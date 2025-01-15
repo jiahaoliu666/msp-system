@@ -4,7 +4,7 @@ export default function TicketSystem() {
       {/* 頁面標題與操作按鈕 */}
       <div className="mb-8">
         <div className="flex items-center text-sm text-gray-500 mb-4">
-          <a href="/" className="hover:text-blue-600">首頁</a>
+          <a href="#" className="hover:text-blue-600">首頁</a>
           <svg className="h-4 w-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
@@ -21,12 +21,6 @@ export default function TicketSystem() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
               建立工單
-            </button>
-            <button className="px-4 py-2 bg-white border rounded-md hover:bg-gray-50 text-gray-600 flex items-center">
-              <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-              </svg>
-              匯出報表
             </button>
           </div>
         </div>

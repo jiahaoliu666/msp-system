@@ -66,8 +66,8 @@ export default function Sidebar({ isSidebarOpen }: SidebarProps) {
           {[
             { name: '使用者管理', icon: '👤', link: '/user-management' },
             { name: '權限設定', icon: '🔒', link: '/permission-setting' },
-            { name: '系統設定', icon: '⚙️', link: '/system-settings' },
             { name: '操作記錄', icon: '📜', link: '/operation-record' },
+            { name: '系統設定', icon: '⚙️', link: '/system-settings' },
           ].map((item) => (
             <Link
               key={item.name}

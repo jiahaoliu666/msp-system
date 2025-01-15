@@ -22,12 +22,6 @@ export default function UserManagement() {
               </svg>
               新增使用者
             </button>
-            <button className="px-4 py-2 bg-white border rounded-md hover:bg-gray-50 text-gray-600 flex items-center">
-              <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-              </svg>
-              匯出使用者清單
-            </button>
           </div>
         </div>
       </div>
@@ -35,10 +29,10 @@ export default function UserManagement() {
       {/* 使用者概況統計 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         {[
-          { title: '總使用者數', value: '48', change: '+5', color: 'blue', icon: '👥' },
-          { title: '本月新增', value: '12', change: '+3', color: 'green', icon: '📈' },
-          { title: '待審核帳號', value: '3', change: '-1', color: 'yellow', icon: '⏳' },
-          { title: '停用帳號', value: '2', change: '0', color: 'red', icon: '🚫' },
+          { title: '總使用者數', value: '48', color: 'blue', icon: '👥' },
+          { title: '本月新增', value: '12', color: 'green', icon: '📈' },
+          { title: '待審核帳號', value: '3', color: 'yellow', icon: '⏳' },
+          { title: '停用帳號', value: '2', color: 'red', icon: '🚫' },
         ].map((stat) => (
           <div key={stat.title} className={`bg-white rounded-lg shadow-md p-6 border-l-4 ${
             stat.color === 'blue' ? 'border-blue-500' :
@@ -50,12 +44,6 @@ export default function UserManagement() {
               <div>
                 <p className="text-gray-500 text-sm">{stat.title}</p>
                 <h3 className="text-2xl font-bold text-gray-800 mt-1">{stat.value}</h3>
-                <p className="text-sm mt-1">
-                  <span className={stat.change === '0' ? 'text-gray-500' : (stat.change.includes('-') ? 'text-green-500' : 'text-red-500')}>
-                    {stat.change === '0' ? '－' : (stat.change.includes('-') ? '↓' : '↑')} {stat.change}
-                  </span>
-                  <span className="text-gray-500 ml-1">較上月</span>
-                </p>
               </div>
               <span className="text-2xl">{stat.icon}</span>
             </div>

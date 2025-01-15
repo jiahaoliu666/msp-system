@@ -35,10 +35,10 @@ export default function ProjectTracking() {
       {/* 專案概況統計 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         {[
-          { title: '進行中專案', value: '12', change: '+2', color: 'blue', icon: '📊' },
-          { title: '即將到期', value: '4', change: '-1', color: 'yellow', icon: '⚠️' },
-          { title: '本月完成', value: '8', change: '+3', color: 'green', icon: '✅' },
-          { title: '專案總預算', value: '2.5M', change: '+300K', color: 'purple', icon: '💰' },
+          { title: '進行中專案', value: '12', color: 'blue', icon: '📊' },
+          { title: '即將到期', value: '4', color: 'yellow', icon: '⚠️' },
+          { title: '本月完成', value: '8', color: 'green', icon: '✅' },
+          { title: '專案總預算', value: '2.5M', color: 'purple', icon: '💰' },
         ].map((stat) => (
           <div key={stat.title} className={`bg-white rounded-lg shadow-md p-6 border-l-4 ${
             stat.color === 'blue' ? 'border-blue-500' :
@@ -50,12 +50,6 @@ export default function ProjectTracking() {
               <div>
                 <p className="text-gray-500 text-sm">{stat.title}</p>
                 <h3 className="text-2xl font-bold text-gray-800 mt-1">{stat.value}</h3>
-                <p className="text-sm mt-1">
-                  <span className={stat.change.includes('-') ? 'text-green-500' : 'text-red-500'}>
-                    {stat.change.includes('-') ? '↓' : '↑'} {stat.change}
-                  </span>
-                  <span className="text-gray-500 ml-1">較上月</span>
-                </p>
               </div>
               <span className="text-2xl">{stat.icon}</span>
             </div>

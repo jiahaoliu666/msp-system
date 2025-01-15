@@ -22,12 +22,6 @@ export default function ServiceRecord() {
               </svg>
               建立工單
             </button>
-            <button className="px-4 py-2 bg-white border rounded-md hover:bg-gray-50 text-gray-600 flex items-center">
-              <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-              </svg>
-              匯出報表
-            </button>
           </div>
         </div>
       </div>
@@ -35,10 +29,10 @@ export default function ServiceRecord() {
       {/* 服務概況統計 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         {[
-          { title: '待處理工單', value: '23', change: '+5', color: 'blue', icon: '🔧' },
-          { title: '進行中工單', value: '15', change: '-2', color: 'yellow', icon: '⚡' },
-          { title: '本月完成', value: '45', change: '+12', color: 'green', icon: '✅' },
-          { title: '平均處理時間', value: '4.2h', change: '-0.5h', color: 'purple', icon: '⏱️' },
+          { title: '待處理工單', value: '23', color: 'blue', icon: '🔧' },
+          { title: '進行中工單', value: '15', color: 'yellow', icon: '⚡' },
+          { title: '本月完成', value: '45', color: 'green', icon: '✅' },
+          { title: '平均處理時間', value: '4.2h', color: 'purple', icon: '⏱️' },
         ].map((stat) => (
           <div key={stat.title} className={`bg-white rounded-lg shadow-md p-6 border-l-4 ${
             stat.color === 'blue' ? 'border-blue-500' :
@@ -50,12 +44,6 @@ export default function ServiceRecord() {
               <div>
                 <p className="text-gray-500 text-sm">{stat.title}</p>
                 <h3 className="text-2xl font-bold text-gray-800 mt-1">{stat.value}</h3>
-                <p className="text-sm mt-1">
-                  <span className={stat.change.includes('-') ? 'text-green-500' : 'text-red-500'}>
-                    {stat.change.includes('-') ? '↓' : '↑'} {stat.change}
-                  </span>
-                  <span className="text-gray-500 ml-1">較上週</span>
-                </p>
               </div>
               <span className="text-2xl">{stat.icon}</span>
             </div>

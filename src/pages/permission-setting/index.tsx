@@ -29,10 +29,10 @@ export default function PermissionSetting() {
       {/* 角色概況統計 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         {[
-          { title: '系統角色數', value: '5', change: '+1', color: 'blue', icon: '👥' },
-          { title: '自訂角色數', value: '8', change: '+2', color: 'green', icon: '⚙️' },
-          { title: '待審核權限', value: '3', change: '-1', color: 'yellow', icon: '⏳' },
-          { title: '權限變更記錄', value: '24', change: '+5', color: 'purple', icon: '📝' },
+          { title: '系統角色數', value: '5', color: 'blue', icon: '👥' },
+          { title: '自訂角色數', value: '8', color: 'green', icon: '⚙️' },
+          { title: '待審核權限', value: '3', color: 'yellow', icon: '⏳' },
+          { title: '權限變更記錄', value: '24', color: 'purple', icon: '📝' },
         ].map((stat) => (
           <div key={stat.title} className={`bg-white rounded-lg shadow-md p-6 border-l-4 ${
             stat.color === 'blue' ? 'border-blue-500' :
@@ -44,12 +44,6 @@ export default function PermissionSetting() {
               <div>
                 <p className="text-gray-500 text-sm">{stat.title}</p>
                 <h3 className="text-2xl font-bold text-gray-800 mt-1">{stat.value}</h3>
-                <p className="text-sm mt-1">
-                  <span className={stat.change.includes('-') ? 'text-green-500' : 'text-red-500'}>
-                    {stat.change.includes('-') ? '↓' : '↑'} {stat.change}
-                  </span>
-                  <span className="text-gray-500 ml-1">較上月</span>
-                </p>
               </div>
               <span className="text-2xl">{stat.icon}</span>
             </div>
