@@ -1,7 +1,20 @@
 import React from 'react';
+import Link from 'next/link';
+import CreateTicketModal from '../components/common/CreateTicketForm';
 
 export default function Home() {
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
+  const [isTicketModalOpen, setIsTicketModalOpen] = React.useState(false);
+
+  const handleCreateTicket = (ticketData: {
+    title: string;
+    description: string;
+    type: string;
+    priority: string;
+  }) => {
+    // TODO: 實作工單建立邏輯
+    console.log('建立工單:', ticketData);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -29,13 +42,15 @@ export default function Home() {
               {/* Logo */}
               <div className="flex items-center gap-2 min-w-[180px]">
                 <img 
-                  src="/msplogo.png" 
+                  src="/msp-logo.png" 
                   alt="Logo" 
-                  className="h-8 w-8 transition-all duration-300 hover:scale-110" 
+                  className="h-8 w-8 transition-all duration-300 hover:scale-110 bg-white" 
                 />
-                <span className="text-lg font-bold text-gray-800 whitespace-nowrap">
-                  MetaAge MSP 
-                </span>
+                <Link href="/">
+                  <span className="text-lg font-bold text-gray-800 whitespace-nowrap hover:text-blue-600 transition-colors duration-200">
+                    MetaAge MSP 
+                  </span>
+                </Link>
               </div>
 
               {/* 搜尋框 */}
@@ -57,17 +72,36 @@ export default function Home() {
 
             {/* 右側區域：快速建立、通知和用戶資訊 */}
             <div className="flex items-center gap-4">
-              {/* 快速建立按鈕 */}
-              <button className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg 
-                               hover:bg-blue-600 transition-all duration-200 whitespace-nowrap">
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                <span>快速建立</span>
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
+              {/* 快速建立按鈕與下拉選單 */}
+              <div className="relative group">
+                <button className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg 
+                                 hover:bg-blue-600 transition-all duration-200 whitespace-nowrap">
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  <span>快速建立</span>
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {/* 下拉選單 */}
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50 invisible group-hover:visible 
+                              transition-all duration-200 opacity-0 group-hover:opacity-100 transform group-hover:translate-y-0 translate-y-1">
+                  <a 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setIsTicketModalOpen(true);
+                    }}
+                    href="#" 
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                  >
+                    <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    建立工單
+                  </a>
+                </div>
+              </div>
 
               {/* 通知圖標 */}
               <button className="p-2 rounded-full hover:bg-gray-100 transition-all duration-200 relative">
@@ -107,11 +141,11 @@ export default function Home() {
                 主要功能
               </div>
               {[
-                { name: '首頁', icon: '📊', badge: '', link: '/' },
+                { name: '總覽', icon: '📊', badge: '', link: '/' },
+                { name: '工單系統', icon: '🎫', badge: '8', link: '/ticket-system' },
                 { name: '客戶管理', icon: '👥', badge: '12', link: '/customer-management' },
                 { name: '服務記錄', icon: '📝', badge: '3', link: '/service-record' },
                 { name: '專案追蹤', icon: '📌', badge: '5', link: '/project-tracking' },
-                { name: '工單系統', icon: '🎫', badge: '8', link: '/ticket-system' },
                 { name: '合約管理', icon: '📋', badge: '', link: '/contract-management' },
                 { name: '待辦事項', icon: '📝', badge: '2', link: '/todo-list' },
               ].map((item) => (
@@ -172,12 +206,12 @@ export default function Home() {
               <svg className="h-4 w-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
-              <span className="text-gray-700">儀表板</span>
+              <span className="text-gray-700">總覽</span>
             </div>
             <div className="mb-8 flex justify-between items-center">
               <div>
                 <h1 className="text-2xl font-bold text-gray-800">總覽</h1>
-                <p className="text-gray-600 mt-1">歡迎回來！</p>
+                <p className="text-gray-600 mt-1">提摩超人，歡迎回來！</p>
               </div>
               <div className="flex space-x-3">
                 <div className="relative">
@@ -248,12 +282,6 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="flex space-x-2">
-                    <button className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-150 flex items-center">
-                      <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                      </svg>
-                      新增工單
-                    </button>
                     <button className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors duration-150 flex items-center">
                       <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
@@ -370,10 +398,10 @@ export default function Home() {
                 </button>
               </div>
 
-              {/* 團隊在線狀態 */}
+              {/* 人員在線狀態 */}
               <div className="bg-white rounded-lg shadow-lg p-6">
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-lg font-bold text-gray-800">團隊在線狀態</h2>
+                  <h2 className="text-lg font-bold text-gray-800">人員在線狀態</h2>
                   <span className="text-sm text-gray-500">5/8 在線</span>
                 </div>
                 <div className="space-y-4">
@@ -540,6 +568,13 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* 工單建立彈窗 */}
+      <CreateTicketModal
+        isOpen={isTicketModalOpen}
+        onClose={() => setIsTicketModalOpen(false)}
+        onSubmit={handleCreateTicket}
+      />
     </div>
   );
 }

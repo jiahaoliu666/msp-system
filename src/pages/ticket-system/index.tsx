@@ -4,7 +4,7 @@ export default function TicketSystem() {
       {/* 頁面標題與操作按鈕 */}
       <div className="mb-8">
         <div className="flex items-center text-sm text-gray-500 mb-4">
-          <a href="#" className="hover:text-blue-600">首頁</a>
+          <a href="/" className="hover:text-blue-600">首頁</a>
           <svg className="h-4 w-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
@@ -35,10 +35,10 @@ export default function TicketSystem() {
       {/* 工單概況統計 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         {[
-          { title: '待處理工單', value: '28', change: '+5', color: 'red', icon: '🔔' },
-          { title: '處理中工單', value: '45', change: '-2', color: 'yellow', icon: '⚡' },
-          { title: '今日完成', value: '16', change: '+3', color: 'green', icon: '✅' },
-          { title: '平均處理時間', value: '2.5h', change: '-0.5h', color: 'blue', icon: '⏱️' },
+          { title: '待處理工單', value: '28',  color: 'red', icon: '🔔' },
+          { title: '處理中工單', value: '45',  color: 'yellow', icon: '⚡' },
+          { title: '今日完成', value: '16', color: 'green', icon: '✅' },
+          { title: '平均處理時間', value: '2.5h',  color: 'blue', icon: '⏱️' },
         ].map((stat) => (
           <div key={stat.title} className={`bg-white rounded-lg shadow-md p-6 border-l-4 ${
             stat.color === 'red' ? 'border-red-500' :
@@ -50,12 +50,6 @@ export default function TicketSystem() {
               <div>
                 <p className="text-gray-500 text-sm">{stat.title}</p>
                 <h3 className="text-2xl font-bold text-gray-800 mt-1">{stat.value}</h3>
-                <p className="text-sm mt-1">
-                  <span className={stat.change.includes('-') ? 'text-green-500' : 'text-red-500'}>
-                    {stat.change.includes('-') ? '↓' : '↑'} {stat.change}
-                  </span>
-                  <span className="text-gray-500 ml-1">較昨日</span>
-                </p>
               </div>
               <span className="text-2xl">{stat.icon}</span>
             </div>
