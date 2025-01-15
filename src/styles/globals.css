@@ -2,81 +2,105 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --primary-color: #3b82f6;
-  --secondary-color: #1e40af;
-  --background-color: #f9fafb;
-  --text-primary: #1f2937;
-  --text-secondary: #6b7280;
-}
-
-body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background-color: var(--background-color);
-  color: var(--text-primary);
-}
-
-/* 優化滾動條 */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
-}
-
-/* 優化卡片和按鈕的過渡效果 */
-.card-hover-effect {
-  @apply transition-all duration-200 ease-in-out hover:shadow-lg hover:transform hover:-translate-y-1;
-}
-
-.button-hover-effect {
-  @apply transition-all duration-150 ease-in-out hover:shadow-md active:transform active:scale-95;
-}
-
-/* 優化表單元素 */
-input, select, textarea {
-  @apply focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200;
-}
-
-/* 優化導航項目 */
-.nav-item {
-  @apply transition-all duration-200 hover:bg-blue-50 hover:text-blue-600 rounded-lg;
-}
-
-/* 優化動畫效果 */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.animate-fadeIn {
-  animation: fadeIn 0.3s ease-in-out;
-}
-
-/* 優化響應式佈局 */
-@media (max-width: 768px) {
-  .responsive-padding {
-    @apply px-4;
+@layer base {
+  :root {
+    /* 淺色模式 */
+    --background-primary: #ffffff;
+    --background-secondary: #f3f4f6;
+    --text-primary: #111827;
+    --text-secondary: #4b5563;
+    --border-color: #e5e7eb;
+    --hover-color: #f9fafb;
+    --accent-color: #3b82f6;
+    --accent-hover: #2563eb;
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --error-color: #ef4444;
+    --info-color: #3b82f6;
   }
-}
 
-/* 優化陰影效果 */
-.custom-shadow {
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05), 0 4px 8px rgba(0,0,0,0.05);
-}
+  .dark {
+    /* 深色模式 */
+    --background-primary: #1f2937;
+    --background-secondary: #111827;
+    --text-primary: #f9fafb;
+    --text-secondary: #d1d5db;
+    --border-color: #374151;
+    --hover-color: #2d3748;
+    --accent-color: #60a5fa;
+    --accent-hover: #3b82f6;
+    --success-color: #34d399;
+    --warning-color: #fbbf24;
+    --error-color: #f87171;
+    --info-color: #60a5fa;
+  }
 
-.custom-shadow-lg {
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05), 0 10px 15px rgba(0,0,0,0.1);
+  body {
+    @apply bg-background-secondary text-text-primary transition-colors duration-200;
+  }
+
+  /* 基礎元素樣式 */
+  h1 {
+    @apply text-3xl font-bold text-text-primary mb-4;
+  }
+
+  h2 {
+    @apply text-2xl font-bold text-text-primary mb-3;
+  }
+
+  h3 {
+    @apply text-xl font-bold text-text-primary mb-2;
+  }
+
+  p {
+    @apply text-text-secondary mb-4;
+  }
+
+  a {
+    @apply text-accent-color hover:text-accent-hover transition-colors duration-200;
+  }
+
+  /* 表單元素樣式 */
+  input, textarea, select {
+    @apply bg-background-primary border border-border-color rounded-lg px-4 py-2
+           text-text-primary placeholder-text-secondary
+           focus:outline-none focus:ring-2 focus:ring-accent-color focus:border-transparent
+           dark:bg-background-secondary;
+  }
+
+  button {
+    @apply transition-colors duration-200;
+  }
+
+  /* 卡片樣式 */
+  .card {
+    @apply bg-background-primary border border-border-color rounded-lg shadow-sm
+           hover:shadow-md transition-shadow duration-200;
+  }
+
+  /* 表格樣式 */
+  table {
+    @apply w-full border-collapse;
+  }
+
+  th {
+    @apply bg-background-secondary text-text-primary px-4 py-2 text-left font-semibold border-b border-border-color;
+  }
+
+  td {
+    @apply px-4 py-2 border-b border-border-color text-text-secondary;
+  }
+
+  /* 滾動條樣式 */
+  ::-webkit-scrollbar {
+    @apply w-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-background-secondary;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border-color rounded-full hover:bg-text-secondary transition-colors duration-200;
+  }
 }
