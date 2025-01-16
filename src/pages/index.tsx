@@ -17,7 +17,7 @@ export default function Home() {
   return (
     <div className="p-8">
       {/* 頁面標題與操作按鈕 */}
-      <div className="mb-8">
+      <div className="mb-4">
         <div className="flex items-center text-sm text-gray-500 mb-4">
           <a href="#" className="hover:text-blue-600 transition-colors duration-200">首頁</a>
           <svg className="h-4 w-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -25,7 +25,7 @@ export default function Home() {
           </svg>
           <span className="text-gray-700">總覽</span>
         </div>
-        <div className="mb-8 flex justify-between items-center">
+        <div className="mb-4 flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">總覽</h1>
             <p className="text-gray-600 mt-1">提摩超人，歡迎回來！</p>

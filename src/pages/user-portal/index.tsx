@@ -1,29 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
-
-// 麵包屑導航組件
-const Breadcrumb = ({ activeTab }: { activeTab: string }) => {
-  const getBreadcrumbText = (tab: string) => {
-    const mapping: { [key: string]: string } = {
-      home: '首頁',
-      create: '建立工單',
-      active: '處理中的工單',
-      closed: '已關閉的工單',
-      faq: '常見問題',
-      profile: '我的資料'
-    };
-    return mapping[tab] || '首頁';
-  };
-
-  return (
-    <div className="flex items-center space-x-2 text-sm text-text-secondary mb-6">
-      <span>使用者入口</span>
-      <span>/</span>
-      <span className="text-accent-color">{getBreadcrumbText(activeTab)}</span>
-    </div>
-  );
-};
+import Image from 'next/image';
 
 // 頁面標題組件
 const PageTitle = ({ title, description }: { title: string; description?: string }) => (
@@ -69,10 +47,9 @@ const CreateTicket = () => (
         <div>
           <label className="block text-sm font-medium text-text-secondary mb-2">問題優先級</label>
           <select className="w-full p-3 border border-border-color rounded-lg bg-background-primary text-text-primary focus:ring-2 focus:ring-accent-color focus:border-accent-color">
-            <option>低</option>
-            <option>中</option>
-            <option>高</option>
-            <option>緊急</option>
+            <option>低 - 可延後處理</option>
+            <option>中 - 正常處理</option>
+            <option>高 - 緊急處理</option>
           </select>
         </div>
       </div>
@@ -81,7 +58,7 @@ const CreateTicket = () => (
         <input
           type="text"
           className="w-full p-3 border border-border-color rounded-lg bg-background-primary text-text-primary focus:ring-2 focus:ring-accent-color focus:border-accent-color"
-          placeholder="請簡短描述問題..."
+          placeholder="請簡要描述您遇到的問題"
         />
       </div>
       <div>
@@ -89,7 +66,7 @@ const CreateTicket = () => (
         <textarea
           rows={4}
           className="w-full p-3 border border-border-color rounded-lg bg-background-primary text-text-primary focus:ring-2 focus:ring-accent-color focus:border-accent-color"
-          placeholder="請詳細描述您遇到的問題..."
+          placeholder="請詳細描述您遇到的問題"
         />
       </div>
       <div>
@@ -394,6 +371,159 @@ const Profile = () => (
   </div>
 );
 
+// 聊天機器人組件
+const Chatbot = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [messages, setMessages] = useState([
+    { type: 'bot', content: '您好！我是 MetaAge 智能助理，很高興為您服務。請問有什麼我可以幫您的嗎？', time: '09:00' },
+    { type: 'bot', content: '您可以詢問我關於：\n1. 系統使用問題\n2. 帳號相關問題\n3. 技術支援需求\n4. 一般諮詢', time: '09:00' }
+  ]);
+  const chatWindowRef = useRef<HTMLDivElement>(null);
+  const [inputValue, setInputValue] = useState('');
+
+  useEffect(() => {
+    if (chatWindowRef.current) {
+      chatWindowRef.current.scrollTop = chatWindowRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  return (
+    <div className="fixed bottom-6 right-6 z-50">
+      {isOpen && (
+        <div className="absolute bottom-20 right-0 w-[400px] h-[600px] bg-background-primary rounded-2xl shadow-2xl border border-border-color/20 flex flex-col overflow-hidden animate-slideUp">
+          {/* 聊天視窗標題 */}
+          <div className="p-4 bg-gradient-to-r from-accent-color to-info-color text-white flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-12 h-12 rounded-xl bg-white/10 p-1 flex items-center justify-center">
+                <Image
+                  src="/msp-logo.png"
+                  alt="MSP Logo"
+                  width={40}
+                  height={40}
+                  className="object-contain"
+                />
+              </div>
+              <div>
+                <h3 className="font-medium text-lg">MetaAge 智能助理</h3>
+                <div className="flex items-center space-x-2 text-xs text-white/80">
+                  <span className="flex items-center">
+                    <span className="w-2 h-2 bg-green-400 rounded-full mr-1 animate-pulse"></span>
+                    線上為您服務
+                  </span>
+                  <span>|</span>
+                  <span>回應時間：約 1 分鐘</span>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsOpen(false)}
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* 聊天訊息區域 */}
+          <div className="flex-1 p-4 overflow-y-auto bg-gradient-to-b from-background-primary to-background-secondary" ref={chatWindowRef}>
+            <div className="space-y-4">
+              {messages.map((message, index) => (
+                <div
+                  key={index}
+                  className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'} group`}
+                >
+                  {message.type === 'bot' && (
+                    <div className="w-8 h-8 rounded-lg bg-accent-color/10 p-1 mr-2 flex-shrink-0">
+                      <Image
+                        src="/msp-logo.png"
+                        alt="Bot Avatar"
+                        width={24}
+                        height={24}
+                        className="object-contain"
+                      />
+                    </div>
+                  )}
+                  <div
+                    className={`max-w-[80%] p-4 ${
+                      message.type === 'user'
+                        ? 'bg-accent-color text-white rounded-2xl rounded-br-none shadow-lg'
+                        : 'bg-white/80 text-text-primary rounded-2xl rounded-bl-none shadow-md'
+                    }`}
+                  >
+                    <div className="whitespace-pre-line">{message.content}</div>
+                    <div className={`text-xs mt-1 ${message.type === 'user' ? 'text-white/70' : 'text-text-secondary'}`}>
+                      {message.time}
+                    </div>
+                  </div>
+                  {message.type === 'user' && (
+                    <div className="w-8 h-8 rounded-full bg-accent-color/10 ml-2 flex items-center justify-center flex-shrink-0">
+                      👤
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 快速回覆選項 */}
+          <div className="p-3 border-t border-border-color/10 bg-background-primary/50 backdrop-blur-sm">
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-accent-color/20 scrollbar-track-transparent">
+              {['系統使用問題', '帳號相關', '技術支援', '一般諮詢'].map((option) => (
+                <button
+                  key={option}
+                  className="px-4 py-2 bg-background-secondary text-text-secondary rounded-full hover:bg-accent-color/10 hover:text-accent-color transition-colors whitespace-nowrap text-sm"
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 輸入區域 */}
+          <div className="p-4 border-t border-border-color/20 bg-background-primary">
+            <div className="flex space-x-2">
+              <div className="flex-1 relative">
+                <input
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  placeholder="輸入訊息..."
+                  className="w-full px-4 py-3 bg-background-secondary rounded-xl focus:outline-none focus:ring-2 focus:ring-accent-color text-text-primary pr-10"
+                />
+                <button className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-text-secondary hover:text-accent-color transition-colors">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                  </svg>
+                </button>
+              </div>
+              <button className="p-3 bg-accent-color text-white rounded-xl hover:bg-accent-color/90 transition-colors shadow-lg hover:shadow-xl">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 聊天機器人開關按鈕 */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-16 h-16 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 bg-gradient-to-r from-accent-color to-info-color hover:shadow-xl hover:scale-105"
+      >
+        <Image
+          src="/msp-logo.png"
+          alt="MSP Logo"
+          width={40}
+          height={40}
+          className="object-contain"
+        />
+      </button>
+    </div>
+  );
+};
+
 export default function UserPortal() {
   const [activeTab, setActiveTab] = useState('home');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -439,11 +569,34 @@ export default function UserPortal() {
             />
             
             {/* 統計概覽 */}
-            <div className="grid grid-cols-4 gap-6 mb-8">
-              <StatsCard icon="📊" title="本月工單總數" value="12" />
-              <StatsCard icon="⚡" title="處理中工單" value="3" />
-              <StatsCard icon="✅" title="已解決工單" value="9" />
-              <StatsCard icon="⏱️" title="平均處理時間" value="2.5天" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              {[
+                { title: '合約時間', value: '2025/01/01 - 2025/12/31', icon: '⏱️', color: 'purple' },
+                { title: '處理中的工單', value: '3', icon: '⚡', color: 'yellow' },
+                { title: '已關閉的工單', value: '9', icon: '✅', color: 'green' },
+                { title: '本月工單總數', value: '12', icon: '📊', color: 'blue' },
+                
+              ].map((stat) => (
+                <div 
+                  key={stat.title} 
+                  className={`bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 p-6 border-l-4 ${
+                    stat.color === 'blue' ? 'border-blue-500 hover:border-blue-600' :
+                    stat.color === 'yellow' ? 'border-yellow-500 hover:border-yellow-600' :
+                    stat.color === 'green' ? 'border-green-500 hover:border-green-600' :
+                    'border-purple-500 hover:border-purple-600'
+                  }`}
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-gray-500 text-sm font-medium">{stat.title}</p>
+                      <div className="flex items-center mt-2">
+                        <h3 className="text-2xl font-bold text-gray-800">{stat.value}</h3>
+                      </div>
+                    </div>
+                    <span className="text-2xl transform transition-transform duration-200 hover:scale-110 cursor-pointer">{stat.icon}</span>
+                  </div>
+                </div>
+              ))}
             </div>
 
             {/* 快速操作卡片 */}
@@ -658,14 +811,14 @@ export default function UserPortal() {
         {/* 主要內容區域 */}
         <div className="ml-72 flex-1 p-8">
           <div className="max-w-full">
-            <div className="mb-8">
-              <Breadcrumb activeTab={activeTab} />
-            </div>
             <div className="px-4">
               {renderContent()}
             </div>
           </div>
         </div>
+
+        {/* 添加聊天機器人 */}
+        <Chatbot />
       </div>
     </>
   );

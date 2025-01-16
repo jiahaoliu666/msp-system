@@ -2,7 +2,7 @@ export default function PermissionSetting() {
   return (
     <div className="flex-1 bg-background-secondary p-8">
       {/* 頁面標題與操作按鈕 */}
-      <div className="mb-8">
+      <div className="mb-4">
         <div className="flex items-center text-sm text-text-secondary mb-4">
           <a href="#" className="hover:text-accent-color transition-colors">首頁</a>
           <svg className="h-4 w-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

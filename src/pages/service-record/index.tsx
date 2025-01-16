@@ -2,7 +2,7 @@ export default function ServiceRecord() {
   return (
     <div className="flex-1 bg-gray-100 p-8">
       {/* 頁面標題與操作按鈕 */}
-      <div className="mb-8">
+      <div className="mb-4">
         <div className="flex items-center text-sm text-gray-500 mb-4">
           <a href="#" className="hover:text-blue-600">首頁</a>
           <svg className="h-4 w-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

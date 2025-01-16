@@ -2,7 +2,7 @@ export default function TicketSystem() {
   return (
     <div className="flex-1 bg-gray-100 p-8">
       {/* 頁面標題與操作按鈕 */}
-      <div className="mb-8">
+      <div className="mb-4">
         <div className="flex items-center text-sm text-gray-500 mb-4">
           <a href="#" className="hover:text-blue-600">首頁</a>
           <svg className="h-4 w-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -29,16 +29,16 @@ export default function TicketSystem() {
       {/* 工單概況統計 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         {[
-          { title: '待處理工單', value: '28',  color: 'red', icon: '🔔' },
+          { title: '待處理工單', value: '28',  color: 'blue', icon: '🔧' },
           { title: '處理中工單', value: '45',  color: 'yellow', icon: '⚡' },
-          { title: '今日完成', value: '16', color: 'green', icon: '✅' },
-          { title: '平均處理時間', value: '2.5h',  color: 'blue', icon: '⏱️' },
+          { title: '本月完成', value: '16', color: 'green', icon: '✅' },
+          { title: '平均處理時間', value: '2.5h',  color: 'purple', icon: '⏱️' },
         ].map((stat) => (
           <div key={stat.title} className={`bg-white rounded-lg shadow-md p-6 border-l-4 ${
-            stat.color === 'red' ? 'border-red-500' :
+            stat.color === 'blue' ? 'border-blue-500' :
             stat.color === 'yellow' ? 'border-yellow-500' :
             stat.color === 'green' ? 'border-green-500' :
-            'border-blue-500'
+            'border-purple-500'
           }`}>
             <div className="flex justify-between items-start">
               <div>
