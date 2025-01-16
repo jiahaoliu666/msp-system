@@ -510,7 +510,7 @@ const Chatbot = () => {
       {/* 聊天機器人開關按鈕 */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-16 h-16 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 bg-gradient-to-r from-accent-color to-info-color hover:shadow-xl hover:scale-105"
+        className="w-16 h-16 rounded-full bg-white shadow-lg flex items-center justify-center transition-all duration-300 hover:shadow-xl hover:scale-105 border border-gray-100"
       >
         <Image
           src="/msp-logo.png"
@@ -798,12 +798,15 @@ export default function UserPortal() {
           {/* Metaage Logo */}
           <div className="p-4 border-t border-border-color/20">
             <div className="flex flex-col items-center space-y-3 p-4 bg-gradient-to-b from-accent-color/5 to-info-color/5 rounded-xl">
-              <svg className="w-12 h-12 text-accent-color" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-              </svg>
-              <span className="text-xl font-bold bg-gradient-to-r from-accent-color to-info-color bg-clip-text text-transparent">
-                MetaAge
-              </span>
+              <a href="https://www.metaage.com.tw/" target="_blank" rel="noopener noreferrer">
+                <Image
+                  src="/metaage-logo.png"
+                  alt="MetaAge Logo" 
+                  width={150}
+                  height={100}
+                  className="object-contain cursor-pointer"
+                />
+              </a>
             </div>
           </div>
         </div>
