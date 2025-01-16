@@ -1,9 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
+    /* 字體設置 */
+    --font-sans: 'Noto Sans TC', 'Inter', system-ui, -apple-system, sans-serif;
+    
     /* 淺色模式 */
     --background-primary: #ffffff;
     --background-secondary: #f3f4f6;
@@ -35,8 +40,13 @@
     --info-color: #60a5fa;
   }
 
+  html {
+    font-family: var(--font-sans);
+  }
+
   body {
     @apply bg-background-secondary text-text-primary transition-colors duration-200;
+    font-family: var(--font-sans);
   }
 
   /* 基礎元素樣式 */

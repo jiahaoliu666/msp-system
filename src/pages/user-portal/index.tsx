@@ -5,22 +5,28 @@ import Image from 'next/image';
 
 // 頁面標題組件
 const PageTitle = ({ title, description }: { title: string; description?: string }) => (
-  <div className="mb-8">
-    <h1 className="text-3xl font-bold text-text-primary">{title}</h1>
-    {description && <p className="mt-2 text-text-secondary">{description}</p>}
+  <div className="mb-12">
+    <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-slate-800 to-blue-800 bg-clip-text text-transparent tracking-tight leading-[1.6]">
+      {title}
+    </h1>
+    {description && (
+      <p className="text-lg text-slate-600 leading-relaxed">
+        {description}
+      </p>
+    )}
   </div>
 );
 
 // 統計卡片組件
 const StatsCard = ({ icon, title, value }: { icon: string; title: string; value: string }) => (
-  <div className="bg-background-primary p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-border-color/10">
-    <div className="flex items-start space-x-4">
-      <div className="w-14 h-14 rounded-xl bg-accent-color/10 flex items-center justify-center text-2xl text-accent-color">
+  <div className="bg-background-primary p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-border-color/10 hover:border-accent-color/30 hover:scale-[1.02] cursor-pointer">
+    <div className="flex items-start space-x-5">
+      <div className="w-16 h-16 rounded-2xl bg-accent-color/10 flex items-center justify-center text-3xl text-accent-color">
         {icon}
       </div>
       <div className="flex-1">
-        <h3 className="text-lg font-semibold text-text-primary">{value}</h3>
-        <p className="text-sm text-text-secondary mt-1">{title}</p>
+        <h3 className="text-2xl font-bold text-text-primary bg-gradient-to-r from-accent-color to-info-color bg-clip-text text-transparent">{value}</h3>
+        <p className="text-base text-text-secondary mt-2">{title}</p>
       </div>
     </div>
   </div>
@@ -39,7 +45,8 @@ const CreateTicket = () => (
           <label className="block text-sm font-medium text-text-secondary mb-2">服務類型</label>
           <select className="w-full p-3 border border-border-color rounded-lg bg-background-primary text-text-primary focus:ring-2 focus:ring-accent-color focus:border-accent-color">
             <option>技術支援</option>
-            <option>系統問題</option>
+            <option>一般諮詢</option>
+            <option>系統故障</option>
             <option>帳號相關</option>
             <option>其他</option>
           </select>
@@ -54,7 +61,7 @@ const CreateTicket = () => (
         </div>
       </div>
       <div>
-        <label className="block text-sm font-medium text-text-secondary mb-2">問題標題</label>
+        <label className="block text-sm font-medium text-text-secondary mb-2">標題</label>
         <input
           type="text"
           className="w-full p-3 border border-border-color rounded-lg bg-background-primary text-text-primary focus:ring-2 focus:ring-accent-color focus:border-accent-color"
@@ -62,7 +69,7 @@ const CreateTicket = () => (
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-text-secondary mb-2">問題描述</label>
+        <label className="block text-sm font-medium text-text-secondary mb-2">描述</label>
         <textarea
           rows={4}
           className="w-full p-3 border border-border-color rounded-lg bg-background-primary text-text-primary focus:ring-2 focus:ring-accent-color focus:border-accent-color"
@@ -285,11 +292,11 @@ const Profile = () => (
     <div className="bg-background-primary p-8 rounded-xl shadow-lg">
       <div className="space-y-6">
         <div className="flex items-center space-x-6">
-          <div className="w-32 h-32 rounded-2xl bg-accent-color/10 flex items-center justify-center text-6xl text-accent-color">
+          <div className="w-28 h-28 rounded-3xl bg-accent-color/15 flex items-center justify-center text-5xl text-accent-color shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
             👤
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-text-primary">提摩超人</h2>
+            <h2 className="mt-5 text-xl font-bold text-text-primary">提摩超人</h2>
             <p className="text-text-secondary">teemo@metaage.com</p>
             <div className="mt-2 flex items-center space-x-2">
               <span className="px-3 py-1 bg-success-color/15 text-success-color rounded-full text-sm">系統管理員</span>
@@ -388,11 +395,11 @@ const Chatbot = () => {
   }, [messages]);
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed bottom-8 right-8 z-50">
       {isOpen && (
-        <div className="absolute bottom-20 right-0 w-[400px] h-[600px] bg-background-primary rounded-2xl shadow-2xl border border-border-color/20 flex flex-col overflow-hidden animate-slideUp">
+        <div className="absolute bottom-24 right-0 w-[450px] h-[650px] bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-border-color/10 flex flex-col overflow-hidden animate-slideUp">
           {/* 聊天視窗標題 */}
-          <div className="p-4 bg-gradient-to-r from-accent-color to-info-color text-white flex items-center justify-between">
+          <div className="p-6 bg-gradient-to-r from-accent-color to-info-color text-white">
             <div className="flex items-center space-x-3">
               <div className="w-12 h-12 rounded-xl bg-white/10 p-1 flex items-center justify-center">
                 <Image
@@ -569,21 +576,20 @@ export default function UserPortal() {
             />
             
             {/* 統計概覽 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
               {[
                 { title: '合約時間', value: '2025/01/01 - 2025/12/31', icon: '⏱️', color: 'purple' },
                 { title: '處理中的工單', value: '3', icon: '⚡', color: 'yellow' },
                 { title: '已關閉的工單', value: '9', icon: '✅', color: 'green' },
                 { title: '本月工單總數', value: '12', icon: '📊', color: 'blue' },
-                
               ].map((stat) => (
                 <div 
                   key={stat.title} 
-                  className={`bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 p-6 border-l-4 ${
+                  className={`bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 p-8 border-l-4 hover:scale-[1.02] cursor-pointer ${
                     stat.color === 'blue' ? 'border-blue-500 hover:border-blue-600' :
-                    stat.color === 'yellow' ? 'border-yellow-500 hover:border-yellow-600' :
-                    stat.color === 'green' ? 'border-green-500 hover:border-green-600' :
-                    'border-purple-500 hover:border-purple-600'
+                    stat.color === 'yellow' ? 'border-amber-500 hover:border-amber-600' :
+                    stat.color === 'green' ? 'border-emerald-500 hover:border-emerald-600' :
+                    'border-violet-500 hover:border-violet-600'
                   }`}
                 >
                   <div className="flex justify-between items-start">
@@ -600,15 +606,15 @@ export default function UserPortal() {
             </div>
 
             {/* 快速操作卡片 */}
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-2 gap-8">
               {/* 建立工單 */}
               <div 
                 onClick={() => setActiveTab('create')}
-                className="bg-background-primary p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer group"
+                className="bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer group hover:scale-[1.02] border border-slate-200/50 hover:border-blue-500/30"
               >
-                <div className="flex items-start space-x-5">
-                  <div className="w-12 h-12 rounded-xl bg-accent-color/10 text-accent-color flex items-center justify-center group-hover:bg-accent-color group-hover:text-white transition-all duration-200">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-start space-x-6">
+                  <div className="w-16 h-16 rounded-2xl bg-accent-color/10 text-accent-color flex items-center justify-center group-hover:bg-accent-color group-hover:text-white transition-all duration-300 shadow-lg group-hover:shadow-xl">
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
                   </div>
@@ -683,20 +689,20 @@ export default function UserPortal() {
       <Head>
         <title>MetaAge 工單系統</title>
       </Head>
-      <div className="flex min-h-screen bg-background-secondary">
+      <div className="flex min-h-screen bg-slate-50/80">
         {/* 左側側邊欄 */}
-        <div className="w-72 bg-background-primary border-r border-border-color/20 fixed h-screen flex flex-col">
+        <div className="w-80 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 fixed h-screen flex flex-col backdrop-blur-xl">
           {/* 使用者資訊區 */}
-          <div className="p-6 border-b border-border-color/20">
+          <div className="p-8 border-b border-white/5 bg-gradient-to-r from-slate-900 to-slate-800">
             <div className="flex flex-col items-center">
-              <div className="w-24 h-24 rounded-2xl bg-accent-color/10 flex items-center justify-center text-4xl text-accent-color shadow-md">
+              <div className="w-28 h-28 rounded-3xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 flex items-center justify-center text-5xl text-blue-300 shadow-lg hover:shadow-blue-500/10 transition-all duration-300">
                 👤
               </div>
-              <h2 className="mt-4 text-lg font-bold text-text-primary">提摩超人</h2>
+              <h2 className="mt-5 text-xl font-bold text-white/90">提摩超人</h2>
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="mt-1 text-sm text-text-secondary hover:underline cursor-pointer flex items-center"
+                  className="mt-1 text-sm text-slate-300 hover:text-blue-300 hover:underline cursor-pointer flex items-center"
                 >
                   teemo@metaage.com
                   <svg
@@ -713,15 +719,15 @@ export default function UserPortal() {
                 
                 {/* 下拉選單 */}
                 {isDropdownOpen && (
-                  <div className="absolute z-10 mt-2 w-48 -left-8 bg-background-primary rounded-xl shadow-lg border border-border-color/20 py-2">
-                    <div className="px-4 py-2 border-b border-border-color/20">
-                      <p className="text-xs text-text-secondary">登入身份</p>
-                      <p className="text-sm font-medium text-text-primary">系統管理員</p>
+                  <div className="absolute z-10 mt-2 w-48 -left-8 bg-slate-800 rounded-xl shadow-lg border border-slate-700 py-2">
+                    <div className="px-4 py-2 border-b border-slate-700">
+                      <p className="text-xs text-slate-400">登入身份</p>
+                      <p className="text-sm font-medium text-slate-200">系統管理員</p>
                     </div>
                     <div className="py-1">
                       <button
                         onClick={() => setActiveTab('profile')}
-                        className="w-full px-4 py-2 text-sm text-text-primary hover:bg-accent-color/5 hover:text-accent-color flex items-center"
+                        className="w-full px-4 py-2 text-sm text-slate-200 hover:bg-slate-700 hover:text-blue-300 flex items-center"
                       >
                         <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -730,7 +736,7 @@ export default function UserPortal() {
                       </button>
                       <Link
                         href="/"
-                        className="w-full px-4 py-2 text-sm text-text-primary hover:bg-accent-color/5 hover:text-accent-color flex items-center"
+                        className="w-full px-4 py-2 text-sm text-slate-200 hover:bg-slate-700 hover:text-blue-300 flex items-center"
                       >
                         <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -739,8 +745,8 @@ export default function UserPortal() {
                         後台管理
                       </Link>
                     </div>
-                    <div className="border-t border-border-color/20 py-1">
-                      <button className="w-full px-4 py-2 text-sm text-error-color hover:bg-error-color/5 flex items-center">
+                    <div className="border-t border-slate-700 py-1">
+                      <button className="w-full px-4 py-2 text-sm text-red-400 hover:bg-slate-700 flex items-center">
                         <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                         </svg>
@@ -754,14 +760,14 @@ export default function UserPortal() {
           </div>
 
           {/* 導航選單 */}
-          <nav className="flex-1 p-4 overflow-y-auto">
-            <div className="space-y-2">
+          <nav className="flex-1 p-6 overflow-y-auto">
+            <div className="space-y-3">
               <button
                 onClick={() => setActiveTab('home')}
-                className={`w-full flex items-center px-5 py-3.5 rounded-xl transition-all duration-200
+                className={`w-full flex items-center px-6 py-4 rounded-xl transition-all duration-300
                   ${activeTab === 'home'
-                  ? 'bg-accent-color/15 text-accent-color font-medium shadow-sm'
-                  : 'text-text-primary hover:bg-accent-color/10 hover:text-accent-color'
+                  ? 'bg-gradient-to-r from-blue-500 to-blue-400 text-white font-medium shadow-lg'
+                  : 'text-white/70 hover:bg-white/5 hover:text-blue-300'
                 }`}
               >
                 <span className="mr-4 text-2xl">🏠</span>
@@ -771,10 +777,10 @@ export default function UserPortal() {
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center px-5 py-3.5 rounded-xl transition-all duration-200
+                  className={`w-full flex items-center px-6 py-4 rounded-xl transition-all duration-300
                     ${activeTab === item.id
-                    ? 'bg-accent-color/15 text-accent-color font-medium shadow-sm'
-                    : 'text-text-primary hover:bg-accent-color/10 hover:text-accent-color'
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-400 text-white font-medium shadow-lg'
+                    : 'text-white/70 hover:bg-white/5 hover:text-blue-300'
                   }`}
                 >
                   <span className="mr-4 text-2xl">{item.icon}</span>
@@ -783,10 +789,10 @@ export default function UserPortal() {
               ))}
               <button
                 onClick={() => setActiveTab('faq')}
-                className={`w-full flex items-center px-5 py-3.5 rounded-xl transition-all duration-200
+                className={`w-full flex items-center px-6 py-4 rounded-xl transition-all duration-300
                   ${activeTab === 'faq'
-                  ? 'bg-accent-color/15 text-accent-color font-medium shadow-sm'
-                  : 'text-text-primary hover:bg-accent-color/10 hover:text-accent-color'
+                  ? 'bg-gradient-to-r from-blue-500 to-blue-400 text-white font-medium shadow-lg'
+                  : 'text-white/70 hover:bg-white/5 hover:text-blue-300'
                 }`}
               >
                 <span className="mr-4 text-2xl">❓</span>
@@ -796,15 +802,15 @@ export default function UserPortal() {
           </nav>
 
           {/* Metaage Logo */}
-          <div className="p-4 border-t border-border-color/20">
-            <div className="flex flex-col items-center space-y-3 p-4 bg-gradient-to-b from-accent-color/5 to-info-color/5 rounded-xl">
+          <div className="p-4 border-t border-white/5">
+            <div className="flex flex-col items-center space-y-3 p-4 bg-gradient-to-b from-white/5 to-transparent rounded-xl">
               <a href="https://www.metaage.com.tw/" target="_blank" rel="noopener noreferrer">
                 <Image
                   src="/metaage-logo.png"
                   alt="MetaAge Logo" 
                   width={150}
                   height={100}
-                  className="object-contain cursor-pointer"
+                  className="object-contain cursor-pointer opacity-70 hover:opacity-100 transition-opacity"
                 />
               </a>
             </div>
@@ -812,11 +818,9 @@ export default function UserPortal() {
         </div>
 
         {/* 主要內容區域 */}
-        <div className="ml-72 flex-1 p-8">
-          <div className="max-w-full">
-            <div className="px-4">
-              {renderContent()}
-            </div>
+        <div className="ml-80 flex-1 min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
+          <div className="h-full p-8">
+            {renderContent()}
           </div>
         </div>
 
