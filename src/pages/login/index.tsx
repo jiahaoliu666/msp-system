@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
-import Head from 'next/head';
 import Link from 'next/link';
 
 export default function Login() {
@@ -29,10 +28,6 @@ export default function Login() {
 
   return (
     <>
-      <Head>
-        <title>登入 - MSP系統</title>
-      </Head>
-      
       <div className="flex min-h-screen">
         {/* 左側品牌區域 */}
         <div className="hidden lg:flex lg:w-1/2 bg-[#1677ff] items-center justify-center p-12">
@@ -151,7 +146,7 @@ export default function Login() {
             </div>
 
             <div className="mt-8 text-center text-sm text-text-secondary">
-              <p>© 2024 MetaAge MSP. All rights reserved.</p>
+              <p>© 2025 MetaAge MSP. All rights reserved.</p>
             </div>
           </div>
         </div>

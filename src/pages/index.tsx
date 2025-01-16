@@ -254,41 +254,7 @@ export default function Home() {
               ))}
             </div>
           </div>
-
-          {/* 最近文件 */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-gray-800">最近文件</h2>
-              <button className="text-blue-500 hover:text-blue-600 text-sm">
-                查看全部
-              </button>
-            </div>
-            <div className="space-y-3">
-              {[
-                { name: '客戶需求文件.pdf', type: 'PDF', size: '2.3 MB', time: '3小時前' },
-                { name: '專案報價單.xlsx', type: 'Excel', size: '1.8 MB', time: '昨天' },
-                { name: '系統架構圖.png', type: '圖片', size: '4.5 MB', time: '2天前' },
-              ].map((file, index) => (
-                <div key={index} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <span className="text-lg">
-                      {file.type === 'PDF' ? '📄' : file.type === 'Excel' ? '📊' : '🖼️'}
-                    </span>
-                    <div>
-                      <p className="text-sm font-medium text-gray-800">{file.name}</p>
-                      <p className="text-xs text-gray-500">{file.size} • {file.time}</p>
-                    </div>
-                  </div>
-                  <button className="p-1 hover:bg-gray-100 rounded-full">
-                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                    </svg>
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
+        
           {/* 新增：近期活動日曆 */}
           <div className="bg-white rounded-lg shadow-lg p-6">
             <div className="flex justify-between items-center mb-4">
