@@ -16,7 +16,8 @@ export default function App({ Component, pageProps }: AppProps) {
   const userMenuRef = React.useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  const isUserPortal = router.pathname === '/user-portal';
+  // 判斷是否為不需要顯示導航的頁面
+  const isStandalonePage = router.pathname === '/user-portal' || router.pathname === '/login';
 
   // 點擊外部關閉用戶選單
   React.useEffect(() => {
@@ -56,7 +57,7 @@ export default function App({ Component, pageProps }: AppProps) {
       <ThemeProvider>
         <div className="min-h-screen bg-background-secondary">
           {/* 頂部導航區 */}
-          {!isUserPortal && (
+          {!isStandalonePage && (
             <nav className="bg-background-primary border-b border-border-color fixed w-full top-0 z-50">
               <div className="w-full px-4">
                 <div className="flex items-center justify-between h-16">
@@ -209,22 +210,24 @@ export default function App({ Component, pageProps }: AppProps) {
             </nav>
           )}
 
-          <div className={`flex ${!isUserPortal ? 'pt-16' : ''}`}>
+          <div className={`flex ${!isStandalonePage ? 'pt-16' : ''}`}>
             {/* 側邊欄 */}
-            {!isUserPortal && <Sidebar isSidebarOpen={isSidebarOpen} />}
+            {!isStandalonePage && <Sidebar isSidebarOpen={isSidebarOpen} />}
 
             {/* 主內容區域 */}
-            <div className={`flex-1 transition-all duration-300 ${!isUserPortal && isSidebarOpen ? 'ml-64' : 'ml-0'}`}>
+            <div className={`flex-1 transition-all duration-300 ${!isStandalonePage && isSidebarOpen ? 'ml-64' : 'ml-0'}`}>
               <Component {...pageProps} />
             </div>
           </div>
 
           {/* 工單建立彈窗 */}
-          <CreateTicketModal
-            isOpen={isTicketModalOpen}
-            onClose={() => setIsTicketModalOpen(false)}
-            onSubmit={handleCreateTicket}
-          />
+          {!isStandalonePage && (
+            <CreateTicketModal
+              isOpen={isTicketModalOpen}
+              onClose={() => setIsTicketModalOpen(false)}
+              onSubmit={handleCreateTicket}
+            />
+          )}
         </div>
       </ThemeProvider>
     </NextThemesProvider>

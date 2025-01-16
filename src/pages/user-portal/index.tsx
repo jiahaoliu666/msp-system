@@ -49,10 +49,10 @@ const StatsCard = ({ icon, title, value }: { icon: string; title: string; value:
 
 // 建立工單表單組件
 const CreateTicket = () => (
-  <div className="max-w-3xl mx-auto">
+  <div>
     <PageTitle 
       title="建立工單" 
-      description="請填寫以下表單，我們的支援團隊會盡快處理您的需求。"
+      description="請填寫以下表單，MetaAge MSP 支援團隊會盡快處理您的需求。"
     />
     <form className="space-y-6 bg-background-primary p-8 rounded-xl shadow-sm">
       <div className="grid grid-cols-2 gap-6">
@@ -385,7 +385,7 @@ export default function UserPortal() {
         return (
           <div>
             <PageTitle 
-              title="歡迎使用 MetaAge 工單系統" 
+              title="歡迎使用 MetaAge MSP 工單系統" 
               description="在這裡，您可以輕鬆管理您的服務請求和追蹤工單狀態。"
             />
             
