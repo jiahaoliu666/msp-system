@@ -16,6 +16,8 @@ interface CreateTicketModalProps {
     business: string;
     source: string;
     engineer: string;
+    productName: string;
+    eventType: string;
     attachments: File[];
   }) => void;
 }
@@ -36,6 +38,8 @@ const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
     business: '',
     source: '',
     engineer: '',
+    productName: '',
+    eventType: '',
     attachments: [] as File[],
   });
 
@@ -47,6 +51,8 @@ const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
     business: false,
     source: false,
     engineer: false,
+    productName: false,
+    eventType: false,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -60,7 +66,9 @@ const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
       'organization',
       'business',
       'source',
-      'engineer'
+      'engineer',
+      'productName',
+      'eventType'
     ].every(field => formData[field as keyof typeof formData]);
 
     if (isValid) {
@@ -74,6 +82,8 @@ const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
         business: '',
         source: '',
         engineer: '',
+        productName: '',
+        eventType: '',
         attachments: [],
       });
       setShowErrors(false);
@@ -84,6 +94,8 @@ const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
         business: false,
         source: false,
         engineer: false,
+        productName: false,
+        eventType: false,
       });
       onClose();
     }
@@ -353,7 +365,58 @@ const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
                 </div>
               </div>
 
-             
+              {/* 產品名稱和事件類型並排 */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* 產品名稱 */}
+                <div className="group">
+                  <label htmlFor="productName" className="block text-sm font-medium text-gray-700 mb-2 group-hover:text-blue-600 transition-colors">
+                    產品名稱 <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      id="productName"
+                      required
+                      value={formData.productName}
+                      onChange={(e) => setFormData({ ...formData, productName: e.target.value })}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 pl-10"
+                      placeholder="請輸入產品名稱"
+                    />
+                    <MdBusinessCenter className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                  </div>
+                  {showErrors && !formData.productName && (
+                    <p className="mt-2 text-sm text-red-500 flex items-center">
+                      <IoWarning className="mr-1" />
+                      請輸入產品名稱
+                    </p>
+                  )}
+                </div>
+
+                {/* 事件類型 */}
+                <div className="group">
+                  <label htmlFor="eventType" className="block text-sm font-medium text-gray-700 mb-2 group-hover:text-blue-600 transition-colors">
+                    事件類型 <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      id="eventType"
+                      required
+                      value={formData.eventType}
+                      onChange={(e) => setFormData({ ...formData, eventType: e.target.value })}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 pl-10"
+                      placeholder="請輸入事件類型"
+                    />
+                    <MdDescription className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                  </div>
+                  {showErrors && !formData.eventType && (
+                    <p className="mt-2 text-sm text-red-500 flex items-center">
+                      <IoWarning className="mr-1" />
+                      請輸入事件類型
+                    </p>
+                  )}
+                </div>
+              </div>
 
               {/* 詳細描述 */}
               <div className="group">
@@ -402,7 +465,6 @@ const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
                       </label>
                       <p className="pl-1">或拖放檔案至此處</p>
                     </div>
-                    <p className="text-xs text-gray-500">支援所有常見檔案格式</p>
                   </div>
                 </div>
 

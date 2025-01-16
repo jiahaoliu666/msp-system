@@ -13,7 +13,7 @@ export default function ServiceRecord() {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">服務記錄</h1>
-            <p className="text-gray-600 mt-1">管理所有客戶服務工單與維護記錄</p>
+            <p className="text-gray-600 mt-1">管理您所有客戶服務工單與維護記錄</p>
           </div>
           <div className="flex space-x-3">
             <button className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-150 flex items-center">
