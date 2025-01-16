@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import { FaShieldAlt, FaHeadset, FaRocket } from 'react-icons/fa';
 
 export default function Login() {
   const router = useRouter();
@@ -30,54 +31,91 @@ export default function Login() {
     <>
       <div className="flex min-h-screen">
         {/* 左側品牌區域 */}
-        <div className="hidden lg:flex lg:w-1/2 bg-[#1677ff] items-center justify-center p-12">
-          <div className="max-w-lg">
-            <div className="text-center">
-              <div className="mb-8">
+        <div className="hidden lg:flex lg:w-[65%] items-center justify-center p-12 relative overflow-hidden"
+             style={{
+               background: 'linear-gradient(135deg, #1a365d 0%, #3182ce 100%)',
+             }}>
+          {/* 背景裝飾元素 */}
+          <div className="absolute inset-0">
+            <div className="absolute inset-0 bg-gradient-to-b from-blue-900/30 to-transparent"></div>
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.1)_0%,transparent_60%)]"></div>
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(59,130,246,0.1)_0%,transparent_40%)]"></div>
+          </div>
+          
+          <div className="relative max-w-2xl z-10 w-full">
+            <div className="text-left max-w-xl mx-auto">
+              {/* Logo - 移除特效 */}
+              <div className="mb-6 text-center">
                 <img 
-                  src="/msp-logo.png" 
+                  src="/metaage-logo1.png" 
                   alt="Logo" 
-                  className="h-24 w-24 mx-auto transition-all duration-300 hover:scale-110" 
+                  className="h-24 w-96 mx-auto" 
                 />
               </div>
-              <h1 className="text-4xl font-bold text-white mb-4">MetaAge MSP</h1>
-              <p className="text-lg text-white/90">
-                專業的 MSP 管理系統，為您的企業提供全方位的 IT 服務支援
+              <p className="text-2xl text-blue-100 mb-16 font-light tracking-wide text-center">
+                專業可靠的 IT 解決方案
               </p>
+              
+              {/* 特色區塊 - 調整寬度和對齊 */}
+              <div className="grid gap-6 mt-16 max-w-lg mx-auto">
+                <div className="flex items-center bg-gradient-to-r from-blue-600/10 to-blue-400/10 p-5 rounded-xl backdrop-blur-sm
+                              border border-white/10">
+                  <div className="flex items-center w-full">
+                    <div className="flex items-center justify-center w-7 h-7">
+                      <FaShieldAlt className="w-6 h-6 text-blue-100" />
+                    </div>
+                    <p className="text-lg font-medium tracking-wide text-blue-50 ml-5 mt-3 leading-none">全方位支持，成就客戶的下一步</p>
+                  </div>
+                </div>
+                <div className="flex items-center bg-gradient-to-r from-blue-600/10 to-blue-400/10 p-5 rounded-xl backdrop-blur-sm
+                              border border-white/10">
+                  <div className="flex items-center w-full">
+                    <div className="flex items-center justify-center w-7 h-7">
+                      <FaHeadset className="w-6 h-6 text-blue-100" />
+                    </div>
+                    <p className="text-lg font-medium tracking-wide text-blue-50 ml-5 mt-3 leading-none">24/7 專業技術支援服務</p>
+                  </div>
+                </div>
+                <div className="flex items-center bg-gradient-to-r from-blue-600/10 to-blue-400/10 p-5 rounded-xl backdrop-blur-sm
+                              border border-white/10">
+                  <div className="flex items-center w-full">
+                    <div className="flex items-center justify-center w-7 h-7">
+                      <FaRocket className="w-6 h-6 text-blue-100" />
+                    </div>
+                    <p className="text-lg font-medium tracking-wide text-blue-50 ml-5 mt-3 leading-none">助您企業數位轉型起飛</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
         {/* 右側登入表單區域 */}
-        <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-background-secondary">
-          <div className="w-full max-w-md">
+        <div className="w-full lg:w-[35%] flex items-center justify-center relative">
+          <div className="absolute inset-0 bg-gray-50/30"></div>
+          <div className="w-full max-w-md mx-auto px-8 py-12 relative z-10">
             <div className="text-center mb-8 lg:hidden">
               <img 
                 src="/msp-logo.png" 
                 alt="Logo" 
                 className="h-16 w-16 mx-auto mb-4" 
               />
-              <h1 className="text-2xl font-bold text-text-primary">MetaAge MSP</h1>
+              <h1 className="text-2xl font-bold text-gray-800">MetaAge MSP</h1>
             </div>
 
-            <div className="bg-background-primary p-8 rounded-2xl shadow-lg border border-border-color/10">
+            <div className="bg-white p-8 rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-gray-100">
               <div className="text-center">
-                <img 
-                  src="/msp-logo.png" 
-                  alt="Logo" 
-                  className="h-16 w-16 mx-auto mb-6" 
-                />
-                <h2 className="text-2xl font-bold text-text-primary">
+                <h2 className="text-2xl font-bold text-gray-800 tracking-tight">
                   歡迎回來
                 </h2>
-                <p className="text-text-secondary mt-2">
+                <p className="text-gray-600 mt-2">
                   請登入您的帳號以繼續
                 </p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6 mt-8">
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-text-primary mb-2">
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                     電子郵件
                   </label>
                   <input
@@ -85,16 +123,17 @@ export default function Login() {
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full p-3 border border-border-color rounded-lg bg-background-primary text-text-primary
-                             focus:ring-2 focus:ring-[#1677ff] focus:border-transparent
-                             placeholder-text-secondary"
+                    className="w-full p-3 border border-gray-200 rounded-xl bg-white text-gray-800
+                             focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                             placeholder-gray-400 transition-all duration-200
+                             hover:border-blue-400"
                     placeholder="請輸入您的電子郵件"
                     required
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-text-primary mb-2">
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                     密碼
                   </label>
                   <input
@@ -102,16 +141,17 @@ export default function Login() {
                     type="password"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full p-3 border border-border-color rounded-lg bg-background-primary text-text-primary
-                             focus:ring-2 focus:ring-[#1677ff] focus:border-transparent
-                             placeholder-text-secondary"
+                    className="w-full p-3 border border-gray-200 rounded-xl bg-white text-gray-800
+                             focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                             placeholder-gray-400 transition-all duration-200
+                             hover:border-blue-400"
                     placeholder="請輸入您的密碼"
                     required
                   />
                 </div>
 
                 {error && (
-                  <div className="text-error-color text-sm p-3 bg-error-color/10 rounded-lg">
+                  <div className="text-red-500 text-sm p-3 bg-red-50 rounded-xl border border-red-100">
                     {error}
                   </div>
                 )}
@@ -119,8 +159,10 @@ export default function Login() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className={`w-full py-3 px-4 bg-[#1677ff] hover:bg-[#1668dc] text-white font-medium rounded-lg
-                    transition-all duration-200 flex items-center justify-center
+                  className={`w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 
+                    text-white font-medium rounded-xl transition-all duration-200 
+                    transform hover:translate-y-[-1px] hover:shadow-lg
+                    flex items-center justify-center
                     ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
                 >
                   {loading ? (
@@ -134,18 +176,16 @@ export default function Login() {
                   ) : '登入'}
                 </button>
 
-                <div className="flex items-center justify-between text-sm">
-                  <Link href="/user-portal" className="text-[#1677ff] hover:text-[#1668dc] transition-colors">
-                    使用者入口
-                  </Link>
-                  <button type="button" className="text-[#1677ff] hover:text-[#1668dc] transition-colors">
+                <div className="text-center">
+                  <button type="button" 
+                          className="text-blue-600 hover:text-blue-700 transition-colors font-medium">
                     忘記密碼？
                   </button>
                 </div>
               </form>
             </div>
 
-            <div className="mt-8 text-center text-sm text-text-secondary">
+            <div className="mt-8 text-center text-sm text-gray-500">
               <p>© 2025 MetaAge MSP. All rights reserved.</p>
             </div>
           </div>

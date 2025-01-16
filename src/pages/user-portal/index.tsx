@@ -382,7 +382,7 @@ const Profile = () => (
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { type: 'bot', content: '您好！我是 MetaAge 智能助理，很高興為您服務。請問有什麼我可以幫您的嗎？', time: '09:00' },
+    { type: 'bot', content: '您好！我是 MetaAge MSP 智能助理，很高興為您服務。請問有什麼我可以幫您的嗎？', time: '09:00' },
     { type: 'bot', content: '您可以詢問我關於：\n1. 系統使用問題\n2. 帳號相關問題\n3. 技術支援需求\n4. 一般諮詢', time: '09:00' }
   ]);
   const chatWindowRef = useRef<HTMLDivElement>(null);
@@ -397,51 +397,53 @@ const Chatbot = () => {
   return (
     <div className="fixed bottom-8 right-8 z-50">
       {isOpen && (
-        <div className="absolute bottom-24 right-0 w-[450px] h-[650px] bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-border-color/10 flex flex-col overflow-hidden animate-slideUp">
+        <div className="absolute bottom-24 right-0 w-[400px] h-[600px] bg-white rounded-3xl shadow-2xl border border-slate-200/50 flex flex-col overflow-hidden animate-slideUp">
           {/* 聊天視窗標題 */}
-          <div className="p-6 bg-gradient-to-r from-accent-color to-info-color text-white">
-            <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 rounded-xl bg-white/10 p-1 flex items-center justify-center">
-                <Image
-                  src="/msp-logo.png"
-                  alt="MSP Logo"
-                  width={40}
-                  height={40}
-                  className="object-contain"
-                />
-              </div>
-              <div>
-                <h3 className="font-medium text-lg">MetaAge 智能助理</h3>
-                <div className="flex items-center space-x-2 text-xs text-white/80">
-                  <span className="flex items-center">
-                    <span className="w-2 h-2 bg-green-400 rounded-full mr-1 animate-pulse"></span>
-                    線上為您服務
-                  </span>
-                  <span>|</span>
-                  <span>回應時間：約 1 分鐘</span>
+          <div className="p-6 bg-gradient-to-r from-blue-600 to-blue-500">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 rounded-xl bg-white/10 p-1.5 flex items-center justify-center">
+                  <Image
+                    src="/msp-logo.png"
+                    alt="MSP Logo"
+                    width={36}
+                    height={36}
+                    className="object-contain"
+                  />
+                </div>
+                <div>
+                  <h3 className="font-medium text-lg text-white">MetaAge 智能助理</h3>
+                  <div className="flex items-center space-x-2 text-xs text-white/90">
+                    <span className="flex items-center">
+                      <span className="w-2 h-2 bg-emerald-400 rounded-full mr-1.5 animate-pulse"></span>
+                      線上為您服務
+                    </span>
+                    <span className="text-white/60">|</span>
+                    <span className="text-white/90">回應時間：約 1 分鐘</span>
+                  </div>
                 </div>
               </div>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white/80 hover:text-white"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
           </div>
 
           {/* 聊天訊息區域 */}
-          <div className="flex-1 p-4 overflow-y-auto bg-gradient-to-b from-background-primary to-background-secondary" ref={chatWindowRef}>
-            <div className="space-y-4">
+          <div className="flex-1 p-6 overflow-y-auto bg-slate-50" ref={chatWindowRef}>
+            <div className="space-y-6">
               {messages.map((message, index) => (
                 <div
                   key={index}
                   className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'} group`}
                 >
                   {message.type === 'bot' && (
-                    <div className="w-8 h-8 rounded-lg bg-accent-color/10 p-1 mr-2 flex-shrink-0">
+                    <div className="w-8 h-8 rounded-lg bg-blue-500/10 p-1 mr-3 flex-shrink-0">
                       <Image
                         src="/msp-logo.png"
                         alt="Bot Avatar"
@@ -454,17 +456,17 @@ const Chatbot = () => {
                   <div
                     className={`max-w-[80%] p-4 ${
                       message.type === 'user'
-                        ? 'bg-accent-color text-white rounded-2xl rounded-br-none shadow-lg'
-                        : 'bg-white/80 text-text-primary rounded-2xl rounded-bl-none shadow-md'
+                        ? 'bg-blue-500 text-white rounded-2xl rounded-br-none shadow-sm'
+                        : 'bg-white text-slate-800 rounded-2xl rounded-bl-none shadow-sm border border-slate-200/50'
                     }`}
                   >
-                    <div className="whitespace-pre-line">{message.content}</div>
-                    <div className={`text-xs mt-1 ${message.type === 'user' ? 'text-white/70' : 'text-text-secondary'}`}>
+                    <div className="whitespace-pre-line text-sm">{message.content}</div>
+                    <div className={`text-xs mt-1.5 ${message.type === 'user' ? 'text-white/80' : 'text-slate-500'}`}>
                       {message.time}
                     </div>
                   </div>
                   {message.type === 'user' && (
-                    <div className="w-8 h-8 rounded-full bg-accent-color/10 ml-2 flex items-center justify-center flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-blue-500/10 ml-3 flex items-center justify-center flex-shrink-0">
                       👤
                     </div>
                   )}
@@ -474,12 +476,12 @@ const Chatbot = () => {
           </div>
 
           {/* 快速回覆選項 */}
-          <div className="p-3 border-t border-border-color/10 bg-background-primary/50 backdrop-blur-sm">
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-accent-color/20 scrollbar-track-transparent">
+          <div className="p-4 border-t border-slate-200/50 bg-white">
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
               {['系統使用問題', '帳號相關', '技術支援', '一般諮詢'].map((option) => (
                 <button
                   key={option}
-                  className="px-4 py-2 bg-background-secondary text-text-secondary rounded-full hover:bg-accent-color/10 hover:text-accent-color transition-colors whitespace-nowrap text-sm"
+                  className="px-4 py-2 bg-slate-100 text-slate-600 rounded-full hover:bg-blue-50 hover:text-blue-500 transition-colors whitespace-nowrap text-sm font-medium"
                 >
                   {option}
                 </button>
@@ -488,23 +490,23 @@ const Chatbot = () => {
           </div>
 
           {/* 輸入區域 */}
-          <div className="p-4 border-t border-border-color/20 bg-background-primary">
-            <div className="flex space-x-2">
+          <div className="p-4 border-t border-slate-200/50 bg-white">
+            <div className="flex space-x-3">
               <div className="flex-1 relative">
                 <input
                   type="text"
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   placeholder="輸入訊息..."
-                  className="w-full px-4 py-3 bg-background-secondary rounded-xl focus:outline-none focus:ring-2 focus:ring-accent-color text-text-primary pr-10"
+                  className="w-full px-4 py-3 bg-slate-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 pr-10 text-sm"
                 />
-                <button className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-text-secondary hover:text-accent-color transition-colors">
+                <button className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-blue-500 transition-colors">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                   </svg>
                 </button>
               </div>
-              <button className="p-3 bg-accent-color text-white rounded-xl hover:bg-accent-color/90 transition-colors shadow-lg hover:shadow-xl">
+              <button className="p-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors shadow-sm hover:shadow-md">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                 </svg>
@@ -517,7 +519,7 @@ const Chatbot = () => {
       {/* 聊天機器人開關按鈕 */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-16 h-16 rounded-full bg-white shadow-lg flex items-center justify-center transition-all duration-300 hover:shadow-xl hover:scale-105 border border-gray-100"
+        className="w-16 h-16 rounded-full bg-white shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-105 border border-slate-200/50"
       >
         <Image
           src="/msp-logo.png"
@@ -628,17 +630,17 @@ export default function UserPortal() {
               {/* 處理中的工單 */}
               <div 
                 onClick={() => setActiveTab('active')}
-                className="bg-background-primary p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer group"
+                className="bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer group hover:scale-[1.02] border border-slate-200/50 hover:border-blue-500/30"
               >
-                <div className="flex items-start space-x-5">
-                  <div className="w-12 h-12 rounded-xl bg-warning-color/10 text-warning-color flex items-center justify-center group-hover:bg-warning-color group-hover:text-white transition-all duration-200">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-start space-x-6">
+                  <div className="w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-white transition-all duration-300 shadow-lg group-hover:shadow-xl">
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-text-primary mb-2 group-hover:text-warning-color transition-colors">處理中的工單</h3>
-                    <p className="text-sm text-text-secondary">追蹤工單處理狀態，與 MetaAge MSP 支援團隊進行溝通</p>
+                    <h3 className="text-lg font-semibold text-slate-800 mb-2 group-hover:text-amber-500 transition-colors">處理中的工單</h3>
+                    <p className="text-sm text-slate-600">追蹤工單處理狀態，與 MetaAge MSP 支援團隊進行溝通</p>
                   </div>
                 </div>
               </div>
@@ -646,17 +648,17 @@ export default function UserPortal() {
               {/* 已關閉的工單 */}
               <div 
                 onClick={() => setActiveTab('closed')}
-                className="bg-background-primary p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer group"
+                className="bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer group hover:scale-[1.02] border border-slate-200/50 hover:border-blue-500/30"
               >
-                <div className="flex items-start space-x-5">
-                  <div className="w-12 h-12 rounded-xl bg-success-color/10 text-success-color flex items-center justify-center group-hover:bg-success-color group-hover:text-white transition-all duration-200">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-start space-x-6">
+                  <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300 shadow-lg group-hover:shadow-xl">
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-text-primary mb-2 group-hover:text-success-color transition-colors">已關閉的工單</h3>
-                    <p className="text-sm text-text-secondary">查看歷史工單記錄，了解過往的服務內容與解決方案</p>
+                    <h3 className="text-lg font-semibold text-slate-800 mb-2 group-hover:text-emerald-500 transition-colors">已關閉的工單</h3>
+                    <p className="text-sm text-slate-600">查看歷史工單記錄，了解過往的服務內容與解決方案</p>
                   </div>
                 </div>
               </div>
@@ -664,17 +666,17 @@ export default function UserPortal() {
               {/* FAQ */}
               <div 
                 onClick={() => setActiveTab('faq')}
-                className="bg-background-primary p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer group"
+                className="bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer group hover:scale-[1.02] border border-slate-200/50 hover:border-blue-500/30"
               >
-                <div className="flex items-start space-x-5">
-                  <div className="w-12 h-12 rounded-xl bg-info-color/10 text-info-color flex items-center justify-center group-hover:bg-info-color group-hover:text-white transition-all duration-200">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-start space-x-6">
+                  <div className="w-16 h-16 rounded-2xl bg-violet-500/10 text-violet-500 flex items-center justify-center group-hover:bg-violet-500 group-hover:text-white transition-all duration-300 shadow-lg group-hover:shadow-xl">
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-text-primary mb-2 group-hover:text-info-color transition-colors">常見問題</h3>
-                    <p className="text-sm text-text-secondary">瀏覽常見問題解答，快速找到您需要的協助</p>
+                    <h3 className="text-lg font-semibold text-slate-800 mb-2 group-hover:text-violet-500 transition-colors">常見問題</h3>
+                    <p className="text-sm text-slate-600">瀏覽常見問題解答，快速找到您需要的協助</p>
                   </div>
                 </div>
               </div>
