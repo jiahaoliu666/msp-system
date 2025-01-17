@@ -27,10 +27,10 @@ export default function Sidebar({ isSidebarOpen }: SidebarProps) {
             { name: '總覽', icon: '📊', badge: '', link: '/' },
             { name: '工單系統', icon: '🎫', badge: '8', link: '/ticket-system' },
             { name: '服務記錄', icon: '📝', badge: '3', link: '/service-record' },
+            { name: '待辦事項', icon: '📝', badge: '2', link: '/todo-list' },
+            { name: '合約管理', icon: '📋', badge: '', link: '/contract-management' },
             { name: '客戶管理', icon: '👥', badge: '12', link: '/customer-management' },
             // { name: '專案追蹤', icon: '📌', badge: '5', link: '/project-tracking' },
-            { name: '合約管理', icon: '📋', badge: '', link: '/contract-management' },
-            { name: '待辦事項', icon: '📝', badge: '2', link: '/todo-list' },
           ].map((item) => (
             <Link
               key={item.name}
