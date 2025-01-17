@@ -296,8 +296,8 @@ const Profile = () => (
             👤
           </div>
           <div>
-            <h2 className="mt-5 text-xl font-bold text-text-primary">提摩超人</h2>
-            <p className="text-text-secondary">teemo@metaage.com</p>
+            <h2 className="mt-5 text-xl font-bold text-text-primary">JiaHao</h2>
+            <p className="text-text-secondary">Liu</p>
             <div className="mt-2 flex items-center space-x-2">
               <span className="px-3 py-1 bg-success-color/15 text-success-color rounded-full text-sm">系統管理員</span>
             </div>
@@ -309,28 +309,37 @@ const Profile = () => (
             <h3 className="text-lg font-semibold text-text-primary">基本資料</h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-text-secondary mb-2">姓名</label>
+                <label className="block text-sm font-medium text-text-secondary mb-2">名</label>
                 <input
                   type="text"
-                  value="提摩超人"
+                  value="JiaHao"
                   className="w-full p-3 border border-border-color rounded-lg bg-background-primary"
                   disabled
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-text-secondary mb-2">電子郵件</label>
+                <label className="block text-sm font-medium text-text-secondary mb-2">性</label>
+                <input
+                  type="text"
+                  value="Liu"
+                  className="w-full p-3 border border-border-color rounded-lg bg-background-primary"
+                  disabled
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-2">組織</label>
+                <input
+                  type="text"
+                  value="METAAGE"
+                  className="w-full p-3 border border-border-color rounded-lg bg-background-primary"
+                  disabled
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-2">Email</label>
                 <input
                   type="email"
                   value="teemo@metaage.com"
-                  className="w-full p-3 border border-border-color rounded-lg bg-background-primary"
-                  disabled
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-2">部門</label>
-                <input
-                  type="text"
-                  value="資訊部"
                   className="w-full p-3 border border-border-color rounded-lg bg-background-primary"
                   disabled
                 />
@@ -339,39 +348,82 @@ const Profile = () => (
           </div>
           
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-text-primary">安全設定</h3>
+            <h3 className="text-lg font-semibold text-text-primary">其他資訊</h3>
             <div className="space-y-4">
-              <button className="w-full p-4 border border-border-color rounded-lg hover:bg-accent-color/5 transition-colors flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <svg className="w-5 h-5 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                  </svg>
-                  <div className="text-left">
-                    <div className="text-text-primary font-medium">修改密碼</div>
-                    <div className="text-sm text-text-secondary">上次更新：2024/03/01</div>
-                  </div>
-                </div>
-                <svg className="w-5 h-5 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-              
-              <button className="w-full p-4 border border-border-color rounded-lg hover:bg-accent-color/5 transition-colors flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <svg className="w-5 h-5 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
-                  <div className="text-left">
-                    <div className="text-text-primary font-medium">雙重認證</div>
-                    <div className="text-sm text-text-secondary">未啟用</div>
-                  </div>
-                </div>
-                <svg className="w-5 h-5 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-2">電話</label>
+                <input
+                  type="tel"
+                  placeholder="請輸入電話號碼"
+                  className="w-full p-3 border border-border-color rounded-lg bg-background-primary"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-2">地理位置</label>
+                <select className="w-full p-3 border border-border-color rounded-lg bg-background-primary">
+                  <option>METAAGE</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-2">職責</label>
+                <input
+                  type="text"
+                  placeholder="請輸入職責"
+                  className="w-full p-3 border border-border-color rounded-lg bg-background-primary"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-2">經理</label>
+                <input
+                  type="text"
+                  placeholder="請輸入經理姓名"
+                  className="w-full p-3 border border-border-color rounded-lg bg-background-primary"
+                />
+              </div>
             </div>
           </div>
+        </div>
+
+        {/* 安全設定區塊 */}
+        <div className="mt-8">
+          <h3 className="text-lg font-semibold text-text-primary mb-4">安全設定</h3>
+          <div className="grid grid-cols-2 gap-6">
+            <button className="w-full p-4 border border-border-color rounded-lg hover:bg-accent-color/5 transition-colors flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <svg className="w-5 h-5 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                </svg>
+                <div className="text-left">
+                  <div className="text-text-primary font-medium">修改密碼</div>
+                  <div className="text-sm text-text-secondary">上次更新：2024/03/01</div>
+                </div>
+              </div>
+              <svg className="w-5 h-5 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+            
+            <button className="w-full p-4 border border-border-color rounded-lg hover:bg-accent-color/5 transition-colors flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <svg className="w-5 h-5 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                <div className="text-left">
+                  <div className="text-text-primary font-medium">雙重認證</div>
+                  <div className="text-sm text-text-secondary">未啟用</div>
+                </div>
+              </div>
+              <svg className="w-5 h-5 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div className="flex justify-end space-x-4 mt-6">
+          <button className="px-6 py-3 bg-accent-color text-white rounded-lg hover:bg-accent-color/90 transition-colors">
+            儲存變更
+          </button>
         </div>
       </div>
     </div>
