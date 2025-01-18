@@ -46,18 +46,18 @@ export default function CheckIn() {
   return (
     <div className="flex-1 bg-background-secondary">
       {/* 頁面標題與麵包屑導航 */}
-      <div className="p-8 pb-6">
-        <div className="flex items-center text-sm text-gray-500">
+      <div className="p-8">
+        <div className="flex items-center text-sm text-gray-500 mb-4">
           <a href="#" className="hover:text-blue-600">首頁</a>
           <svg className="h-4 w-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
-          <span>值班簽到</span>
+          <span className="text-gray-700">值班簽到</span>
         </div>
-        <div className="flex justify-between items-center mt-4">
+        <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">值班簽到</h1>
-            <p className="mt-1 text-sm text-gray-500">管理與記錄值班人員的簽到狀態</p>
+            <h1 className="text-2xl font-bold text-gray-800">值班簽到</h1>
+            <p className="text-gray-600 mt-1">管理與記錄值班人員的簽到狀態</p>
           </div>
         </div>
       </div>

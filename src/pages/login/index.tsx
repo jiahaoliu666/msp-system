@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
-import Link from 'next/link';
 import { FaShieldAlt, FaHeadset, FaRocket, FaEye, FaEyeSlash } from 'react-icons/fa';
 
 export default function Login() {

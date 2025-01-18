@@ -22,7 +22,7 @@ export default function ServiceRecord() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         {[
           { title: '待處理工單', value: '23', color: 'blue', icon: '🔧' },
-          { title: '進行中工單', value: '15', color: 'yellow', icon: '⚡' },
+          { title: '處理中工單', value: '15', color: 'yellow', icon: '⚡' },
           { title: '本月完成', value: '45', color: 'green', icon: '✅' },
           { title: '平均處理時間', value: '4.2h', color: 'purple', icon: '⏱️' },
         ].map((stat) => (

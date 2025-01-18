@@ -52,9 +52,9 @@ export default function Home() {
       {/* 快速統計卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {[
-          { title: '在線客戶', value: '12', icon: '👥', color: 'blue' },
-          { title: '待處理工單', value: '23', icon: '🔧', color: 'yellow' },
+          { title: '待處理工單', value: '23', icon: '🔧', color: 'blue' },
           { title: '待辦事項', value: '2', icon: '📝', color: 'green' },
+          { title: '在線客戶', value: '12', icon: '👥', color: 'yellow' },
           { title: '在線人員', value: '8', icon: '👤', color: 'purple' },
         ].map((stat) => (
           <div 
