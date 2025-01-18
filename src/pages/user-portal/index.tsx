@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
 import Image from 'next/image';
+import NProgress from 'nprogress';
 
 // 頁面標題組件
 const PageTitle = ({ title, description }: { title: string; description?: string }) => (
@@ -609,6 +610,12 @@ export default function UserPortal() {
     { id: 'closed', name: '已關閉的工單', icon: '✅' },
   ];
 
+  const handleSectionChange = (section: string) => {
+    NProgress.start();
+    setActiveTab(section);
+    NProgress.done();
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'create':
@@ -663,7 +670,7 @@ export default function UserPortal() {
             <div className="grid grid-cols-2 gap-8">
               {/* 建立工單 */}
               <div 
-                onClick={() => setActiveTab('create')}
+                onClick={() => handleSectionChange('create')}
                 className="bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer group hover:scale-[1.02] border border-slate-200/50 hover:border-blue-500/30"
               >
                 <div className="flex items-start space-x-6">
@@ -681,7 +688,7 @@ export default function UserPortal() {
 
               {/* 處理中的工單 */}
               <div 
-                onClick={() => setActiveTab('active')}
+                onClick={() => handleSectionChange('active')}
                 className="bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer group hover:scale-[1.02] border border-slate-200/50 hover:border-blue-500/30"
               >
                 <div className="flex items-start space-x-6">
@@ -699,7 +706,7 @@ export default function UserPortal() {
 
               {/* 已關閉的工單 */}
               <div 
-                onClick={() => setActiveTab('closed')}
+                onClick={() => handleSectionChange('closed')}
                 className="bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer group hover:scale-[1.02] border border-slate-200/50 hover:border-blue-500/30"
               >
                 <div className="flex items-start space-x-6">
@@ -717,7 +724,7 @@ export default function UserPortal() {
 
               {/* FAQ */}
               <div 
-                onClick={() => setActiveTab('faq')}
+                onClick={() => handleSectionChange('faq')}
                 className="bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer group hover:scale-[1.02] border border-slate-200/50 hover:border-blue-500/30"
               >
                 <div className="flex items-start space-x-6">
@@ -780,7 +787,7 @@ export default function UserPortal() {
                     </div>
                     <div className="py-1">
                       <button
-                        onClick={() => setActiveTab('profile')}
+                        onClick={() => handleSectionChange('profile')}
                         className="w-full px-4 py-2 text-sm text-slate-200 hover:bg-slate-700 hover:text-blue-300 flex items-center"
                       >
                         <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -817,7 +824,7 @@ export default function UserPortal() {
           <nav className="flex-1 p-6 overflow-y-auto">
             <div className="space-y-3">
               <button
-                onClick={() => setActiveTab('home')}
+                onClick={() => handleSectionChange('home')}
                 className={`w-full flex items-center px-6 py-4 rounded-xl transition-all duration-300
                   ${activeTab === 'home'
                   ? 'bg-gradient-to-r from-blue-500 to-blue-400 text-white font-medium shadow-lg'
@@ -830,7 +837,7 @@ export default function UserPortal() {
               {menuItems.map((item) => (
                 <button
                   key={item.id}
-                  onClick={() => setActiveTab(item.id)}
+                  onClick={() => handleSectionChange(item.id)}
                   className={`w-full flex items-center px-6 py-4 rounded-xl transition-all duration-300
                     ${activeTab === item.id
                     ? 'bg-gradient-to-r from-blue-500 to-blue-400 text-white font-medium shadow-lg'
@@ -842,7 +849,7 @@ export default function UserPortal() {
                 </button>
               ))}
               <button
-                onClick={() => setActiveTab('faq')}
+                onClick={() => handleSectionChange('faq')}
                 className={`w-full flex items-center px-6 py-4 rounded-xl transition-all duration-300
                   ${activeTab === 'faq'
                   ? 'bg-gradient-to-r from-blue-500 to-blue-400 text-white font-medium shadow-lg'

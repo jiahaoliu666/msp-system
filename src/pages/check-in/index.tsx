@@ -46,7 +46,7 @@ export default function CheckIn() {
   return (
     <div className="flex-1 bg-background-secondary">
       {/* 頁面標題與麵包屑導航 */}
-      <div className="p-8">
+      <div className="p-8 pb-6">
         <div className="flex items-center text-sm text-gray-500">
           <a href="#" className="hover:text-blue-600">首頁</a>
           <svg className="h-4 w-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -62,7 +62,49 @@ export default function CheckIn() {
         </div>
       </div>
 
-      <div className="px-8 space-y-4">
+      <div className="px-8 space-y-4 -mt-2">
+        {/* 統計卡片區域 */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-background-primary p-6 rounded-xl shadow-sm">
+            <div className="text-text-secondary text-sm">本月簽到次數</div>
+            <div className="mt-2 flex justify-between items-end">
+              <div className="text-2xl font-bold text-text-primary">15</div>
+              <div className="text-success-color text-sm flex items-center">
+                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                </svg>
+                <span>98%</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-background-primary p-6 rounded-xl shadow-sm">
+            <div className="text-text-secondary text-sm">本月準時率</div>
+            <div className="mt-2 flex justify-between items-end">
+              <div className="text-2xl font-bold text-text-primary">95%</div>
+              <div className="text-success-color text-sm flex items-center">
+                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                </svg>
+                <span>2.5%</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-background-primary p-6 rounded-xl shadow-sm">
+            <div className="text-text-secondary text-sm">本月缺勤次數</div>
+            <div className="mt-2 flex justify-between items-end">
+              <div className="text-2xl font-bold text-text-primary">1</div>
+              <div className="text-error-color text-sm flex items-center">
+                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                </svg>
+                <span>1次</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* 簽到表單區域 */}
         <div className="bg-background-primary rounded-xl shadow-sm p-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

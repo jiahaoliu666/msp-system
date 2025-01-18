@@ -51,6 +51,8 @@ src/pages/check-in/index.tsx
 
 除了值班人員之外不給簽到
 
+系統管理員看得到值班人員的簽到
+
 --------------------------------
 
 src/components/common/CreateTicketForm.tsx 建立工單表單
@@ -159,6 +161,8 @@ src/pages/version-record/index.tsx 更版紀錄
 調整配色，使其更加柔和、舒適且易讀
 --------------------------------
 
+使用一致的loading元件
+
 使用 AWS SDK for JavaScript v3 
 
 當前值班人員 要能顯示當前值班人員 和 值班時間 交接狀態 交接項目
@@ -172,6 +176,8 @@ src/pages/version-record/index.tsx 更版紀錄
 當在user-portal頁面或從首頁登出都要能登出
 
 把左側欄和右側主要內容 各別包在一個容器裡面
+
+主頁的搜尋欄要能搜尋
 --------------------------------
 
 # 安裝並使用最新的 LTS 版本

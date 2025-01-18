@@ -113,4 +113,91 @@
   ::-webkit-scrollbar-thumb {
     @apply bg-border-color rounded-full hover:bg-text-secondary transition-colors duration-200;
   }
+
+  /* Loading Bar Styles */
+  .loading-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: transparent;
+    z-index: 99999;
+  }
+
+  .loading-bar__progress {
+    height: 100%;
+    background: #3b82f6;
+    transition: width 400ms cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
+  }
+
+  /* NProgress 自定義樣式 */
+  #nprogress {
+    pointer-events: none;
+  }
+
+  #nprogress .bar {
+    background: linear-gradient(to right, var(--accent-color), var(--accent-hover));
+    position: fixed;
+    z-index: 100000;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 12px;
+    box-shadow: 
+      0 0 25px var(--accent-color),
+      0 0 15px var(--accent-hover);
+  }
+
+  /* 進度條頭部發光效果 */
+  #nprogress .peg {
+    display: block;
+    position: absolute;
+    right: 0px;
+    width: 300px;
+    height: 100%;
+    opacity: 1.0;
+    transform: rotate(3deg) translate(0px, -4px);
+    background: linear-gradient(to right, 
+      rgba(59, 130, 246, 0), 
+      var(--accent-hover)
+    );
+    box-shadow: 
+      0 0 30px var(--accent-hover),
+      0 0 15px var(--accent-color);
+  }
+
+  /* 添加背景遮罩效果 */
+  #nprogress::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 8px;
+    background: linear-gradient(
+      to bottom,
+      rgba(59, 130, 246, 0.15),
+      transparent
+    );
+    z-index: 99999;
+  }
+
+  /* 添加頂部邊緣發光效果 */
+  #nprogress::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(
+      to bottom,
+      rgba(59, 130, 246, 0.1),
+      transparent
+    );
+    filter: blur(4px);
+    z-index: 99998;
+  }
 }
