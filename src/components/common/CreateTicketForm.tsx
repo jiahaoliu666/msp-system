@@ -152,12 +152,9 @@ const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
           {/* 標題區域 */}
           <div className="flex items-center justify-between mb-6 pb-4 border-b">
             <div className="flex items-center space-x-3">
-              <div className="bg-blue-100 p-2 rounded-lg">
-                <BsTicketDetailed className="w-6 h-6 text-blue-600" />
-              </div>
+              
               <div>
                 <h2 className="text-2xl font-bold text-gray-800">建立新工單</h2>
-                <p className="text-sm text-gray-500 mt-1">請填寫以下資訊以建立新的工單</p>
               </div>
             </div>
             <button

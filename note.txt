@@ -65,6 +65,15 @@ src/components/common/CreateTicketForm.tsx 建立工單表單
 
 --------------------------------
 
+src/components/common/CreateTodoForm.tsx
+
+要能建立對應的待辦編號
+
+二線要能分配給一線
+
+--------------------------------
+
+
 src/pages/index.tsx 首頁 總覽
 
 人員狀態要能篩選部門
