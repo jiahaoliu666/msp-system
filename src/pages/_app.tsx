@@ -6,6 +6,7 @@ import { ThemeProvider as NextThemesProvider } from 'next-themes';
 import { ThemeProvider } from '@/context/ThemeContext';
 import Sidebar from '@/components/common/Sidebar';
 import CreateTicketModal from '@/components/common/CreateTicketForm';
+import CreateTodoForm from '@/components/common/CreateTodoForm';
 import ThemeToggle from '@/components/ThemeToggle';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
@@ -13,6 +14,7 @@ import Head from 'next/head';
 export default function App({ Component, pageProps }: AppProps) {
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
   const [isTicketModalOpen, setIsTicketModalOpen] = React.useState(false);
+  const [isTodoModalOpen, setIsTodoModalOpen] = React.useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false);
   const userMenuRef = React.useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -147,6 +149,10 @@ export default function App({ Component, pageProps }: AppProps) {
                             建立工單
                           </a>
                           <a 
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setIsTodoModalOpen(true);
+                            }}
                             href="#" 
                             className="block px-4 py-2 text-sm text-text-primary hover:bg-hover-color flex items-center"
                           >
@@ -249,11 +255,17 @@ export default function App({ Component, pageProps }: AppProps) {
 
             {/* 工單建立彈窗 */}
             {!isStandalonePage && (
-              <CreateTicketModal
-                isOpen={isTicketModalOpen}
-                onClose={() => setIsTicketModalOpen(false)}
-                onSubmit={handleCreateTicket}
-              />
+              <>
+                <CreateTicketModal
+                  isOpen={isTicketModalOpen}
+                  onClose={() => setIsTicketModalOpen(false)}
+                  onSubmit={handleCreateTicket}
+                />
+                <CreateTodoForm
+                  isOpen={isTodoModalOpen}
+                  onClose={() => setIsTodoModalOpen(false)}
+                />
+              </>
             )}
           </div>
         </ThemeProvider>

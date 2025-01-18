@@ -173,7 +173,7 @@ const CustomerManagement = () => {
                 <th className="px-6 py-3 text-left text-text-primary">聯絡人</th>
                 <th className="px-6 py-3 text-left text-text-primary">合約狀態</th>
                 <th className="px-6 py-3 text-left text-text-primary">服務類型</th>
-                <th className="px-6 py-3 text-left text-text-primary">最近互動</th>
+                <th className="px-6 py-3 text-left text-text-primary">上次登入</th>
                 <th className="px-6 py-3 text-left text-text-primary">負責人</th>
                 <th className="px-6 py-3 text-left text-text-primary">操作</th>
               </tr>

@@ -25,6 +25,7 @@ export default function Sidebar({ isSidebarOpen }: SidebarProps) {
           </div>
           {[
             { name: '總覽', icon: '📊', badge: '', link: '/' },
+            { name: '值班簽到', icon: '⏰', badge: '', link: '/check-in' },
             { name: '工單系統', icon: '🎫', badge: '8', link: '/ticket-system' },
             { name: '服務記錄', icon: '📝', badge: '3', link: '/service-record' },
             { name: '待辦事項', icon: '📝', badge: '2', link: '/todo-list' },

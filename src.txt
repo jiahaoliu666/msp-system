@@ -13,6 +13,8 @@ src/
 │   ├── user-portal 客戶介面
 │   │   └── index.tsx 
 │   │   -----------------------------------------------------------側邊欄頁面
+│   │   ├── check-in 值班簽到表單
+│   │   └── index.tsx 
 │   ├── ticket-system 工單系統
 │   │   └── index.tsx
 │   ├── service-record 服務紀錄
@@ -42,6 +44,7 @@ src/
 ├── components-----------------------------------------------------------組件
 │   ├── common
 │   │   ├── CreateTicketForm.tsx 建立工單表單
+│   │   ├── CreateTodoForm.tsx 建立待辦表單
 │   │   ├── Sidebar.tsx 側邊欄
 ├── services-----------------------------------------------------------服務
 │   ├── 

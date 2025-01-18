@@ -15,14 +15,6 @@ export default function ServiceRecord() {
             <h1 className="text-2xl font-bold text-gray-800">服務記錄</h1>
             <p className="text-gray-600 mt-1">管理您所有客戶服務工單與維護記錄</p>
           </div>
-          <div className="flex space-x-3">
-            <button className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-150 flex items-center">
-              <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              建立工單
-            </button>
-          </div>
         </div>
       </div>
 

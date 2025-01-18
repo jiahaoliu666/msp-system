@@ -52,7 +52,7 @@ export default function Home() {
       {/* 快速統計卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {[
-          { title: '活躍客戶', value: '12', icon: '👥', color: 'blue' },
+          { title: '在線客戶', value: '12', icon: '👥', color: 'blue' },
           { title: '待處理工單', value: '23', icon: '🔧', color: 'yellow' },
           { title: '待辦事項', value: '2', icon: '📝', color: 'green' },
           { title: '在線人員', value: '8', icon: '👤', color: 'purple' },
@@ -305,38 +305,6 @@ export default function Home() {
             <button className="mt-4 w-full py-2 text-sm text-blue-500 hover:text-blue-600 flex items-center justify-center border border-blue-200 rounded-md hover:bg-blue-50">
               查看完整行事曆
             </button>
-          </div>
-
-          {/* 新增：系統更新日誌 */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-gray-800">系統更新日誌</h2>
-              <span className="text-sm text-gray-500">版本 2.1.0</span>
-            </div>
-            <div className="space-y-4">
-              {[
-                { version: '2.1.0', date: '2024/03/15', type: '功能更新', content: '新增批量客戶資料導入功能' },
-                { version: '2.0.9', date: '2024/03/10', type: '問題修復', content: '修復報表匯出異常問題' },
-                { version: '2.0.8', date: '2024/03/05', type: '效能優化', content: '提升系統整體運行效能' },
-              ].map((log, index) => (
-                <div key={index} className="p-3 hover:bg-gray-50 rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm font-medium text-gray-800">v{log.version}</span>
-                      <span className="text-xs text-gray-500">{log.date}</span>
-                    </div>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      log.type === '功能更新' ? 'bg-blue-100 text-blue-600' :
-                      log.type === '問題修復' ? 'bg-red-100 text-red-600' :
-                      'bg-green-100 text-green-600'
-                    }`}>
-                      {log.type}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-600">{log.content}</p>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       </div>

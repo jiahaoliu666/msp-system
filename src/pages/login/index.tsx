@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import { FaShieldAlt, FaHeadset, FaRocket } from 'react-icons/fa';
+import { FaShieldAlt, FaHeadset, FaRocket, FaEye, FaEyeSlash } from 'react-icons/fa';
 
 export default function Login() {
   const router = useRouter();
@@ -11,6 +11,7 @@ export default function Login() {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,18 +128,29 @@ export default function Login() {
                   <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                     密碼
                   </label>
-                  <input
-                    id="password"
-                    type="password"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full p-3 border border-gray-200 rounded-xl bg-white text-gray-800
-                             focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                             placeholder-gray-400 transition-all duration-200
-                             hover:border-blue-400"
-                    placeholder="請輸入您的密碼"
-                    required
-                  />
+                  <div className="relative">
+                    <input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      className="w-full p-3 border border-gray-200 rounded-xl bg-white text-gray-800
+                               focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                               placeholder-gray-400 transition-all duration-200
+                               hover:border-blue-400 pr-12"
+                      placeholder="請輸入您的密碼"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2
+                                text-gray-500 hover:text-gray-700 transition-colors
+                                focus:outline-none"
+                    >
+                      {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+                    </button>
+                  </div>
                 </div>
 
                 {error && (
