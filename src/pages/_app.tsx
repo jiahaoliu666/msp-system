@@ -184,7 +184,7 @@ export default function App({ Component, pageProps }: AppProps) {
                         >
                           <div className="text-right hidden sm:block">
                             <div className="text-sm font-medium text-text-primary">管理員</div>
-                            <div className="text-xs text-text-secondary">admin@msp.com</div>
+                            <div className="text-xs text-text-secondary">admin@metaage.com.tw</div>
                           </div>
                           <div className="h-8 w-8 rounded-full bg-gradient-to-r from-accent-color to-accent-hover 
                                       flex items-center justify-center text-white">

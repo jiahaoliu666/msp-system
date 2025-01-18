@@ -13,7 +13,7 @@ export default function ServiceRecord() {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">服務記錄</h1>
-            <p className="text-gray-600 mt-1">管理您所有客戶服務工單與維護記錄</p>
+            <p className="text-gray-600 mt-1">管理您個人所有客戶服務工單與維護記錄</p>
           </div>
         </div>
       </div>
