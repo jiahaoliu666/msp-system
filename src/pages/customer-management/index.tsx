@@ -52,12 +52,8 @@ const CustomerManagement = () => {
   ];
 
   return (
-    <div className="p-6 bg-background-secondary">
-      {/* <div className="mb-6">
-        <h1 className="text-2xl font-bold text-text-primary">客戶管理</h1>
-        <p className="text-text-secondary">管理所有客戶資料與互動記錄</p>
-      </div> */}
-<div className="mb-4">
+    <div className="p-8 bg-background-secondary">
+      <div className="mb-4">
         <div className="flex items-center text-sm text-gray-500 mb-4">
           <a href="#" className="hover:text-blue-600 transition-colors duration-150">首頁</a>
           <svg className="h-4 w-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

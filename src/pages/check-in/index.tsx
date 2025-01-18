@@ -46,7 +46,7 @@ export default function CheckIn() {
   return (
     <div className="flex-1 bg-background-secondary">
       {/* 頁面標題與麵包屑導航 */}
-      <div className="px-8 py-6">
+      <div className="p-8">
         <div className="flex items-center text-sm text-gray-500">
           <a href="#" className="hover:text-blue-600">首頁</a>
           <svg className="h-4 w-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
