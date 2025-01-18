@@ -10,8 +10,9 @@ src/
 │   ├── 404.tsx 404 錯誤頁面
 │   ├── login 登入頁面
 │   │   └── index.tsx 
-│   ├── user-portal 客戶 portal
+│   ├── user-portal 客戶介面
 │   │   └── index.tsx 
+│   │   -----------------------------------------------------------側邊欄頁面
 │   ├── ticket-system 工單系統
 │   │   └── index.tsx
 │   ├── service-record 服務紀錄

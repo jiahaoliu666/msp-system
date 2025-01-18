@@ -1,48 +1,115 @@
 
+服務
+cognito
+
+--------------------------------
+
+src/pages/login/index.tsx 登入介面
+
+新增cognito服務
+
+--------------------------------
+
+src/pages/user-portal/index.tsx 客戶介面
+
+智能助理 轉接給一線和二線功能、先讓用戶先輸入問題
+
+滿意度調查
+
+minio自動翻譯英文
+
+個人資料頁面有些數據要唯讀狀態
+
+常見問題 faq 爬蟲 
+
+工單可以評論
+
+--------------------------------
+
+src/pages/_app.tsx 頂部欄、側邊欄
+
+--------------------------------
+
+src/components/common/CreateTicketForm.tsx 建立工單表單
+
+要能建立對應的工單編號
+
+產品名稱使用下拉選項 例如AWS akamai等等，工程師可以選擇當前團隊的工程師人員
+
+工單客戶名稱使用下拉式選單，要先建立客戶資料
+
+--------------------------------
+
+src/pages/index.tsx 首頁 總覽
+
+人員狀態要能篩選部門
+
+在線叮咚同仁
+
+戳戳樣式 看誰還在線上 和狀態 顯示上線中 忙線中 等
+
+--------------------------------
+
+src/pages/ticket-system/index.tsx 工單系統
+
+工單可以評論
+
+--------------------------------
+
+src/pages/service-record/index.tsx 服務紀錄
+
+--------------------------------
+
+src/pages/todo-list/index.tsx 待辦事項
+
+--------------------------------
+
+src/pages/handover-item/index.tsx 交接項目
+
+導入Planner
+
+進度條
+
+--------------------------------
+
+src/pages/contract-management/index.tsx 合約管理
+
+客戶和合約綁定 互通？
+
+--------------------------------
+
+src/pages/customer-management/index.tsx 客戶管理
+
+--------------------------------
+
+src/pages/user-management/index.tsx 使用者管理
+
 建立用戶功能
+客戶要有分類標籤
 權限
 系統管理員
 專案經理：系統管理員
 架構師
 維運工程師：建立工單、會議
 管理員:可以取得客戶戶的帳號密碼、建立合約、建立工單、建立使用者、建立權限 (要綁MFA)
+
 --------------------------------
 
-src/pages/login/index.tsx登入介面框新增陰影
-
-src/pages/_app.tsx 頂部欄新增選項 我的資料 且使用當前切換 - 使用者介面的圖示
-
-將src/pages/_app.tsx 頂部欄選項的換 - 使用者介面 改為適當的切換圖示
-
-側邊欄的系統設定下方新增：更版紀錄 和與其他頁面一致佈局風格的src/pages/version-record/index.tsx更版紀錄的頁面
-
-src/components/common/CreateTicketForm.tsx工單表單的更改工單類型輸入框的圖示要符合工單 的圖示 不是時間的圖示，事件類型要使用選項的方式 此事件類型要和src/pages/ticket-system/index.tsx的
-<select className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-  <option value="all">全部工單</option>
-  <option value="event">事件管理</option>
-  <option value="incident">事故管理</option>
-  <option value="problem">問題管理</option>
-  <option value="change">變更管理</option>
-</select>
-一致
-
-快速建立按鈕除了建立工單之外還要新增：建立待辦 的下拉選項
+src/pages/permission-setting/index.tsx 權限設定
 
 
+--------------------------------
 
-產品名稱使用下拉選項，工程師可以選擇當前工程師人員
-
-工單客戶名稱使用下拉式選單，要先建立客戶資料
-要能建立對應的工單編號
+src/pages/operation-record/index.tsx 操作紀錄
 
 
+--------------------------------
 
+src/pages/system-setting/index.tsx 系統設定
 
+--------------------------------
 
-
-
-
-
+src/pages/version-record/index.tsx 更版紀錄
 
 --------------------------------
 幫我建立完整的src/pages/todo-list/index.tsx待辦事項UI頁面 就好 不需要功能 和邏輯  
@@ -51,33 +118,7 @@ src/components/common/CreateTicketForm.tsx工單表單的更改工單類型輸�
 調整配色，使其更加柔和、舒適且易讀
 --------------------------------
 
-
-
-
-導入Planner
-在線叮咚同仁
-進度條
-戳戳樣式 看誰還在線上 和狀態 顯示上線中 忙線中 等
-
-----
-
-客戶分類標籤
-簡潔直觀的操作流程
-響應式設計適應不同裝置
-
-人員狀態要能篩選部門
-
-工單可以評論
-
-----
-
-前端用戶 faq 爬蟲 
-
-智能助理 轉接給一線和二線功能、先讓用戶先輸入問題
-
-滿意度調查
-
-minio自動翻譯英文
+使用 AWS SDK for JavaScript v3 
 
 ----
 
@@ -85,12 +126,9 @@ minio自動翻譯英文
 nvm install --lts
 nvm use --lts
 
-
 ------
 
-user-portal
-
-個人資料頁面有些數據要唯讀狀態
 
 
-------
+
+
