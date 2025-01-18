@@ -53,11 +53,35 @@ const CustomerManagement = () => {
 
   return (
     <div className="p-6 bg-background-secondary">
-      <div className="mb-6">
+      {/* <div className="mb-6">
         <h1 className="text-2xl font-bold text-text-primary">客戶管理</h1>
         <p className="text-text-secondary">管理所有客戶資料與互動記錄</p>
+      </div> */}
+<div className="mb-4">
+        <div className="flex items-center text-sm text-gray-500 mb-4">
+          <a href="#" className="hover:text-blue-600 transition-colors duration-150">首頁</a>
+          <svg className="h-4 w-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+          <span className="text-gray-700">客戶管理</span>
+        </div>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800 flex items-center">
+            客戶管理
+            </h1>
+            <p className="text-gray-600 mt-1">管理所有客戶資料與互動記錄</p>
+          </div>
+          <div className="flex space-x-3">
+            <button className="group px-4 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200 flex items-center shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+              <svg className="h-5 w-5 mr-2 transition-transform duration-200 group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              新增客戶
+            </button>
+          </div>
+        </div>
       </div>
-
       {/* 搜尋和篩選區 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="relative">

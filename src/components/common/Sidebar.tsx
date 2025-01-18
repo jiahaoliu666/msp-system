@@ -28,9 +28,9 @@ export default function Sidebar({ isSidebarOpen }: SidebarProps) {
             { name: '工單系統', icon: '🎫', badge: '8', link: '/ticket-system' },
             { name: '服務記錄', icon: '📝', badge: '3', link: '/service-record' },
             { name: '待辦事項', icon: '📝', badge: '2', link: '/todo-list' },
+            { name: '交接項目', icon: '🔄', badge: '5', link: '/handover-item' },
             { name: '合約管理', icon: '📋', badge: '', link: '/contract-management' },
             { name: '客戶管理', icon: '👥', badge: '12', link: '/customer-management' },
-            // { name: '專案追蹤', icon: '📌', badge: '5', link: '/project-tracking' },
           ].map((item) => (
             <Link
               key={item.name}
@@ -81,6 +81,18 @@ export default function Sidebar({ isSidebarOpen }: SidebarProps) {
               <span className={`font-medium ${!isSidebarOpen && 'hidden'}`}>{item.name}</span>
             </Link>
           ))}
+
+          <Link
+            href="/version-record"
+            className={`flex items-center px-4 py-3 rounded-lg cursor-pointer transition-all duration-200 group ${
+              isCurrentPath('/version-record')
+                ? 'bg-accent-color/10 text-accent-color'
+                : 'text-text-primary hover:bg-accent-color/10 hover:text-accent-color'
+            }`}
+          >
+            <span className="mr-3 text-xl">📋</span>
+            <span className={`font-medium ${!isSidebarOpen && 'hidden'}`}>更版紀錄</span>
+          </Link>
         </div>
       </nav>
     </div>

@@ -308,20 +308,20 @@ const Profile = () => (
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-text-primary">基本資料</h3>
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-2">名</label>
+            <div>
+                <label className="block text-sm font-medium text-text-secondary mb-2">姓</label>
                 <input
                   type="text"
-                  value="JiaHao"
+                  value="Liu"
                   className="w-full p-3 border border-border-color rounded-lg bg-background-primary"
                   disabled
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-text-secondary mb-2">性</label>
+                <label className="block text-sm font-medium text-text-secondary mb-2">名字</label>
                 <input
                   type="text"
-                  value="Liu"
+                  value="JiaHao"
                   className="w-full p-3 border border-border-color rounded-lg bg-background-primary"
                   disabled
                 />

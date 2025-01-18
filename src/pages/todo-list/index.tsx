@@ -13,7 +13,6 @@ export default function TodoList() {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-gray-800 flex items-center">
-              <span className="mr-3 text-3xl">📝</span>
               待辦事項
             </h1>
             <p className="text-gray-600 mt-1">管理您的個人和團隊待辦事項</p>

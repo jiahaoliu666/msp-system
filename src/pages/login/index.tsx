@@ -94,7 +94,7 @@ export default function Login() {
         <div className="w-full lg:w-[35%] flex items-center justify-center relative">
           <div className="absolute inset-0 bg-gray-50/30"></div>
           <div className="w-full max-w-md mx-auto px-8 py-12 relative z-10">
-            <div className="bg-white p-8 rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-gray-100">
+            <div className="bg-white p-8 rounded-3xl shadow-lg border border-gray-100">
               <div className="text-center">
                 <h2 className="text-2xl font-bold text-gray-800 tracking-tight">
                   歡迎回來

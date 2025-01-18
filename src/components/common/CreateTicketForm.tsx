@@ -330,7 +330,9 @@ const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
                       <option value="request">服務請求</option>
                       <option value="other">其他</option>
                     </select>
-                    <FaRegClock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                    <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
                     <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
                       <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -398,16 +400,24 @@ const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
                     事件類型 <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <input
-                      type="text"
+                    <select
                       id="eventType"
                       required
                       value={formData.eventType}
                       onChange={(e) => setFormData({ ...formData, eventType: e.target.value })}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 pl-10"
-                      placeholder="請輸入事件類型"
-                    />
+                    >
+                      <option value="event">事件管理</option>
+                      <option value="incident">事故管理</option>
+                      <option value="problem">問題管理</option>
+                      <option value="change">變更管理</option>
+                    </select>
                     <MdDescription className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                    <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
                   </div>
                   {showErrors && !formData.eventType && (
                     <p className="mt-2 text-sm text-red-500 flex items-center">
