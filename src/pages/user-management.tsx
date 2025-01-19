@@ -137,11 +137,7 @@ export default function UserManagement() {
               onChange={(e) => setNewUserData({ ...newUserData, department: e.target.value })}
               className="w-full p-2 border rounded-lg"
             >
-              <option value="">選擇部門</option>
-              <option value="it">資訊部</option>
-              <option value="sales">業務部</option>
-              <option value="support">技術支援部</option>
-              <option value="finance">財務部</option>
+              <option value="it">ST630</option>
             </select>
           </div>
           <div>
@@ -153,10 +149,9 @@ export default function UserManagement() {
               onChange={(e) => setNewUserData({ ...newUserData, role: e.target.value })}
               className="w-full p-2 border rounded-lg"
             >
-              <option value="">選擇角色</option>
+              <option value="user">維運工程師</option>
+              <option value="manager">架構師</option>
               <option value="admin">系統管理員</option>
-              <option value="manager">部門主管</option>
-              <option value="user">一般使用者</option>
             </select>
           </div>
         </div>
