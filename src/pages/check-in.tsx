@@ -1,22 +1,32 @@
 import { useState, useEffect } from 'react';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 export default function CheckIn() {
   const mockUser = {
     name: '王小明',
     department: 'IT部門',
-    position: '系統工程師'
+    position: '系統工程師',
+    shiftStart: '上午 09:00',
+    shiftEnd: '下午 06:00'
   };
 
   const mockHistory = [
-    { date: '2024-01-20', checkIn: '上午09:00:00', checkOut: '下午06:00:00', name: '王小明', status: 'completed' },
-    { date: '2024-01-19', checkIn: '上午08:45:00', checkOut: '下午05:30:00', name: '王小明', status: 'completed' },
-    { date: '2024-01-18', checkIn: '上午09:15:00', checkOut: '下午06:15:00', name: '王小明', status: 'completed' },
-    { date: '2024-01-17', checkIn: '-', checkOut: '-', name: '王小明', status: 'missed' },
-    { date: '2024-01-16', checkIn: '上午09:30:00', checkOut: '下午06:30:00', name: '王小明', status: 'completed' },
+    { date: '2024-01-20', checkIn: '上午09:00:00', checkOut: '下午06:00:00', name: '王小明', status: 'completed', tasks: { keys: true, phone: true } },
+    { date: '2024-01-19', checkIn: '上午08:45:00', checkOut: '下午05:30:00', name: '王小明', status: 'completed', tasks: { keys: true, phone: true } },
+    { date: '2024-01-18', checkIn: '上午09:15:00', checkOut: '下午06:15:00', name: '王小明', status: 'completed', tasks: { keys: false, phone: true } },
+    { date: '2024-01-17', checkIn: '-', checkOut: '-', name: '王小明', status: 'missed', tasks: { keys: false, phone: false } },
+    { date: '2024-01-16', checkIn: '上午09:30:00', checkOut: '下午06:30:00', name: '王小明', status: 'completed', tasks: { keys: true, phone: true } },
   ];
 
   const [isCheckedOut, setIsCheckedOut] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [startDate, setStartDate] = useState(new Date());
+  const [endDate, setEndDate] = useState(new Date());
+  const [dailyTasks, setDailyTasks] = useState({
+    keys: false,
+    phone: false
+  });
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -41,6 +51,13 @@ export default function CheckIn() {
     const minutes = date.getMinutes().toString().padStart(2, '0');
     const seconds = date.getSeconds().toString().padStart(2, '0');
     return `${period}${formattedHours.toString().padStart(2, '0')}:${minutes}:${seconds}`;
+  };
+
+  const handleTaskToggle = (task: 'keys' | 'phone') => {
+    setDailyTasks(prev => ({
+      ...prev,
+      [task]: !prev[task]
+    }));
   };
 
   return (
@@ -112,7 +129,7 @@ export default function CheckIn() {
             <div className="space-y-4">
               <div>
                 <h3 className="text-lg font-semibold text-text-primary mb-4">值班人員資訊</h3>
-                <div className="space-y-2">
+                <div className="space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-accent-color/10 text-accent-color 
                                 flex items-center justify-center font-bold text-lg">
@@ -121,6 +138,34 @@ export default function CheckIn() {
                     <div>
                       <div className="font-medium text-text-primary">{mockUser.name}</div>
                       <div className="text-sm text-text-secondary">{mockUser.department}</div>
+                      <div className="text-sm text-text-secondary">
+                        值班時間: {mockUser.shiftStart} - {mockUser.shiftEnd}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* 每日任務檢查 */}
+                  <div className="mt-4">
+                    <h4 className="text-sm font-semibold text-text-primary mb-2">每日任務檢查</h4>
+                    <div className="space-y-2">
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={dailyTasks.keys}
+                          onChange={() => handleTaskToggle('keys')}
+                          className="form-checkbox h-4 w-4 text-accent-color"
+                        />
+                        <span className="text-sm text-text-secondary">鑰匙檢查</span>
+                      </label>
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={dailyTasks.phone}
+                          onChange={() => handleTaskToggle('phone')}
+                          className="form-checkbox h-4 w-4 text-accent-color"
+                        />
+                        <span className="text-sm text-text-secondary">話機測試</span>
+                      </label>
                     </div>
                   </div>
                 </div>
@@ -146,23 +191,38 @@ export default function CheckIn() {
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-text-primary mb-4">簽到狀態</h3>
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">
-                    簽到時間
-                  </label>
-                  <input
-                    type="time"
-                    className="w-full p-2 border border-border-color rounded-lg 
-                             bg-background-primary text-text-primary
-                             focus:ring-2 focus:ring-accent-color focus:border-transparent"
-                    defaultValue="09:00"
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-text-secondary mb-1">
+                      簽到時間
+                    </label>
+                    <input
+                      type="time"
+                      className="w-full p-2 border border-border-color rounded-lg 
+                               bg-background-primary text-text-primary
+                               focus:ring-2 focus:ring-accent-color focus:border-transparent"
+                      defaultValue="09:00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-text-secondary mb-1">
+                      簽退時間
+                    </label>
+                    <input
+                      type="time"
+                      className="w-full p-2 border border-border-color rounded-lg 
+                               bg-background-primary text-text-primary
+                               focus:ring-2 focus:ring-accent-color focus:border-transparent"
+                      defaultValue="18:00"
+                      disabled={!isCheckedOut}
+                    />
+                  </div>
                 </div>
                 <button
                   onClick={() => setIsCheckedOut(!isCheckedOut)}
                   className={`w-full py-3 px-4 rounded-lg font-medium transition-all
                     ${isCheckedOut 
-                      ? 'bg-background-secondary text-text-primary hover:bg-hover-color'
+                      ? 'bg-success-color text-white hover:bg-success-color/90'
                       : 'bg-accent-color text-white hover:bg-accent-hover'}`}
                 >
                   {isCheckedOut ? '已簽退' : '簽退'}
@@ -172,10 +232,33 @@ export default function CheckIn() {
           </div>
         </div>
 
+        {/* 日期篩選區域 */}
+        <div className="bg-background-primary rounded-xl shadow-sm p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-text-primary">紀錄查詢</h3>
+            <div className="flex space-x-4">
+              <div>
+                <label className="block text-sm text-text-secondary mb-1">開始日期</label>
+                <DatePicker
+                  selected={startDate}
+                  className="p-2 border border-border-color rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-text-secondary mb-1">結束日期</label>
+                <DatePicker
+                  selected={endDate}
+                  className="p-2 border border-border-color rounded-lg"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* 歷史記錄區域 */}
         <div className="bg-background-primary rounded-xl shadow-sm overflow-hidden">
           <div className="p-6 border-b border-border-color">
-            <h2 className="text-lg font-semibold text-text-primary">本週簽到記錄</h2>
+            <h2 className="text-lg font-semibold text-text-primary">值班紀錄</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-border-color">
@@ -196,6 +279,7 @@ export default function CheckIn() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
                     值班人員
                   </th>
+                 
                 </tr>
               </thead>
               <tbody className="bg-background-primary divide-y divide-border-color">
@@ -215,7 +299,7 @@ export default function CheckIn() {
                         ${record.status === 'completed' 
                           ? 'bg-success-color/10 text-success-color' 
                           : 'bg-error-color/10 text-error-color'}`}>
-                        {record.status === 'completed' ? '已簽到' : '未簽到'}
+                        {record.status === 'completed' ? '已簽退' : '未簽到'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -226,6 +310,9 @@ export default function CheckIn() {
                         </div>
                         <span className="ml-2 text-sm text-text-primary">{record.name}</span>
                       </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                     
                     </td>
                   </tr>
                 ))}

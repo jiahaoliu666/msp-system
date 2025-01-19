@@ -228,37 +228,7 @@ export default function UserManagement() {
                 <button className="px-3 py-1 border rounded-md text-gray-600 hover:bg-gray-50">下一頁</button>
               </div>
             </div>
-                  {/* 最近活動記錄 */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">最近活動記錄</h2>
-          <div className="space-y-4">
-            {[
-              { user: '王小明', action: '登入系統', time: '2024/03/15 14:30', status: '成功' },
-              { user: '李小華', action: '修改權限', time: '2024/03/15 13:45', status: '成功' },
-              { user: '張小美', action: '重設密碼', time: '2024/03/15 11:20', status: '失敗' },
-            ].map((activity, index) => (
-              <div key={index} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                <div className="flex items-center space-x-4">
-                  <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                    <span className="text-gray-600 font-medium">{activity.user.slice(0, 1)}</span>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{activity.user}</p>
-                    <p className="text-sm text-gray-500">{activity.action}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-gray-500">{activity.time}</p>
-                  <span className={`inline-flex px-2 py-1 text-xs rounded-full ${
-                    activity.status === '成功' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                  }`}>
-                    {activity.status}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+
           </div>
         </div>
       </div>

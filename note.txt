@@ -4,6 +4,7 @@ cognito
 dynamodb
 s3
 amplify
+ses
 
 --------------------------------
 
@@ -176,6 +177,8 @@ src/pages/user-management/index.tsx 使用者管理
 新增使用者時要有是否要綁MFA的選項
 
 使用中、待驗證、已停用、已刪除
+
+msp人員 早晚夜班
 
 --------------------------------
 
