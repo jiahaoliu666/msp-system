@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { FaShieldAlt, FaHeadset, FaRocket, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { useAuth } from '@/context/AuthContext';
 
 export default function Login() {
   const router = useRouter();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -18,10 +20,24 @@ export default function Login() {
     setError('');
     
     try {
-      // TODO: 實作登入邏輯
-      router.push('/');
-    } catch (err) {
-      setError('登入失敗，請檢查您的帳號密碼');
+      await login({
+        email: formData.email,
+        password: formData.password,
+      });
+      // 登入成功後的重定向由 AuthContext 處理
+    } catch (err: any) {
+      let errorMessage = '登入失敗，請檢查您的帳號密碼';
+      
+      // 處理 Cognito 特定錯誤
+      if (err.name === 'NotAuthorizedException') {
+        errorMessage = '帳號或密碼錯誤';
+      } else if (err.name === 'UserNotConfirmedException') {
+        errorMessage = '帳號尚未驗證';
+      } else if (err.name === 'UserNotFoundException') {
+        errorMessage = '找不到此帳號';
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

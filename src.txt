@@ -2,47 +2,49 @@ src/
 ├── types-----------------------------------------------------------類型
 │   ├──
 ├── context-----------------------------------------------------------上下文
-│   ├── AuthContext.tsx 認證上下文
-│   ├── LoadingContext.tsx 加載狀態上下文 (使用NProgress)
-│   ├── ThemeContext.tsx 主題切換上下文
+│   ├── AuthContext.tsx # 認證上下文
+│   ├── LoadingContext.tsx # 加載狀態上下文 (使用NProgress)
+│   ├── ThemeContext.tsx # 主題切換上下文
 ├── pages-----------------------------------------------------------頁面
-│   ├── _app.tsx 應用程序入口
-│   ├── index.tsx 首頁
-│   ├── _document.tsx 自定義文檔
-│   ├── 404.tsx 404 錯誤頁面
-│   ├── login 登入頁面
+│   ├── _app.tsx # 應用程序入口
+│   ├── index.tsx # 首頁
+│   ├── _document.tsx # 自定義文檔
+│   ├── 404.tsx # 404 錯誤頁面
+│   ├── login # 登入頁面
 │   │   └── index.tsx 
-│   ├── user-portal 客戶介面
+│   ├── user-portal # 客戶介面
 │   │   └── index.tsx 
 │   │--------------------------------------------------------------側邊欄頁面
-│   ├── check-in.tsx 值班簽到
-│   ├── ticket-system.tsx 工單系統
-│   ├── service-record.tsx 服務紀錄
-│   ├── todo-list.tsx 待辦事項
-│   ├── handover-item.tsx 交接項目
-│   ├── storage.tsx 檔案儲存
-│   ├── meeting.tsx 會議排程
-│   ├── user-management.tsx 使用者管理
-│   ├── customer-management.tsx 客戶管理
-│   ├── contract-management.tsx 合約管理
-│   ├── permission-setting.tsx 權限設定
-│   ├── operation-record.tsx 操作紀錄
-│   ├── system-settings.tsx 系統設定
-│   ├── version-record.tsx 更版紀錄
+│   ├── check-in.tsx # 值班簽到
+│   ├── ticket-system.tsx # 工單系統
+│   ├── service-record.tsx # 服務紀錄
+│   ├── todo-list.tsx # 待辦事項
+│   ├── handover-item.tsx # 交接項目
+│   ├── storage.tsx # 檔案儲存
+│   ├── meeting.tsx # 會議排程
+│   ├── user-management.tsx # 使用者管理
+│   ├── customer-management.tsx # 客戶管理
+│   ├── contract-management.tsx # 合約管理
+│   ├── permission-setting.tsx # 權限設定
+│   ├── operation-record.tsx # 操作紀錄
+│   ├── system-settings.tsx # 系統設定
+│   ├── version-record.tsx # 更版紀錄
 ├── hooks-----------------------------------------------------------Hooks
 │   ├── 
 ├── api-----------------------------------------------------------API
-│   ├── 
+│   ├── users
+│   │   └── index.ts # 使用者管理 API (獲取用戶列表、創建新用戶)
 ├── components-----------------------------------------------------------組件
 │   ├── common
-│   │   ├── CreateTicketForm.tsx 建立工單表單
-│   │   ├── CreateTodoForm.tsx 建立待辦表單
-│   │   ├── Sidebar.tsx 側邊欄
-│   │   ├── ThemeToggle.tsx 主題切換按鈕
-├── services-----------------------------------------------------------服務
-│   ├── 
+│   │   ├── CreateTicketForm.tsx # 建立工單表單
+│   │   ├── CreateTodoForm.tsx # 建立待辦表單
+│   │   ├── Sidebar.tsx # 側邊欄
+│   │   ├── ThemeToggle.tsx # 主題切換按鈕
+├── services-----------------------------------------------------------AWS服務
+│   ├── auth
+│   │   ├── cognito.ts # 認證服務
 ├── config-----------------------------------------------------------配置
-│   ├── 
+│   ├── aws-config.ts # AWS 配置
 ├── utils-----------------------------------------------------------工具
 │   ├── 
 ├── libs-----------------------------------------------------------庫
