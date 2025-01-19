@@ -13,8 +13,6 @@ MFA功能
 
 登入後要能記錄登入時間
 
-建立404頁面，隱藏src/pages/_app.tsx的頂部、側邊欄
-
 --------------------------------
 
 src/pages/user-portal/index.tsx 客戶介面

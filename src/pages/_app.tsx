@@ -54,7 +54,9 @@ const AppContent: React.FC<AppProps> = ({ Component, pageProps }) => {
   }, [router]);
 
   // 判斷是否為不需要顯示導航的頁面
-  const isStandalonePage = router.pathname === '/user-portal' || router.pathname === '/login';
+  const isStandalonePage = router.pathname === '/user-portal' || 
+                          router.pathname === '/login' || 
+                          router.pathname === '/404';
 
   // 點擊外部關閉用戶選單
   React.useEffect(() => {
