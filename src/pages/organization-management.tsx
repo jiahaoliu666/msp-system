@@ -51,54 +51,6 @@ export default function OrganizationManagement() {
         ))}
       </div>
 
-      {/* 組織架構圖 */}
-      <div className="bg-background-primary rounded-xl shadow-sm mb-6">
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-text-primary">組織架構示例</h2>
-            <div className="flex items-center space-x-2">
-              <button className="px-3 py-1 text-sm text-accent-color hover:text-accent-hover transition-colors">
-                展開全部
-              </button>
-              <button className="px-3 py-1 text-sm text-text-secondary hover:text-text-primary transition-colors">
-                收合全部
-              </button>
-            </div>
-          </div>
-          <div className="border border-border-color rounded-lg p-6">
-            <div className="flex justify-center">
-              <div className="text-center">
-                <div className="inline-block p-4 bg-accent-color/10 rounded-lg mb-4">
-                  <span className="text-accent-color font-medium">台灣微軟股份有限公司</span>
-                </div>
-                <div className="grid grid-cols-3 gap-8 mt-8">
-                  {[
-                    { name: '雲端服務部', members: 25, users: ['系統管理員', '一般使用者'] },
-                    { name: '資訊安全部', members: 18, users: ['安全管理員', '一般使用者'] },
-                    { name: '業務部', members: 30, users: ['業務主管', '一般使用者'] },
-                  ].map((org, index) => (
-                    <div key={index} className="relative">
-                      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-8 bg-border-color"></div>
-                      <div className="p-4 bg-background-secondary rounded-lg border border-border-color">
-                        <h3 className="font-medium text-text-primary">{org.name}</h3>
-                        <p className="text-sm text-text-secondary mt-1">{org.members} 人</p>
-                        <div className="mt-3 space-y-2">
-                          {org.users.map((user, userIndex) => (
-                            <div key={userIndex} className="text-sm px-2 py-1 bg-background-primary rounded">
-                              {user}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* 組織管理列表 */}
       <div className="bg-background-primary rounded-xl shadow-sm">
         <div className="p-6">

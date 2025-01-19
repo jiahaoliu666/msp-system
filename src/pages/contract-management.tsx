@@ -5,7 +5,6 @@ import CreateContractForm from '../components/UserManagement/CreateContractForm'
 
 interface Contract {
   contractName: string;
-  organization: string;
   contractType: string;
   description: string;
   startDate: string;
@@ -13,16 +12,24 @@ interface Contract {
   contractStatus: string;
   createdAt: string;
   updatedAt: string;
+  productName: string;
 }
 
 export default function ContractManagement() {
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
+  const [productList, setProductList] = useState<string[]>([]);
 
   useEffect(() => {
     fetchContracts();
   }, []);
+
+  useEffect(() => {
+    // 從合約中提取唯一的產品名稱列表
+    const uniqueProducts = Array.from(new Set(contracts.map(contract => contract.productName))).filter(Boolean);
+    setProductList(uniqueProducts);
+  }, [contracts]);
 
   const fetchContracts = async () => {
     try {
@@ -131,8 +138,8 @@ export default function ContractManagement() {
                 <div key={index} className="border rounded-lg p-4 bg-yellow-50">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="font-medium text-gray-900">{contract.organization}</h3>
-                      <p className="text-sm text-gray-600">{contract.contractType}</p>
+                      <h3 className="font-medium text-gray-900">合約名稱：{contract.contractName}</h3>
+                      <p className="text-sm text-gray-600">合約類型：{contract.contractType}</p>
                       <p className="text-sm text-gray-500 mt-1">到期日：{contract.endDate}</p>
                     </div>
                     <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">
@@ -190,6 +197,16 @@ export default function ContractManagement() {
               <option value="maintenance-24">7*24 雲託管</option>
             </select>
           </div>
+          <div>
+            <select className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="">產品名稱</option>
+              {productList.map((product, index) => (
+                <option key={index} value={product}>
+                  {product}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
   
@@ -219,49 +236,53 @@ export default function ContractManagement() {
               <table className="min-w-full">
                 <thead>
                   <tr className="bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    <th className="px-6 py-3">合約資訊</th>
-                    <th className="px-6 py-3">客戶名稱</th>
-                    <th className="px-6 py-3">合約類型</th>
-                    <th className="px-6 py-3">狀態</th>
-                    <th className="px-6 py-3">到期日</th>
-                    <th className="px-6 py-3">操作</th>
+                    <th className="px-6 py-3 text-center">項次</th>
+                    <th className="px-6 py-3 text-center">合約名稱</th>
+                    <th className="px-6 py-3 text-center">合約類型</th>
+                    <th className="px-6 py-3 text-center">產品名稱</th>
+                    <th className="px-6 py-3 text-center">狀態</th>
+                    <th className="px-6 py-3 text-center">到期日</th>
+                    <th className="px-6 py-3 text-center">操作</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {contracts.map((contract, index) => (
                     <tr key={index} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 text-sm text-gray-500 text-center">
+                        {index + 1}
+                      </td>
                       <td className="px-6 py-4">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0 h-10 w-10 rounded bg-blue-100 flex items-center justify-center">
-                            <span className="text-blue-600 font-medium">CT</span>
-                          </div>
-                          <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">{contract.contractName}</div>
-                            <div className="text-xs text-gray-500">{contract.description}</div>
-                          </div>
+                        <div className="text-sm font-medium text-gray-900 text-center">
+                          {contract.contractName}
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-gray-900">{contract.organization}</div>
+                        <div className="text-sm text-gray-900 text-center">
+                          {contract.contractType}
+                        </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-gray-900">{contract.contractType}</div>
+                        <div className="text-sm text-gray-900 text-center">
+                          {contract.productName}
+                        </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          contract.contractStatus === '生效中' ? 'bg-green-100 text-green-800' :
-                          contract.contractStatus === '待續約' ? 'bg-yellow-100 text-yellow-800' :
-                          contract.contractStatus === '待簽署' ? 'bg-blue-100 text-blue-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {contract.contractStatus}
-                        </span>
+                        <div className="flex justify-center">
+                          <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            contract.contractStatus === '生效中' ? 'bg-green-100 text-green-800' :
+                            contract.contractStatus === '待續約' ? 'bg-yellow-100 text-yellow-800' :
+                            contract.contractStatus === '待簽署' ? 'bg-blue-100 text-blue-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {contract.contractStatus}
+                          </span>
+                        </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-500">
+                      <td className="px-6 py-4 text-sm text-gray-500 text-center">
                         {contract.endDate}
                       </td>
                       <td className="px-6 py-4 text-sm font-medium">
-                        <div className="flex space-x-2">
+                        <div className="flex justify-center space-x-2">
                           <button className="text-blue-600 hover:text-blue-900">查看</button>
                           <button className="text-gray-600 hover:text-gray-900">編輯</button>
                           <button className="text-red-600 hover:text-red-900">刪除</button>
@@ -312,13 +333,15 @@ export default function ContractManagement() {
       </div>
 
       {/* 新增合約表單 */}
-      <CreateContractForm 
-        isOpen={isCreateFormOpen}
-        onClose={() => {
-          setIsCreateFormOpen(false);
-          fetchContracts(); // 關閉表單後重新獲取合約列表
-        }}
-      />
+      {isCreateFormOpen && (
+        <CreateContractForm 
+          isOpen={isCreateFormOpen}
+          onClose={() => {
+            setIsCreateFormOpen(false);
+            fetchContracts(); // 關閉表單後重新獲取合約列表
+          }}
+        />
+      )}
     </div>
   );
 }
