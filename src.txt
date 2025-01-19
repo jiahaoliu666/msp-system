@@ -22,6 +22,7 @@ src/
 │   ├── handover-item.tsx # 交接項目
 │   ├── storage.tsx # 檔案儲存
 │   ├── meeting.tsx # 會議排程
+│   ├── organization-management.tsx # 組織管理
 │   ├── user-management.tsx # 使用者管理
 │   ├── customer-management.tsx # 客戶管理
 │   ├── contract-management.tsx # 合約管理
@@ -40,6 +41,11 @@ src/
 │   │   ├── CreateTodoForm.tsx # 建立待辦表單
 │   │   ├── Sidebar.tsx # 側邊欄
 │   │   ├── ThemeToggle.tsx # 主題切換按鈕
+│   ├── UserManagement # 用戶管理
+│   │   ├── CreateContractForm.tsx # 建立合約表單
+│   │   ├── CreateOrganizationForm.tsx # 建立組織表單
+│   │   ├── CreateUserForm.tsx # 建立使用者表單
+│   │   ├── CreateCustomerForm.tsx # 建立客戶表單
 ├── services-----------------------------------------------------------AWS服務
 │   ├── auth
 │   │   ├── cognito.ts # 認證服務

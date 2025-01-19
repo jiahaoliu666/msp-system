@@ -62,9 +62,10 @@ export default function Sidebar({ isSidebarOpen }: SidebarProps) {
             用戶管理
           </div>
           {[
+            { name: '合約管理', icon: '📋', link: '/contract-management' },
+            { name: '組織管理', icon: '🏢', link: '/organization-management' },
             { name: '使用者管理', icon: '👤', link: '/user-management' },
             { name: '客戶管理', icon: '👥', link: '/customer-management' },
-            { name: '合約管理', icon: '📋', link: '/contract-management' },
           ].map((item) => (
             <Link
               key={item.name}

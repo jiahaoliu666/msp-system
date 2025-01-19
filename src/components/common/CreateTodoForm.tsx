@@ -170,7 +170,7 @@ export default function CreateTodoForm({ isOpen, onClose }: CreateTodoFormProps)
                 className={`w-full p-2 border rounded-lg bg-background-primary text-text-primary
                          focus:ring-2 focus:ring-accent-color focus:border-transparent
                          ${errors.title ? 'border-error-color' : 'border-border-color'}`}
-                placeholder="請輸入待辦事項標題"
+                placeholder="請輸入標題"
               />
               {errors.title && <p className="mt-1 text-sm text-error-color">{errors.title}</p>}
             </div>
