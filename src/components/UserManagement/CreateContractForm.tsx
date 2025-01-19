@@ -9,10 +9,9 @@ interface CreateContractFormProps {
 }
 
 const contractTypeOptions = [
-  { value: 'maintenance', label: '維護合約' },
-  { value: 'service', label: '服務合約' },
-  { value: 'license', label: '授權合約' },
-  { value: 'consulting', label: '顧問合約' }
+  { value: 'service', label: '帳務託管' },
+  { value: 'maintenance-8', label: '5*8 雲顧問' },
+  { value: 'maintenance-24', label: '7*24 雲託管' }
 ];
 
 export default function CreateContractForm({ isOpen, onClose }: CreateContractFormProps) {

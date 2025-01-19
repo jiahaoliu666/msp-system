@@ -185,10 +185,9 @@ export default function ContractManagement() {
           <div>
             <select className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
               <option value="">合約類型</option>
-              <option value="maintenance">維護合約</option>
-              <option value="service">服務合約</option>
-              <option value="license">授權合約</option>
-              <option value="consulting">顧問合約</option>
+              <option value="service">帳務託管</option>
+              <option value="maintenance-8">5*8 雲顧問</option>
+              <option value="maintenance-24">7*24 雲託管</option>
             </select>
           </div>
         </div>

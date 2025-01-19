@@ -193,6 +193,12 @@ organization-management.tsx # 組織管理
 組織建立
 
 建立組織前要先有合約
+
+合約建立
+
+合約建立前要先有組織
+
+
 --------------------------------
 
 src/pages/user-management/index.tsx 使用者管理
