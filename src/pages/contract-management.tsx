@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, ScanCommand, DeleteCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, ScanCommand, DeleteCommand, PutCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
 import CreateContractForm from '../components/UserManagement/CreateContractForm';
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
@@ -124,11 +124,103 @@ export default function ContractManagement() {
     totalAmount: contracts.length // 這裡應該根據實際合約金額計算，目前僅顯示合約數量
   };
 
+  // 更新合約狀態的函數
+  const updateContractStatus = async (contractId: string, newStatus: string, originalContract?: Contract) => {
+    try {
+      const client = new DynamoDBClient({
+        region: process.env.NEXT_PUBLIC_AWS_REGION,
+        credentials: {
+          accessKeyId: process.env.NEXT_PUBLIC_AWS_ACCESS_KEY_ID || '',
+          secretAccessKey: process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY || ''
+        }
+      });
+
+      const docClient = DynamoDBDocumentClient.from(client);
+
+      // 先獲取當前合約資料
+      const { Item } = await docClient.send(
+        new GetCommand({
+          TableName: "MetaAge-MSP-Contract-Management",
+          Key: {
+            contractId: contractId
+          }
+        })
+      );
+
+      if (Item) {
+        const now = new Date();
+        const utc8Time = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+        const formattedTime = utc8Time.toISOString().replace('Z', '+08:00');
+
+        // 更新合約狀態
+        await docClient.send(
+          new PutCommand({
+            TableName: "MetaAge-MSP-Contract-Management",
+            Item: {
+              ...Item,
+              contractStatus: newStatus,
+              updatedAt: formattedTime
+            }
+          })
+        );
+
+        // 重新獲取合約列表
+        await fetchContracts();
+
+        // 更新後再顯示合約詳細資訊
+        const updatedContract = {
+          ...Item,
+          contractStatus: newStatus,
+          updatedAt: formattedTime
+        } as Contract;
+        
+        setSelectedContract(updatedContract);
+        setIsViewModalOpen(true);
+      }
+    } catch (error) {
+      console.error('Error updating contract status:', error);
+      // 如果更新失敗，仍然顯示原始合約資訊
+      if (originalContract) {
+        setSelectedContract(originalContract);
+        setIsViewModalOpen(true);
+      }
+    }
+  };
+
   // 處理查看合約
   const handleView = (contract: Contract) => {
-    setSelectedContract(contract);
-    setIsViewModalOpen(true);
+    // 檢查合約是否已到期
+    const now = new Date();
+    const endDate = new Date(contract.endDate);
+    
+    // 如果合約已到期且狀態不是"已到期"，則更新狀態
+    if (now >= endDate && contract.contractStatus !== '已到期') {
+      updateContractStatus(contract.contractId, '已到期', contract);
+    } else {
+      setSelectedContract(contract);
+      setIsViewModalOpen(true);
+    }
   };
+
+  // 在 useEffect 中添加定期檢查合約狀態的邏輯
+  useEffect(() => {
+    const checkExpiredContracts = async () => {
+      const now = new Date();
+      const expiredContracts = contracts.filter(contract => 
+        new Date(contract.endDate) <= now && contract.contractStatus !== '已到期'
+      );
+
+      // 更新所有已到期的合約
+      for (const contract of expiredContracts) {
+        await updateContractStatus(contract.contractId, '已到期');
+      }
+    };
+
+    // 初次載入和每次合約列表更新時檢查
+    if (contracts.length > 0) {
+      checkExpiredContracts();
+    }
+  }, [contracts]);
 
   // 處理編輯合約
   const handleEdit = (contract: Contract) => {
@@ -603,61 +695,156 @@ export default function ContractManagement() {
               leaveTo="opacity-0 scale-95"
             >
               <div className="inline-block w-full max-w-2xl p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
-                <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900 mb-4">
-                  合約詳細資訊
-                </Dialog.Title>
+                <div className="flex justify-between items-center mb-6 border-b pb-4">
+                  <Dialog.Title as="h3" className="text-xl font-semibold text-gray-900 flex items-center">
+                    <svg className="w-6 h-6 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    合約詳細資訊
+                  </Dialog.Title>
+                  <span className={`px-3 py-1.5 text-sm font-semibold rounded-full ${
+                    selectedContract?.contractStatus === '生效中' ? 'bg-green-100 text-green-800 border border-green-200' :
+                    selectedContract?.contractStatus === '待續約' ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' :
+                    selectedContract?.contractStatus === '待簽署' ? 'bg-blue-100 text-blue-800 border border-blue-200' :
+                    selectedContract?.contractStatus === '已到期' ? 'bg-red-100 text-red-800 border border-red-200' :
+                    'bg-gray-100 text-gray-800 border border-gray-200'
+                  }`}>
+                    {selectedContract?.contractStatus}
+                  </span>
+                </div>
                 {selectedContract && (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">合約編號</label>
-                        <p className="mt-1 text-sm text-gray-900">{selectedContract.contractId}</p>
+                  <div className="space-y-6 max-h-[calc(100vh-300px)] overflow-y-auto pr-2">
+                    <div className="bg-white rounded-lg border border-gray-200 divide-y divide-gray-100">
+                      {/* 基本資訊區塊 */}
+                      <div className="p-6">
+                        <h4 className="text-sm font-medium text-gray-700 mb-4 flex items-center">
+                          <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          基本資訊
+                        </h4>
+                        <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-500 mb-1">合約編號</label>
+                            <p className="text-sm text-gray-900">{selectedContract.contractId}</p>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-500 mb-1">合約名稱</label>
+                            <p className="text-sm text-gray-900">{selectedContract.contractName}</p>
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">合約名稱</label>
-                        <p className="mt-1 text-sm text-gray-900">{selectedContract.contractName}</p>
+
+                      {/* 服務內容區塊 */}
+                      <div className="p-6">
+                        <h4 className="text-sm font-medium text-gray-700 mb-4 flex items-center">
+                          <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                          </svg>
+                          服務內容
+                        </h4>
+                        <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-500 mb-1">合約類型</label>
+                            <p className="text-sm text-gray-900">{selectedContract.contractType}</p>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-500 mb-1">產品名稱</label>
+                            <p className="text-sm text-gray-900">{selectedContract.productName}</p>
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">合約類型</label>
-                        <p className="mt-1 text-sm text-gray-900">{selectedContract.contractType}</p>
+
+                      {/* 時間資訊區塊 */}
+                      <div className="p-6">
+                        <h4 className="text-sm font-medium text-gray-700 mb-4 flex items-center">
+                          <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          時間資訊
+                        </h4>
+                        <div className="space-y-6">
+                          <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+                            <div>
+                              <label className="block text-xs font-medium text-gray-500 mb-1">開始日期</label>
+                              <p className="text-sm text-gray-900">{selectedContract.startDate}</p>
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-500 mb-1">到期日期</label>
+                              <p className="text-sm text-gray-900">{selectedContract.endDate}</p>
+                            </div>
+                          </div>
+                          <div>
+                            <div className="mb-2">
+                              <div className="h-2 bg-gray-50 rounded-full overflow-hidden">
+                                {(() => {
+                                  const start = new Date(selectedContract.startDate).getTime();
+                                  const end = new Date(selectedContract.endDate).getTime();
+                                  const now = new Date().getTime();
+                                  const progress = ((now - start) / (end - start)) * 100;
+                                  return (
+                                    <div 
+                                      className={`h-full transition-all duration-500 ${
+                                        progress > 80 ? 'bg-red-500' : 
+                                        progress > 50 ? 'bg-yellow-500' : 
+                                        'bg-green-500'
+                                      }`}
+                                      style={{ width: `${Math.min(Math.max(progress, 0), 100)}%` }}
+                                    />
+                                  );
+                                })()}
+                              </div>
+                            </div>
+                            <div className="flex justify-between items-center text-xs">
+                              <span className="text-gray-500">合約進度</span>
+                              {(() => {
+                                const end = new Date(selectedContract.endDate);
+                                const now = new Date();
+                                const daysLeft = Math.ceil((end.getTime() - now.getTime()) / (1000 * 3600 * 24));
+                                return (
+                                  <span className={`font-medium ${
+                                    daysLeft <= 30 ? 'text-red-600' :
+                                    daysLeft <= 90 ? 'text-yellow-600' :
+                                    'text-green-600'
+                                  }`}>
+                                    {daysLeft > 0 ? `距離到期還有 ${daysLeft} 天` : '已到期'}
+                                  </span>
+                                );
+                              })()}
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">產品名稱</label>
-                        <p className="mt-1 text-sm text-gray-900">{selectedContract.productName}</p>
+
+                      {/* 合約描述區塊 */}
+                      <div className="p-6">
+                        <h4 className="text-sm font-medium text-gray-700 mb-4 flex items-center">
+                          <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          合約描述
+                        </h4>
+                        <div>
+                          <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+                            {selectedContract.description || '無描述'}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">開始日期</label>
-                        <p className="mt-1 text-sm text-gray-900">{selectedContract.startDate}</p>
+
+                      {/* 系統資訊 */}
+                      <div className="p-6 bg-gray-50">
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span>建立時間：{selectedContract.createdAt.split('T').join(' ').split('.')[0]}</span>
+                          <span>最後更新：{selectedContract.updatedAt.split('T').join(' ').split('.')[0]}</span>
+                        </div>
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">到期日期</label>
-                        <p className="mt-1 text-sm text-gray-900">{selectedContract.endDate}</p>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">狀態</label>
-                        <p className="mt-1">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            selectedContract.contractStatus === '生效中' ? 'bg-green-100 text-green-800' :
-                            selectedContract.contractStatus === '待續約' ? 'bg-yellow-100 text-yellow-800' :
-                            selectedContract.contractStatus === '待簽署' ? 'bg-blue-100 text-blue-800' :
-                            selectedContract.contractStatus === '已到期' ? 'bg-red-100 text-red-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>
-                            {selectedContract.contractStatus}
-                          </span>
-                        </p>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">描述</label>
-                      <p className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{selectedContract.description}</p>
                     </div>
                   </div>
                 )}
                 <div className="mt-6">
                   <button
                     type="button"
-                    className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-transparent rounded-md hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-500"
+                    className="w-full px-4 py-2 text-sm font-medium text-white bg-blue-500 border border-transparent rounded-md hover:bg-blue-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 transition-colors"
                     onClick={() => setIsViewModalOpen(false)}
                   >
                     關閉
