@@ -8,7 +8,7 @@ import { LoadingProvider } from '@/context/LoadingContext';
 import Sidebar from '@/components/common/Sidebar';
 import CreateTicketModal from '@/components/common/CreateTicketForm';
 import CreateTodoForm from '@/components/common/CreateTodoForm';
-import ThemeToggle from '@/components/ThemeToggle';
+import ThemeToggle from '@/components/common/ThemeToggle';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import NProgress from 'nprogress';
