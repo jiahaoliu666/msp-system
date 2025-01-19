@@ -138,7 +138,7 @@ src/pages/handover-item/index.tsx 交接項目
 src/pages/storage.tsx 檔案儲存
 
 綁s3 資料夾
- 
+
 --------------------------------
 
 src/pages/contract-management/index.tsx 合約管理
@@ -238,8 +238,7 @@ src/pages/version-record/index.tsx 更版紀錄
 --------------------------------
 
 # 安裝並使用最新的 LTS 版本
-nvm install --lts
-nvm use --lts
+nvm install --lts && nvm use --lts
 
 --------------------------------
 
