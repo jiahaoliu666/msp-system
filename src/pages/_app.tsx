@@ -133,7 +133,7 @@ const AppContent: React.FC<AppProps> = ({ Component, pageProps }) => {
                 <div className="relative flex-1 max-w-2xl hidden md:block">
                   <input
                     type="text"
-                    placeholder="搜尋客戶、工單或專案..."
+                    placeholder="搜尋客戶、工單或待辦..."
                     className="w-full pl-10 pr-4 py-2 border border-border-color rounded-lg text-sm 
                                    bg-background-primary text-text-primary placeholder-text-secondary
                                    focus:outline-none focus:ring-2 focus:ring-accent-color focus:border-transparent 
