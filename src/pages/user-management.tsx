@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { CognitoService } from '@/services/auth/cognito';
 import { UserType, AttributeType } from '@aws-sdk/client-cognito-identity-provider';
+import Link from 'next/link';
 
 interface User {
   username: string;
@@ -178,7 +179,7 @@ export default function UserManagement() {
       {/* 頁面標題與操作按鈕 */}
       <div className="mb-4">
         <div className="flex items-center text-sm text-gray-500 mb-4">
-          <a href="#" className="hover:text-blue-600">首頁</a>
+          <Link href="/" className="hover:text-blue-600">首頁</Link>
           <svg className="h-4 w-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>

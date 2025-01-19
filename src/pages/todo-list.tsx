@@ -1,10 +1,12 @@
+import Link from 'next/link';
+
 export default function TodoList() {
     return (
       <div className="flex-1 bg-gray-100 p-8">
         {/* 頁面標題與操作按鈕 */}
         <div className="mb-4">
           <div className="flex items-center text-sm text-gray-500 mb-4">
-            <a href="#" className="hover:text-blue-600 transition-colors duration-150">首頁</a>
+            <Link href="/" className="hover:text-blue-600 transition-colors duration-150">首頁</Link>
             <svg className="h-4 w-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>

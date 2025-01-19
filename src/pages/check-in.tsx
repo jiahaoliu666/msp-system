@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import Link from 'next/link';
 
 export default function CheckIn() {
   const mockUser = {
@@ -65,7 +66,7 @@ export default function CheckIn() {
       {/* 頁面標題與麵包屑導航 */}
       <div className="p-8">
         <div className="flex items-center text-sm text-gray-500 mb-4">
-          <a href="#" className="hover:text-blue-600">首頁</a>
+          <Link href="/" className="hover:text-blue-600">首頁</Link>
           <svg className="h-4 w-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>

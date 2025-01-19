@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, ScanCommand, DeleteCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 import CreateContractForm from '../components/UserManagement/CreateContractForm';
@@ -37,6 +38,7 @@ export default function ContractManagement() {
   const [editFormData, setEditFormData] = useState<Contract | null>(null);
 
   const [sortByTime, setSortByTime] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     fetchContracts();
@@ -47,6 +49,18 @@ export default function ContractManagement() {
     const uniqueProducts = Array.from(new Set(contracts.map(contract => contract.productName))).filter(Boolean);
     setProductList(uniqueProducts);
   }, [contracts]);
+
+  // 到期提醒區塊排序
+  const sortedExpiringContracts = contracts
+    .filter(contract => {
+      const daysUntilExpire = Math.ceil((new Date(contract.endDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
+      return daysUntilExpire <= 30 && daysUntilExpire > 0 && contract.contractStatus === '生效中';
+    })
+    .sort((a, b) => {
+      const daysLeftA = Math.ceil((new Date(a.endDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
+      const daysLeftB = Math.ceil((new Date(b.endDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
+      return daysLeftA - daysLeftB;
+    });
 
   // 篩選合約列表
   const filteredContracts = contracts
@@ -65,6 +79,10 @@ export default function ContractManagement() {
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       } else if (sortByTime === 'oldest') {
         return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      } else if (sortByTime === 'expiring-soon') {
+        return new Date(a.endDate).getTime() - new Date(b.endDate).getTime();
+      } else if (sortByTime === 'expiring-late') {
+        return new Date(b.endDate).getTime() - new Date(a.endDate).getTime();
       }
       return 0;
     });
@@ -202,7 +220,7 @@ export default function ContractManagement() {
       {/* 頁面標題與操作按鈕 */}
       <div className="mb-4">
         <div className="flex items-center text-sm text-gray-500 mb-4">
-          <a href="#" className="hover:text-blue-600">首頁</a>
+          <Link href="/" className="hover:text-blue-600">首頁</Link>
           <svg className="h-4 w-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
@@ -254,34 +272,76 @@ export default function ContractManagement() {
   
       {/* 到期提醒區塊 */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">合約30天內到期提醒</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold text-gray-800">有效合約30天內到期提醒</h2>
+          <div className="flex items-center space-x-2 text-sm text-gray-600">
+            <span>共 {sortedExpiringContracts.length} 份合約即將到期</span>
+            {sortedExpiringContracts.length > 3 && (
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className={`px-3 py-1 rounded-md ${
+                    currentPage === 1
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-white text-gray-600 hover:bg-gray-50 border'
+                  }`}
+                >
+                  上一頁
+                </button>
+                {Array.from({ length: Math.ceil(sortedExpiringContracts.length / 3) }, (_, i) => i + 1).map(page => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-3 py-1 rounded-md ${
+                      currentPage === page
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-white text-gray-600 hover:bg-gray-50 border'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setCurrentPage(prev => prev + 1)}
+                  disabled={currentPage === Math.ceil(sortedExpiringContracts.length / 3)}
+                  className={`px-3 py-1 rounded-md ${
+                    currentPage === Math.ceil(sortedExpiringContracts.length / 3)
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-white text-gray-600 hover:bg-gray-50 border'
+                  }`}
+                >
+                  下一頁
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {contracts
-            .filter(contract => {
-              const daysUntilExpire = Math.ceil((new Date(contract.endDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
-              return daysUntilExpire <= 30 && daysUntilExpire > 0;
-            })
+          {sortedExpiringContracts
+            .slice((currentPage - 1) * 3, currentPage * 3)
             .map((contract, index) => {
               const daysLeft = Math.ceil((new Date(contract.endDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
               return (
-                <div key={index} className="border rounded-lg p-4 bg-yellow-50">
+                <div key={index} className={`border rounded-lg p-4 ${daysLeft <= 7 ? 'bg-red-50' : 'bg-yellow-50'}`}>
                   <div className="flex justify-between items-start">
                     <div>
                       <h3 className="font-medium text-gray-900">{contract.contractName}</h3>
                       <p className="text-sm text-gray-600">{contract.contractType}</p>
                       <p className="text-sm text-gray-500 mt-1">到期日：{contract.endDate}</p>
                     </div>
-                    <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">
+                    <span className={`px-2 py-1 rounded-full text-xs ${
+                      daysLeft <= 7 
+                      ? 'bg-red-100 text-red-800' 
+                      : 'bg-yellow-100 text-yellow-800'
+                    }`}>
                       剩餘 {daysLeft} 天
                     </span>
                   </div>
                 </div>
               );
             })}
-          {!loading && contracts.filter(contract => {
-            const daysUntilExpire = Math.ceil((new Date(contract.endDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
-            return daysUntilExpire <= 30 && daysUntilExpire > 0;
-          }).length === 0 && (
+          {!loading && sortedExpiringContracts.length === 0 && (
             <div className="col-span-3 text-center py-8">
               <div className="text-gray-500">
                 <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -357,8 +417,11 @@ export default function ContractManagement() {
               onChange={(e) => setSortByTime(e.target.value)}
               className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="oldest">最舊到最新</option>
-              <option value="newest">最新到最舊</option>
+              <option value="">排序方式</option>
+              <option value="oldest">建立時間 - 最舊到最新</option>
+              <option value="newest">建立時間 - 最新到最舊</option>
+              <option value="expiring-soon">到期日期 - 最近到最遠</option>
+              <option value="expiring-late">到期日期 - 最遠到最近</option>
             </select>
           </div>
         </div>
