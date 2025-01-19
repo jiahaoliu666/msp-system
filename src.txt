@@ -20,6 +20,7 @@ src/
 │   ├── service-record.tsx 服務紀錄
 │   ├── todo-list.tsx 待辦事項
 │   ├── handover-item.tsx 交接項目
+│   ├── storage.tsx 檔案儲存
 │   ├── meeting.tsx 會議排程
 │   ├── user-management.tsx 使用者管理
 │   ├── customer-management.tsx 客戶管理

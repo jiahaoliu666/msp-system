@@ -135,6 +135,12 @@ src/pages/handover-item/index.tsx 交接項目
 
 --------------------------------
 
+src/pages/storage.tsx 檔案儲存
+
+綁s3 資料夾
+ 
+--------------------------------
+
 src/pages/contract-management/index.tsx 合約管理
 
 客戶和合約綁定 互通？
