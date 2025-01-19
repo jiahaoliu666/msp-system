@@ -30,6 +30,7 @@ export default function Sidebar({ isSidebarOpen }: SidebarProps) {
             { name: '服務記錄', icon: '📝', badge: '3', link: '/service-record' },
             { name: '待辦事項', icon: '📝', badge: '2', link: '/todo-list' },
             { name: '交接項目', icon: '🔄', badge: '5', link: '/handover-item' },
+            { name: '會議排程', icon: '📅', badge: '', link: '/meeting' },
           ].map((item) => (
             <Link
               key={item.name}
@@ -43,9 +44,7 @@ export default function Sidebar({ isSidebarOpen }: SidebarProps) {
               title={!isSidebarOpen ? item.name : ''}
             >
               <div className="flex items-center">
-                <span className={`text-xl ${isSidebarOpen ? 'mr-3' : 'mx-auto'}`}>
-                  {item.icon}
-                </span>
+                <span className={`text-xl ${isSidebarOpen ? 'mr-3' : 'mx-auto'}`}>{item.icon}</span>
                 <span className={`font-medium ${!isSidebarOpen && 'hidden'}`}>{item.name}</span>
               </div>
               {item.badge && isSidebarOpen && (
