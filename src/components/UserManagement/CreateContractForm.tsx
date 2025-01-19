@@ -1,20 +1,22 @@
 import { Dialog, Transition } from '@headlessui/react';
-import { Fragment, useState } from 'react';
+import { Fragment, useState, useEffect } from 'react';
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
 
 interface CreateContractFormProps {
   isOpen: boolean;
   onClose: () => void;
+  existingProducts: string[];
 }
 
 const contractTypeOptions = [
   { value: 'service', label: '帳務託管' },
   { value: 'maintenance-8', label: '5*8 雲顧問' },
-  { value: 'maintenance-24', label: '7*24 雲託管' }
+  { value: 'maintenance-24', label: '7*24 雲託管' },
+  { value: 'internal', label: '內部合約' }
 ];
 
-export default function CreateContractForm({ isOpen, onClose }: CreateContractFormProps) {
+export default function CreateContractForm({ isOpen, onClose, existingProducts }: CreateContractFormProps) {
   const [formData, setFormData] = useState({
     contractName: '',
     contractType: '',
@@ -28,6 +30,29 @@ export default function CreateContractForm({ isOpen, onClose }: CreateContractFo
   const [productList, setProductList] = useState<string[]>([]);
   const [showProductInput, setShowProductInput] = useState(false);
   const [showProductManage, setShowProductManage] = useState(false);
+  const [existingProductSet, setExistingProductSet] = useState<Set<string>>(new Set());
+
+  // 生成合約編號
+  const generateContractId = () => {
+    const date = new Date();
+    // 轉換為台北時區 (UTC+8)
+    const taipeiDate = new Date(date.getTime() + (8 * 60 * 60 * 1000));
+    
+    const year = taipeiDate.getUTCFullYear();
+    const month = String(taipeiDate.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(taipeiDate.getUTCDate()).padStart(2, '0');
+    const hours = String(taipeiDate.getUTCHours()).padStart(2, '0');
+    const minutes = String(taipeiDate.getUTCMinutes()).padStart(2, '0');
+    const seconds = String(taipeiDate.getUTCSeconds()).padStart(2, '0');
+
+    return `MSP-${year}${month}${day}${hours}${minutes}${seconds}`;
+  };
+
+  // 初始化產品列表和已存在產品集合
+  useEffect(() => {
+    setProductList(existingProducts);
+    setExistingProductSet(new Set(existingProducts));
+  }, [existingProducts]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -46,6 +71,10 @@ export default function CreateContractForm({ isOpen, onClose }: CreateContractFo
   };
 
   const handleRemoveProduct = (productToRemove: string) => {
+    // 如果是已存在的產品，不允許刪除
+    if (existingProductSet.has(productToRemove)) {
+      return;
+    }
     setProductList(prev => prev.filter(product => product !== productToRemove));
     if (formData.productName === productToRemove) {
       setFormData(prev => ({ ...prev, productName: '' }));
@@ -71,9 +100,13 @@ export default function CreateContractForm({ isOpen, onClose }: CreateContractFo
       const utc8Time = new Date(now.getTime() + (8 * 60 * 60 * 1000));
       const formattedTime = utc8Time.toISOString().replace('Z', '+08:00');
 
+      // 生成合約編號
+      const contractId = generateContractId();
+
       const params = {
         TableName: "MetaAge-MSP-Contract-Management",
         Item: {
+          contractId: contractId,
           contractName: formData.contractName,
           contractType: formData.contractType,
           productName: formData.productName,
@@ -288,18 +321,29 @@ export default function CreateContractForm({ isOpen, onClose }: CreateContractFo
                           productList.map((product, index) => (
                             <div
                               key={index}
-                              className="flex items-center justify-between p-2 bg-white rounded-lg border border-gray-200"
+                              className={`flex items-center justify-between p-2 bg-white rounded-lg border ${
+                                existingProductSet.has(product) ? 'border-blue-200 bg-blue-50' : 'border-gray-200'
+                              }`}
                             >
-                              <span className="text-sm text-gray-700">{product}</span>
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveProduct(product)}
-                                className="text-red-400 hover:text-red-600 p-1"
-                              >
-                                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                              </button>
+                              <div className="flex items-center space-x-2">
+                                <span className="text-sm text-gray-700">{product}</span>
+                                {existingProductSet.has(product) && (
+                                  <span className="px-2 py-0.5 text-xs bg-blue-100 text-blue-600 rounded-full">
+                                    使用中
+                                  </span>
+                                )}
+                              </div>
+                              {!existingProductSet.has(product) && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveProduct(product)}
+                                  className="text-red-400 hover:text-red-600 p-1"
+                                >
+                                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  </svg>
+                                </button>
+                              )}
                             </div>
                           ))
                         ) : (
@@ -316,7 +360,7 @@ export default function CreateContractForm({ isOpen, onClose }: CreateContractFo
               {/* 描述 */}
               <div className="group">
                 <label className="block text-sm font-medium text-gray-700 mb-2 group-hover:text-blue-600 transition-colors">
-                  描述
+                  描述 <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   name="description"
@@ -325,6 +369,7 @@ export default function CreateContractForm({ isOpen, onClose }: CreateContractFo
                   rows={4}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 resize-none"
                   placeholder="請輸入合約描述"
+                  required
                 />
               </div>
 

@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, ScanCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, ScanCommand, DeleteCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 import CreateContractForm from '../components/UserManagement/CreateContractForm';
+import { Dialog, Transition } from '@headlessui/react';
+import { Fragment } from 'react';
 
 interface Contract {
+  contractId: string;
   contractName: string;
   contractType: string;
   description: string;
@@ -20,6 +23,20 @@ export default function ContractManagement() {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
   const [productList, setProductList] = useState<string[]>([]);
+  
+  // 搜尋和篩選狀態
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
+  const [productFilter, setProductFilter] = useState('');
+
+  // 合約操作狀態
+  const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editFormData, setEditFormData] = useState<Contract | null>(null);
+
+  const [sortByTime, setSortByTime] = useState('');
 
   useEffect(() => {
     fetchContracts();
@@ -30,6 +47,27 @@ export default function ContractManagement() {
     const uniqueProducts = Array.from(new Set(contracts.map(contract => contract.productName))).filter(Boolean);
     setProductList(uniqueProducts);
   }, [contracts]);
+
+  // 篩選合約列表
+  const filteredContracts = contracts
+    .filter(contract => {
+      const matchesSearch = contract.contractName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         contract.contractId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         contract.description.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = !statusFilter || contract.contractStatus === statusFilter;
+      const matchesType = !typeFilter || contract.contractType === typeFilter;
+      const matchesProduct = !productFilter || contract.productName === productFilter;
+
+      return matchesSearch && matchesStatus && matchesType && matchesProduct;
+    })
+    .sort((a, b) => {
+      if (sortByTime === 'newest') {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      } else if (sortByTime === 'oldest') {
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      }
+      return 0;
+    });
 
   const fetchContracts = async () => {
     try {
@@ -68,6 +106,97 @@ export default function ContractManagement() {
     totalAmount: contracts.length // 這裡應該根據實際合約金額計算，目前僅顯示合約數量
   };
 
+  // 處理查看合約
+  const handleView = (contract: Contract) => {
+    setSelectedContract(contract);
+    setIsViewModalOpen(true);
+  };
+
+  // 處理編輯合約
+  const handleEdit = (contract: Contract) => {
+    setSelectedContract(contract);
+    setEditFormData(contract);
+    setIsEditModalOpen(true);
+  };
+
+  // 處理編輯表單變更
+  const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setEditFormData(prev => prev ? {
+      ...prev,
+      [name]: value
+    } : null);
+  };
+
+  // 處理更新合約
+  const handleUpdateContract = async () => {
+    if (!editFormData) return;
+
+    try {
+      const client = new DynamoDBClient({
+        region: process.env.NEXT_PUBLIC_AWS_REGION,
+        credentials: {
+          accessKeyId: process.env.NEXT_PUBLIC_AWS_ACCESS_KEY_ID || '',
+          secretAccessKey: process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY || ''
+        }
+      });
+
+      const docClient = DynamoDBDocumentClient.from(client);
+
+      const now = new Date();
+      const utc8Time = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+      const formattedTime = utc8Time.toISOString().replace('Z', '+08:00');
+
+      await docClient.send(
+        new PutCommand({
+          TableName: "MetaAge-MSP-Contract-Management",
+          Item: {
+            ...editFormData,
+            updatedAt: formattedTime
+          }
+        })
+      );
+
+      setIsEditModalOpen(false);
+      fetchContracts();
+    } catch (error) {
+      console.error('Error updating contract:', error);
+      alert('更新合約時發生錯誤');
+    }
+  };
+
+  // 處理刪除合約
+  const handleDelete = async (contractId: string) => {
+    if (window.confirm('確定要刪除此合約嗎？')) {
+      try {
+        const client = new DynamoDBClient({
+          region: process.env.NEXT_PUBLIC_AWS_REGION,
+          credentials: {
+            accessKeyId: process.env.NEXT_PUBLIC_AWS_ACCESS_KEY_ID || '',
+            secretAccessKey: process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY || ''
+          }
+        });
+
+        const docClient = DynamoDBDocumentClient.from(client);
+
+        await docClient.send(
+          new DeleteCommand({
+            TableName: "MetaAge-MSP-Contract-Management",
+            Key: {
+              contractId: contractId
+            }
+          })
+        );
+
+        // 重新獲取合約列表
+        fetchContracts();
+      } catch (error) {
+        console.error('Error deleting contract:', error);
+        alert('刪除合約時發生錯誤');
+      }
+    }
+  };
+
   return (
     <div className="flex-1 bg-gray-100 p-8">
       {/* 頁面標題與操作按鈕 */}
@@ -104,7 +233,7 @@ export default function ContractManagement() {
           { title: '有效合約', value: stats.activeContracts, color: 'green', icon: '📄' },
           { title: '即將到期', value: stats.expiringContracts, color: 'yellow', icon: '⚠️' },
           { title: '待續約確認', value: stats.pendingRenewal, color: 'red', icon: '🔔' },
-          { title: '合約總數', value: stats.totalAmount, color: 'blue', icon: '💰' },
+          { title: '合約總數', value: stats.totalAmount, color: 'blue', icon: '📊' },
         ].map((stat) => (
           <div key={stat.title} className={`bg-white rounded-lg shadow-md p-6 border-l-4 ${
             stat.color === 'green' ? 'border-green-500' :
@@ -138,8 +267,8 @@ export default function ContractManagement() {
                 <div key={index} className="border rounded-lg p-4 bg-yellow-50">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="font-medium text-gray-900">合約名稱：{contract.contractName}</h3>
-                      <p className="text-sm text-gray-600">合約類型：{contract.contractType}</p>
+                      <h3 className="font-medium text-gray-900">{contract.contractName}</h3>
+                      <p className="text-sm text-gray-600">{contract.contractType}</p>
                       <p className="text-sm text-gray-500 mt-1">到期日：{contract.endDate}</p>
                     </div>
                     <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">
@@ -171,7 +300,9 @@ export default function ContractManagement() {
           <div className="relative">
             <input
               type="text"
-              placeholder="搜尋合約..."
+              placeholder="搜尋合約編號或名稱"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <div className="absolute left-3 top-2.5">
@@ -181,30 +312,53 @@ export default function ContractManagement() {
             </div>
           </div>
           <div>
-            <select className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
               <option value="">合約狀態</option>
-              <option value="active">生效中</option>
-              <option value="pending">待簽署</option>
-              <option value="expired">已到期</option>
-              <option value="terminated">已終止</option>
+              <option value="生效中">生效中</option>
+              <option value="待簽署">待簽署</option>
+              <option value="待續約">待續約</option>
+              <option value="已到期">已到期</option>
             </select>
           </div>
           <div>
-            <select className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
               <option value="">合約類型</option>
-              <option value="service">帳務託管</option>
-              <option value="maintenance-8">5*8 雲顧問</option>
-              <option value="maintenance-24">7*24 雲託管</option>
+              <option value="帳務託管">帳務託管</option>
+              <option value="5*8 雲顧問">5*8 雲顧問</option>
+              <option value="7*24 雲託管">7*24 雲託管</option>
+              <option value="內部合約">內部合約</option>
             </select>
           </div>
           <div>
-            <select className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <select
+              value={productFilter}
+              onChange={(e) => setProductFilter(e.target.value)}
+              className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
               <option value="">產品名稱</option>
               {productList.map((product, index) => (
                 <option key={index} value={product}>
                   {product}
                 </option>
               ))}
+            </select>
+          </div>
+          <div>
+            <select
+              value={sortByTime}
+              onChange={(e) => setSortByTime(e.target.value)}
+              className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="oldest">最舊到最新</option>
+              <option value="newest">最新到最舊</option>
             </select>
           </div>
         </div>
@@ -216,7 +370,7 @@ export default function ContractManagement() {
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-semibold text-gray-800">合約列表</h2>
             <div className="flex items-center space-x-2 text-sm text-gray-600">
-              <span>共 {contracts.length} 份合約</span>
+              <span>共 {filteredContracts.length} 份合約</span>
               <select className="px-2 py-1 border rounded-md">
                 <option value="10">10 筆/頁</option>
                 <option value="20">20 筆/頁</option>
@@ -237,6 +391,7 @@ export default function ContractManagement() {
                 <thead>
                   <tr className="bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     <th className="px-6 py-3 text-center">項次</th>
+                    <th className="px-6 py-3 text-center">合約編號</th>
                     <th className="px-6 py-3 text-center">合約名稱</th>
                     <th className="px-6 py-3 text-center">合約類型</th>
                     <th className="px-6 py-3 text-center">產品名稱</th>
@@ -246,10 +401,15 @@ export default function ContractManagement() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {contracts.map((contract, index) => (
+                  {filteredContracts.map((contract, index) => (
                     <tr key={index} className="hover:bg-gray-50">
                       <td className="px-6 py-4 text-sm text-gray-500 text-center">
                         {index + 1}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm font-medium text-gray-900 text-center">
+                          {contract.contractId}
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm font-medium text-gray-900 text-center">
@@ -272,6 +432,7 @@ export default function ContractManagement() {
                             contract.contractStatus === '生效中' ? 'bg-green-100 text-green-800' :
                             contract.contractStatus === '待續約' ? 'bg-yellow-100 text-yellow-800' :
                             contract.contractStatus === '待簽署' ? 'bg-blue-100 text-blue-800' :
+                            contract.contractStatus === '已到期' ? 'bg-red-100 text-red-800' :
                             'bg-gray-100 text-gray-800'
                           }`}>
                             {contract.contractStatus}
@@ -283,9 +444,24 @@ export default function ContractManagement() {
                       </td>
                       <td className="px-6 py-4 text-sm font-medium">
                         <div className="flex justify-center space-x-2">
-                          <button className="text-blue-600 hover:text-blue-900">查看</button>
-                          <button className="text-gray-600 hover:text-gray-900">編輯</button>
-                          <button className="text-red-600 hover:text-red-900">刪除</button>
+                          <button 
+                            onClick={() => handleView(contract)}
+                            className="text-blue-600 hover:text-blue-900"
+                          >
+                            查看
+                          </button>
+                          <button 
+                            onClick={() => handleEdit(contract)}
+                            className="text-gray-600 hover:text-gray-900"
+                          >
+                            編輯
+                          </button>
+                          <button 
+                            onClick={() => handleDelete(contract.contractId)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            刪除
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -320,7 +496,7 @@ export default function ContractManagement() {
           {!loading && contracts.length > 0 && (
             <div className="flex items-center justify-between mt-6">
               <div className="text-sm text-gray-500">
-                顯示 1 至 {Math.min(contracts.length, 10)} 筆，共 {contracts.length} 筆
+                顯示 1 至 {Math.min(filteredContracts.length, 10)} 筆，共 {filteredContracts.length} 筆
               </div>
               <div className="flex space-x-2">
                 <button className="px-3 py-1 border rounded-md text-gray-600 hover:bg-gray-50">上一頁</button>
@@ -332,14 +508,269 @@ export default function ContractManagement() {
         </div>
       </div>
 
+      {/* 查看合約模態框 */}
+      <Transition appear show={isViewModalOpen} as={Fragment}>
+        <Dialog
+          as="div"
+          className="fixed inset-0 z-50 overflow-y-auto"
+          onClose={() => setIsViewModalOpen(false)}
+        >
+          <div className="min-h-screen px-4 text-center">
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0"
+              enterTo="opacity-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100"
+              leaveTo="opacity-0"
+            >
+              <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity" />
+            </Transition.Child>
+
+            <span className="inline-block h-screen align-middle" aria-hidden="true">&#8203;</span>
+
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0 scale-95"
+              enterTo="opacity-100 scale-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100 scale-100"
+              leaveTo="opacity-0 scale-95"
+            >
+              <div className="inline-block w-full max-w-2xl p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
+                <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900 mb-4">
+                  合約詳細資訊
+                </Dialog.Title>
+                {selectedContract && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">合約編號</label>
+                        <p className="mt-1 text-sm text-gray-900">{selectedContract.contractId}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">合約名稱</label>
+                        <p className="mt-1 text-sm text-gray-900">{selectedContract.contractName}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">合約類型</label>
+                        <p className="mt-1 text-sm text-gray-900">{selectedContract.contractType}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">產品名稱</label>
+                        <p className="mt-1 text-sm text-gray-900">{selectedContract.productName}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">開始日期</label>
+                        <p className="mt-1 text-sm text-gray-900">{selectedContract.startDate}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">到期日期</label>
+                        <p className="mt-1 text-sm text-gray-900">{selectedContract.endDate}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">狀態</label>
+                        <p className="mt-1">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                            selectedContract.contractStatus === '生效中' ? 'bg-green-100 text-green-800' :
+                            selectedContract.contractStatus === '待續約' ? 'bg-yellow-100 text-yellow-800' :
+                            selectedContract.contractStatus === '待簽署' ? 'bg-blue-100 text-blue-800' :
+                            selectedContract.contractStatus === '已到期' ? 'bg-red-100 text-red-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {selectedContract.contractStatus}
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">描述</label>
+                      <p className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{selectedContract.description}</p>
+                    </div>
+                  </div>
+                )}
+                <div className="mt-6">
+                  <button
+                    type="button"
+                    className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-transparent rounded-md hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-500"
+                    onClick={() => setIsViewModalOpen(false)}
+                  >
+                    關閉
+                  </button>
+                </div>
+              </div>
+            </Transition.Child>
+          </div>
+        </Dialog>
+      </Transition>
+
+      {/* 編輯合約模態框 */}
+      <Transition appear show={isEditModalOpen} as={Fragment}>
+        <Dialog
+          as="div"
+          className="fixed inset-0 z-50 overflow-y-auto"
+          onClose={() => setIsEditModalOpen(false)}
+        >
+          <div className="min-h-screen px-4 text-center">
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0"
+              enterTo="opacity-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100"
+              leaveTo="opacity-0"
+            >
+              <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity" />
+            </Transition.Child>
+
+            <span className="inline-block h-screen align-middle" aria-hidden="true">&#8203;</span>
+
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0 scale-95"
+              enterTo="opacity-100 scale-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100 scale-100"
+              leaveTo="opacity-0 scale-95"
+            >
+              <div className="inline-block w-full max-w-2xl p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
+                <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900 mb-4">
+                  編輯合約
+                </Dialog.Title>
+                {editFormData && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">合約編號</label>
+                        <input
+                          type="text"
+                          name="contractId"
+                          value={editFormData.contractId}
+                          disabled
+                          className="w-full px-3 py-2 border rounded-lg bg-gray-50 text-gray-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">合約名稱</label>
+                        <input
+                          type="text"
+                          name="contractName"
+                          value={editFormData.contractName}
+                          onChange={handleEditFormChange}
+                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">合約類型</label>
+                        <select
+                          name="contractType"
+                          value={editFormData.contractType}
+                          onChange={handleEditFormChange}
+                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="帳務託管">帳務託管</option>
+                          <option value="5*8 雲顧問">5*8 雲顧問</option>
+                          <option value="7*24 雲託管">7*24 雲託管</option>
+                          <option value="內部合約">內部合約</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">產品名稱</label>
+                        <select
+                          name="productName"
+                          value={editFormData.productName}
+                          onChange={handleEditFormChange}
+                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                        >
+                          {productList.map((product, index) => (
+                            <option key={index} value={product}>
+                              {product}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">開始日期</label>
+                        <input
+                          type="date"
+                          name="startDate"
+                          value={editFormData.startDate}
+                          onChange={handleEditFormChange}
+                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">到期日期</label>
+                        <input
+                          type="date"
+                          name="endDate"
+                          value={editFormData.endDate}
+                          onChange={handleEditFormChange}
+                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">狀態</label>
+                        <select
+                          name="contractStatus"
+                          value={editFormData.contractStatus}
+                          onChange={handleEditFormChange}
+                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="生效中">生效中</option>
+                          <option value="待簽署">待簽署</option>
+                          <option value="待續約">待續約</option>
+                          <option value="已到期">已到期</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">描述</label>
+                      <textarea
+                        name="description"
+                        value={editFormData.description}
+                        onChange={handleEditFormChange}
+                        rows={4}
+                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 resize-none"
+                      />
+                    </div>
+                  </div>
+                )}
+                <div className="mt-6 flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-transparent rounded-md hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-500"
+                    onClick={() => setIsEditModalOpen(false)}
+                  >
+                    取消
+                  </button>
+                  <button
+                    type="button"
+                    className="px-4 py-2 text-sm font-medium text-white bg-blue-500 border border-transparent rounded-md hover:bg-blue-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500"
+                    onClick={handleUpdateContract}
+                  >
+                    保存
+                  </button>
+                </div>
+              </div>
+            </Transition.Child>
+          </div>
+        </Dialog>
+      </Transition>
+
       {/* 新增合約表單 */}
       {isCreateFormOpen && (
         <CreateContractForm 
           isOpen={isCreateFormOpen}
           onClose={() => {
             setIsCreateFormOpen(false);
-            fetchContracts(); // 關閉表單後重新獲取合約列表
+            fetchContracts();
           }}
+          existingProducts={productList}
         />
       )}
     </div>
