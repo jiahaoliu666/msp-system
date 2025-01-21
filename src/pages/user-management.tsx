@@ -1,15 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import { CognitoService } from '@/services/auth/cognito';
 import { UserType, AttributeType } from '@aws-sdk/client-cognito-identity-provider';
 import Link from 'next/link';
+import { Dialog, Transition } from '@headlessui/react';
+import CreateUserForm from '@/components/UserManagement/CreateUserForm';
+import { useToast } from '@/context/ToastContext';
+import { useRouter } from 'next/router';
 
 interface User {
   username: string;
   email: string;
+  organization?: string;
   department?: string;
   role?: string;
   status: string;
-  lastLogin?: string;
+  emailVerified: boolean;
+  lastLogin?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export default function UserManagement() {
@@ -17,38 +25,68 @@ export default function UserManagement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [newUserData, setNewUserData] = useState({
-    email: '',
-    temporaryPassword: '',
-    department: '',
-    role: '',
-  });
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editFormData, setEditFormData] = useState<User | null>(null);
+  const { showToast } = useToast();
+  const router = useRouter();
 
   // 獲取用戶列表
   const fetchUsers = async () => {
     try {
+      setLoading(true);
+      setError('');
+      console.log('開始獲取用戶列表...');
+      
       const response = await CognitoService.listUsers();
-      const formattedUsers = response.Users?.map((user: UserType) => {
-        const attributes = user.Attributes || [];
-        const email = attributes.find((attr: AttributeType) => attr.Name === 'email')?.Value || '';
-        const department = attributes.find((attr: AttributeType) => attr.Name === 'custom:department')?.Value;
-        const role = attributes.find((attr: AttributeType) => attr.Name === 'custom:role')?.Value;
-        const lastLogin = user.UserLastModifiedDate?.toLocaleString();
+      console.log('成功獲取用戶列表，開始處理數據...');
+      
+      if (!Array.isArray(response)) {
+        throw new Error('返回數據格式錯誤');
+      }
+      
+      const formattedUsers = response.map((user: any) => {
+        // 格式化時間
+        const lastLoginDate = user.lastLogin ? new Date(user.lastLogin) : null;
+        const formattedLastLogin = lastLoginDate ? 
+          lastLoginDate.toLocaleString('zh-TW', {
+            timeZone: 'Asia/Taipei',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+          }).replace(/\//g, '-') : null;
 
         return {
-          username: user.Username || '',
-          email,
-          department,
-          role,
-          status: user.Enabled ? '使用中' : '已停用',
-          lastLogin,
+          username: user.username,
+          email: user.email,
+          organization: user.organization,
+          role: user.role,
+          status: !user.enabled ? '已停用' : user.status === 'FORCE_CHANGE_PASSWORD' ? '待驗證' : '使用中',
+          emailVerified: user.emailVerified || false,
+          lastLogin: formattedLastLogin,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt,
         };
-      }) || [];
+      });
 
+      console.log('數據處理完成，更新用戶列表...');
       setUsers(formattedUsers);
-    } catch (err) {
-      console.error('Fetch users error:', err);
-      setError('獲取用戶列表失敗');
+    } catch (err: any) {
+      console.error('獲取用戶列表失敗:', err);
+      const errorMessage = err.message || '獲取用戶列表失敗';
+      setError(errorMessage);
+      showToast('error', errorMessage);
+      
+      // 如果是認證相關的錯誤，可能需要重新登入
+      if (err.name === 'NotAuthorizedException' || err.name === 'TokenExpiredError') {
+        showToast('error', '登入已過期，請重新登入');
+        router.push('/login');
+      }
     } finally {
       setLoading(false);
     }
@@ -58,121 +96,92 @@ export default function UserManagement() {
     fetchUsers();
   }, []);
 
-  // 創建新用戶
-  const handleCreateUser = async () => {
-    try {
-      await CognitoService.createUser({
-        email: newUserData.email,
-        temporaryPassword: newUserData.temporaryPassword,
-        userAttributes: {
-          department: newUserData.department,
-          role: newUserData.role,
-        },
-      });
-      
-      setShowCreateModal(false);
-      setNewUserData({
-        email: '',
-        temporaryPassword: '',
-        department: '',
-        role: '',
-      });
-      
-      // 重新獲取用戶列表
-      await fetchUsers();
-    } catch (err) {
-      console.error('Create user error:', err);
-      setError('創建用戶失敗');
-    }
-  };
-
   // 停用/啟用用戶
   const handleToggleUserStatus = async (username: string, currentStatus: string) => {
     try {
       if (currentStatus === '使用中') {
         await CognitoService.disableUser(username);
+        showToast('success', '已成功停用用戶');
       } else {
         await CognitoService.enableUser(username);
+        showToast('success', '已成功啟用用戶');
       }
       await fetchUsers();
     } catch (err) {
       console.error('Toggle user status error:', err);
       setError('更改用戶狀態失敗');
+      showToast('error', '更改用戶狀態失敗');
     }
   };
 
-  // 創建用戶 Modal
-  const CreateUserModal = () => (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-8 max-w-md w-full">
-        <h2 className="text-2xl font-bold mb-6">新增使用者</h2>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              電子郵件
-            </label>
-            <input
-              type="email"
-              value={newUserData.email}
-              onChange={(e) => setNewUserData({ ...newUserData, email: e.target.value })}
-              className="w-full p-2 border rounded-lg"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              臨時密碼
-            </label>
-            <input
-              type="password"
-              value={newUserData.temporaryPassword}
-              onChange={(e) => setNewUserData({ ...newUserData, temporaryPassword: e.target.value })}
-              className="w-full p-2 border rounded-lg"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              部門
-            </label>
-            <select
-              value={newUserData.department}
-              onChange={(e) => setNewUserData({ ...newUserData, department: e.target.value })}
-              className="w-full p-2 border rounded-lg"
-            >
-              <option value="it">ST630</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              角色
-            </label>
-            <select
-              value={newUserData.role}
-              onChange={(e) => setNewUserData({ ...newUserData, role: e.target.value })}
-              className="w-full p-2 border rounded-lg"
-            >
-              <option value="user">維運工程師</option>
-              <option value="manager">架構師</option>
-              <option value="admin">系統管理員</option>
-            </select>
-          </div>
-        </div>
-        <div className="mt-6 flex justify-end space-x-3">
-          <button
-            onClick={() => setShowCreateModal(false)}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800"
-          >
-            取消
-          </button>
-          <button
-            onClick={handleCreateUser}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-          >
-            建立
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+  // 處理查看用戶
+  const handleView = (user: User) => {
+    setSelectedUser(user);
+    setIsViewModalOpen(true);
+  };
+
+  // 處理編輯用戶
+  const handleEdit = (user: User) => {
+    setSelectedUser(user);
+    setEditFormData(user);
+    setIsEditModalOpen(true);
+  };
+
+  // 處理編輯表單變更
+  const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setEditFormData(prev => prev ? {
+      ...prev,
+      [name]: value
+    } : null);
+  };
+
+  // 處理更新用戶
+  const handleUpdateUser = async () => {
+    if (!editFormData) return;
+
+    try {
+      await CognitoService.updateUser({
+        username: editFormData.username,
+        email: editFormData.email,
+        organization: editFormData.organization,
+        role: editFormData.role
+      });
+      setIsEditModalOpen(false);
+      showToast('success', '用戶資料更新成功');
+      fetchUsers();
+    } catch (error) {
+      console.error('Error updating user:', error);
+      setError('更新用戶時發生錯誤');
+      showToast('error', '更新用戶時發生錯誤');
+    }
+  };
+
+  // 處理刪除用戶
+  const handleDelete = async (username: string) => {
+    if (window.confirm('確定要刪除此用戶嗎？')) {
+      try {
+        const response = await fetch('/api/users', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ username }),
+        });
+
+        if (!response.ok) {
+          throw new Error('刪除用戶失敗');
+        }
+
+        showToast('success', '用戶已成功刪除');
+        await fetchUsers();
+      } catch (error) {
+        console.error('Error deleting user:', error);
+        setError('刪除用戶時發生錯誤');
+        showToast('error', '刪除用戶時發生錯誤');
+      }
+    }
+  };
 
   return (
     <div className="flex-1 bg-gray-100 p-8">
@@ -204,6 +213,29 @@ export default function UserManagement() {
         </div>
       </div>
 
+      {loading && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-4 rounded-lg shadow-lg flex items-center space-x-3">
+            <svg className="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span className="text-gray-700">載入中...</span>
+          </div>
+        </div>
+      )}
+
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="flex items-center">
+            <svg className="h-5 w-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="text-red-700">{error}</span>
+          </div>
+        </div>
+      )}
+
       {/* 使用者列表 */}
       <div className="bg-white rounded-lg shadow-md">
         <div className="p-6">
@@ -211,18 +243,20 @@ export default function UserManagement() {
             <table className="min-w-full">
               <thead>
                 <tr className="bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <th className="px-6 py-3">使用者資訊</th>
-                  <th className="px-6 py-3">部門/角色</th>
-                  <th className="px-6 py-3">狀態</th>
-                  <th className="px-6 py-3">最後登入</th>
-                  <th className="px-6 py-3">操作</th>
+                  <th className="px-6 py-3 text-center">使用者資訊</th>
+                  <th className="px-6 py-3 text-center">組織</th>
+                  <th className="px-6 py-3 text-center">角色</th>
+                  <th className="px-6 py-3 text-center">狀態</th>
+                  <th className="px-6 py-3 text-center">電子郵件驗證</th>
+                  <th className="px-6 py-3 text-center">最後登入</th>
+                  <th className="px-6 py-3 text-center">操作</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {users.map((user) => (
                   <tr key={user.username} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
-                      <div className="flex items-center">
+                      <div className="flex items-center justify-center">
                         <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
                           <span className="text-blue-600 font-medium">
                             {user.email.charAt(0).toUpperCase()}
@@ -234,22 +268,55 @@ export default function UserManagement() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900">{user.department || '-'}</div>
-                      <div className="text-sm text-gray-500">{user.role || '-'}</div>
+                    <td className="px-6 py-4 text-sm text-gray-900 text-center">
+                      {user.organization || '-'}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 text-sm text-gray-900 text-center">
+                      {user.role || '-'}
+                    </td>
+                    <td className="px-6 py-4 text-center">
                       <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        user.status === '使用中' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        user.status === '使用中' 
+                          ? 'bg-green-100 text-green-800' 
+                          : user.status === '待驗證'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-red-100 text-red-800'
                       }`}>
                         {user.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
+                    <td className="px-6 py-4 text-center">
+                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        user.emailVerified
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {user.emailVerified ? '已驗證' : '未驗證'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500 text-center">
                       {user.lastLogin || '-'}
                     </td>
-                    <td className="px-6 py-4 text-sm font-medium">
-                      <div className="flex space-x-2">
+                    <td className="px-6 py-4 text-sm font-medium text-center">
+                      <div className="flex justify-center space-x-2">
+                        <button
+                          onClick={() => handleView(user)}
+                          className="text-blue-600 hover:text-blue-900"
+                        >
+                          查看
+                        </button>
+                        <button
+                          onClick={() => handleEdit(user)}
+                          className="text-gray-600 hover:text-gray-900"
+                        >
+                          編輯
+                        </button>
+                        <button
+                          onClick={() => handleDelete(user.username)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          刪除
+                        </button>
                         <button
                           onClick={() => handleToggleUserStatus(user.username, user.status)}
                           className={`${
@@ -270,15 +337,246 @@ export default function UserManagement() {
         </div>
       </div>
 
-      {/* 錯誤提示 */}
-      {error && (
-        <div className="fixed bottom-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-          {error}
-        </div>
-      )}
+      {/* 查看用戶模態框 */}
+      <Transition appear show={isViewModalOpen} as={Fragment}>
+        <Dialog
+          as="div"
+          className="fixed inset-0 z-50 overflow-y-auto"
+          onClose={() => setIsViewModalOpen(false)}
+        >
+          <div className="min-h-screen px-4 text-center">
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0"
+              enterTo="opacity-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100"
+              leaveTo="opacity-0"
+            >
+              <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity" />
+            </Transition.Child>
 
-      {/* 創建用戶 Modal */}
-      {showCreateModal && <CreateUserModal />}
+            <span className="inline-block h-screen align-middle" aria-hidden="true">&#8203;</span>
+
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0 scale-95"
+              enterTo="opacity-100 scale-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100 scale-100"
+              leaveTo="opacity-0 scale-95"
+            >
+              <div className="inline-block w-full max-w-2xl p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
+                <div className="flex justify-between items-center mb-6 border-b pb-4">
+                  <Dialog.Title as="h3" className="text-xl font-semibold text-gray-900 flex items-center">
+                    <svg className="w-6 h-6 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    使用者詳細資訊
+                  </Dialog.Title>
+                  <span className={`px-3 py-1.5 text-sm font-semibold rounded-full ${
+                    selectedUser?.status === '使用中' ? 'bg-green-100 text-green-800 border border-green-200' :
+                    selectedUser?.status === '待驗證' ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' :
+                    'bg-red-100 text-red-800 border border-red-200'
+                  }`}>
+                    {selectedUser?.status}
+                  </span>
+                </div>
+                {selectedUser && (
+                  <div className="space-y-6">
+                    <div className="bg-white rounded-lg border border-gray-200 divide-y divide-gray-100">
+                      {/* 基本資訊區塊 */}
+                      <div className="p-6">
+                        <h4 className="text-sm font-medium text-gray-700 mb-4 flex items-center">
+                          <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          基本資訊
+                        </h4>
+                        <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-500 mb-1">使用者名稱</label>
+                            <p className="text-sm text-gray-900">{selectedUser.username}</p>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-500 mb-1">電子郵件</label>
+                            <div className="flex items-center space-x-2">
+                              <p className="text-sm text-gray-900">{selectedUser.email}</p>
+                              <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
+                                selectedUser.emailVerified
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-yellow-100 text-yellow-800'
+                              }`}>
+                                {selectedUser.emailVerified ? '已驗證' : '未驗證'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 組織資訊區塊 */}
+                      <div className="p-6">
+                        <h4 className="text-sm font-medium text-gray-700 mb-4 flex items-center">
+                          <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                          </svg>
+                          組織資訊
+                        </h4>
+                        <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-500 mb-1">組織</label>
+                            <p className="text-sm text-gray-900">{selectedUser.organization || '-'}</p>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-500 mb-1">角色</label>
+                            <p className="text-sm text-gray-900">{selectedUser.role || '-'}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 系統資訊 */}
+                      <div className="p-6 bg-gray-50">
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span>最後登入：{selectedUser.lastLogin || '-'}</span>
+                          <span>建立時間：{selectedUser.createdAt || '-'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div className="mt-6">
+                  <button
+                    type="button"
+                    className="w-full px-4 py-2 text-sm font-medium text-white bg-blue-500 border border-transparent rounded-md hover:bg-blue-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 transition-colors"
+                    onClick={() => setIsViewModalOpen(false)}
+                  >
+                    關閉
+                  </button>
+                </div>
+              </div>
+            </Transition.Child>
+          </div>
+        </Dialog>
+      </Transition>
+
+      {/* 編輯用戶模態框 */}
+      <Transition appear show={isEditModalOpen} as={Fragment}>
+        <Dialog
+          as="div"
+          className="fixed inset-0 z-50 overflow-y-auto"
+          onClose={() => setIsEditModalOpen(false)}
+        >
+          <div className="min-h-screen px-4 text-center">
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0"
+              enterTo="opacity-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100"
+              leaveTo="opacity-0"
+            >
+              <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity" />
+            </Transition.Child>
+
+            <span className="inline-block h-screen align-middle" aria-hidden="true">&#8203;</span>
+
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0 scale-95"
+              enterTo="opacity-100 scale-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100 scale-100"
+              leaveTo="opacity-0 scale-95"
+            >
+              <div className="inline-block w-full max-w-2xl p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
+                <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900 mb-4">
+                  編輯使用者
+                </Dialog.Title>
+                {editFormData && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">使用者名稱</label>
+                        <input
+                          type="text"
+                          name="username"
+                          value={editFormData.username}
+                          disabled
+                          className="w-full px-3 py-2 border rounded-lg bg-gray-50 text-gray-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">電子郵件</label>
+                        <input
+                          type="email"
+                          name="email"
+                          value={editFormData.email}
+                          disabled
+                          className="w-full px-3 py-2 border rounded-lg bg-gray-50 text-gray-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">組織</label>
+                        <input
+                          type="text"
+                          name="organization"
+                          value={editFormData.organization || ''}
+                          onChange={handleEditFormChange}
+                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">角色</label>
+                        <select
+                          name="role"
+                          value={editFormData.role || ''}
+                          onChange={handleEditFormChange}
+                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="">請選擇角色</option>
+                          <option value="SA">架構師</option>
+                          <option value="OP">維運工程師</option>
+                          <option value="Admin">系統管理員</option>
+                          <option value="User">一般用戶</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div className="mt-6 flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-transparent rounded-md hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-500"
+                    onClick={() => setIsEditModalOpen(false)}
+                  >
+                    取消
+                  </button>
+                  <button
+                    type="button"
+                    className="px-4 py-2 text-sm font-medium text-white bg-blue-500 border border-transparent rounded-md hover:bg-blue-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500"
+                    onClick={handleUpdateUser}
+                  >
+                    保存
+                  </button>
+                </div>
+              </div>
+            </Transition.Child>
+          </div>
+        </Dialog>
+      </Transition>
+
+      {/* 新增使用者表單 */}
+      <CreateUserForm 
+        isOpen={showCreateModal}
+        onClose={() => {
+          setShowCreateModal(false);
+          fetchUsers();
+        }}
+      />
     </div>
   );
 }

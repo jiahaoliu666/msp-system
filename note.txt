@@ -14,6 +14,12 @@ MFA功能
 
 登入後要能記錄登入時間
 
+一般用戶登入成功要導向 user-portal 頁面
+
+其他登入成功要導向 / 頁面
+
+是否需要自動完成 已驗證電子郵件地址
+需要驗證電子郵件地址嗎
 --------------------------------
 
 src/pages/user-portal/index.tsx 客戶介面
@@ -311,10 +317,17 @@ nvm install --lts && nvm use --lts
 
 
 cognito 使用者管理
+src/pages/login/index.tsx
+src/context/AuthContext.tsx
+src/pages/user-management.tsx
 src/config/aws-config.ts
 src/pages/api/users/index.ts
-src/pages/login/index.tsx
-src/pages/user-management.tsx
-src/context/AuthContext.tsx
+src/components/UserManagement/CreateUserForm.tsx
 src/services/auth/cognito.ts
 
+
+toast 自定義通知
+src/components/common/Toast.tsx
+src/pages/_app.tsx
+src/context/ToastContext.tsx
+src/styles/toast.css

@@ -1,6 +1,7 @@
 import React from 'react';
 import type { AppProps } from 'next/app';
 import '@/styles/globals.css';
+import '@/styles/toast.css';
 import Link from 'next/link';
 import { ThemeProvider as NextThemesProvider } from 'next-themes';
 import { ThemeProvider } from '@/context/ThemeContext';
@@ -13,6 +14,8 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import NProgress from 'nprogress';
 import 'nprogress/nprogress.css';
+import { ToastProvider } from '@/context/ToastContext';
+import { Toast } from '@/components/common/Toast';
 
 // 配置 NProgress
 NProgress.configure({ 
@@ -311,7 +314,10 @@ export default function App(props: AppProps) {
       <NextThemesProvider attribute="class" defaultTheme="system" enableSystem>
         <ThemeProvider>
           <LoadingProvider>
-            <AppContent {...props} />
+            <ToastProvider>
+              <AppContent {...props} />
+              <Toast />
+            </ToastProvider>
           </LoadingProvider>
         </ThemeProvider>
       </NextThemesProvider>

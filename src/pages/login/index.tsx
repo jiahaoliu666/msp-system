@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { FaShieldAlt, FaHeadset, FaRocket, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/context/ToastContext';
 
 export default function Login() {
   const router = useRouter();
   const { login } = useAuth();
+  const { showToast } = useToast();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -19,28 +21,66 @@ export default function Login() {
     setLoading(true);
     setError('');
     
+    console.log('開始處理登入表單提交...');
+    
+    if (!formData.email || !formData.password) {
+      setError('請填寫電子郵件和密碼');
+      showToast('error', '請填寫電子郵件和密碼');
+      setLoading(false);
+      return;
+    }
+
     try {
+      console.log('嘗試登入...');
       await login({
         email: formData.email,
         password: formData.password,
       });
-      // 登入成功後的重定向由 AuthContext 處理
+      console.log('登入請求已發送，等待回應...');
     } catch (err: any) {
+      console.error('登入錯誤:', {
+        name: err.name,
+        message: err.message,
+        code: err.__type
+      });
+
       let errorMessage = '登入失敗，請檢查您的帳號密碼';
       
       // 處理 Cognito 特定錯誤
-      if (err.name === 'NotAuthorizedException') {
-        errorMessage = '帳號或密碼錯誤';
-      } else if (err.name === 'UserNotConfirmedException') {
-        errorMessage = '帳號尚未驗證';
-      } else if (err.name === 'UserNotFoundException') {
-        errorMessage = '找不到此帳號';
+      switch (err.name) {
+        case 'NotAuthorizedException':
+          errorMessage = '帳號或密碼錯誤';
+          showToast('error', '帳號或密碼錯誤');
+          break;
+        case 'UserNotConfirmedException':
+          errorMessage = '帳號尚未驗證，請查收電子郵件進行驗證';
+          showToast('warning', '帳號尚未驗證，請查收電子郵件進行驗證');
+          break;
+        case 'UserNotFoundException':
+          errorMessage = '找不到此帳號';
+          showToast('error', '找不到此帳號');
+          break;
+        case 'PasswordResetRequiredException':
+          errorMessage = '需要重設密碼';
+          showToast('warning', '需要重設密碼，請聯繫系統管理員');
+          break;
+        case 'TooManyRequestsException':
+          errorMessage = '登入嘗試次數過多，請稍後再試';
+          showToast('error', '登入嘗試次數過多，請稍後再試');
+          break;
+        default:
+          errorMessage = err.message || '登入失敗，請稍後再試';
+          showToast('error', errorMessage);
       }
       
       setError(errorMessage);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleForgotPassword = () => {
+    showToast('info', '請聯繫系統管理員重設密碼');
   };
 
   return (
@@ -195,8 +235,11 @@ export default function Login() {
                 </button>
 
                 <div className="text-center">
-                  <button type="button" 
-                          className="text-blue-600 hover:text-blue-700 transition-colors font-medium">
+                  <button 
+                    type="button" 
+                    onClick={handleForgotPassword}
+                    className="text-blue-600 hover:text-blue-700 transition-colors font-medium"
+                  >
                     忘記密碼？
                   </button>
                 </div>

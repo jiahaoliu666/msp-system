@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { CognitoService, LoginParams } from '@/services/auth/cognito';
+import { useToast } from '@/context/ToastContext';
 
 interface AuthContextType {
   user: any | null;
@@ -24,6 +25,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const { showToast } = useToast();
 
   useEffect(() => {
     // 檢查本地存儲的認證狀態
@@ -31,12 +33,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const token = localStorage.getItem('authToken');
         if (token) {
-          // TODO: 驗證 token 有效性
           const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
           setUser(userInfo);
         }
       } catch (error) {
         console.error('Auth check error:', error);
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userInfo');
+        setUser(null);
       } finally {
         setIsLoading(false);
       }
@@ -48,18 +52,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async ({ email, password }: LoginParams) => {
     try {
       const response = await CognitoService.login({ email, password });
-      const token = response.AuthenticationResult?.AccessToken;
       
-      if (token) {
-        localStorage.setItem('authToken', token);
-        // TODO: 解析 JWT 獲取用戶信息或調用獲取用戶信息的 API
-        const userInfo = { email }; // 簡化示例
-        localStorage.setItem('userInfo', JSON.stringify(userInfo));
-        setUser(userInfo);
-        router.push('/'); // 登入成功後重定向到首頁
+      if (!response.AuthenticationResult?.AccessToken) {
+        throw new Error('驗證失敗：未收到有效的認證令牌');
       }
-    } catch (error) {
-      console.error('Login error:', error);
+
+      // 保存認證資訊
+      const { AccessToken } = response.AuthenticationResult;
+      localStorage.setItem('authToken', AccessToken);
+      
+      // 保存用戶資訊
+      const userInfo = { 
+        email,
+        token: AccessToken,
+        lastLoginTime: new Date().toISOString()
+      };
+      localStorage.setItem('userInfo', JSON.stringify(userInfo));
+      setUser(userInfo);
+      
+      // 顯示成功訊息並重定向
+      showToast('success', '登入成功');
+      router.push('/');
+    } catch (error: any) {
+      // 清除認證資訊
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userInfo');
+      setUser(null);
       throw error;
     }
   };

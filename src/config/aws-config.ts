@@ -9,14 +9,37 @@ export const AWS_CONFIG = {
   },
 };
 
+// 檢查必要的配置
+if (!AWS_CONFIG.cognito.userPoolId || !AWS_CONFIG.cognito.clientId) {
+  console.error('AWS Cognito 配置缺失:', {
+    region: AWS_CONFIG.region,
+    userPoolId: AWS_CONFIG.cognito.userPoolId ? '已設置' : '未設置',
+    clientId: AWS_CONFIG.cognito.clientId ? '已設置' : '未設置'
+  });
+}
+
 // 創建 Cognito 客戶端實例
 export const cognitoClient = new CognitoIdentityProviderClient({
   region: AWS_CONFIG.region,
-  // 在伺服器端運行時使用環境變數中的憑證
-  ...(typeof window === 'undefined' && {
-    credentials: {
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
-    },
-  }),
+  endpoint: `https://cognito-idp.${AWS_CONFIG.region}.amazonaws.com`,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || ''
+  },
+  maxAttempts: 3,
+  logger: {
+    debug: (...args) => console.debug(...args),
+    info: (...args) => console.log(...args),
+    warn: (...args) => console.warn(...args),
+    error: (...args) => console.error(...args)
+  }
+});
+
+// 輸出配置資訊
+console.log('AWS Cognito 客戶端初始化完成:', {
+  region: AWS_CONFIG.region,
+  userPoolId: AWS_CONFIG.cognito.userPoolId ? '已設置' : '未設置',
+  clientId: AWS_CONFIG.cognito.clientId ? '已設置' : '未設置',
+  endpoint: `https://cognito-idp.${AWS_CONFIG.region}.amazonaws.com`,
+  hasCredentials: !!process.env.AWS_ACCESS_KEY_ID && !!process.env.AWS_SECRET_ACCESS_KEY
 }); 
