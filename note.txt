@@ -186,7 +186,9 @@ src/pages/contract-management/index.tsx 合約管理
 
 organization-management.tsx # 組織管理
 
-要能自動同步更新組織架構圖
+資料表名稱 MetaAge-MSP-Organization-Management
+分區索引鍵 organizationName
+
 
 不需要部門 此組織管理主要管理客戶的組織架構，將此組織管理由管理公司組織改為管理客戶組織
 
@@ -202,7 +204,7 @@ organization-management.tsx # 組織管理
 
 組織要有aws 帳戶id 不要有登入資訊 使用SSO登入
 
-
+組織編號
 --------------------------------
 
 src/pages/user-management/index.tsx 使用者管理
@@ -290,8 +292,11 @@ src/pages/version-record/index.tsx 更版紀錄
 
 通知要符合SLA ，若時間快到未處理要閃爍
 
+權限上下文
 
+環境變數不要有常數 都使用變數值
 --------------------------------
+
 
 
 
