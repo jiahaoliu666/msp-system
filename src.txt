@@ -16,6 +16,7 @@ src/
 │   │   └── index.tsx 
 │   │--------------------------------------------------------------側邊欄頁面
 │   ├── check-in.tsx # 值班簽到
+│   ├── chat-room.tsx # 聊天對話
 │   ├── ticket-system.tsx # 工單系統
 │   ├── service-record.tsx # 服務紀錄
 │   ├── todo-list.tsx # 待辦事項
@@ -36,7 +37,7 @@ src/
 │   ├── users
 │   │   └── index.ts # 使用者管理 API (獲取用戶列表、創建新用戶)
 ├── components-----------------------------------------------------------組件
-│   ├── common
+│   ├── common # 通用組件 (快速建立按鈕、側邊欄、主題切換按鈕)
 │   │   ├── CreateTicketForm.tsx # 建立工單表單
 │   │   ├── CreateTodoForm.tsx # 建立待辦表單
 │   │   ├── Sidebar.tsx # 側邊欄

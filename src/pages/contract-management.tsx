@@ -17,6 +17,7 @@ interface Contract {
   createdAt: string;
   updatedAt: string;
   productName: string;
+  remainingHours?: number;
 }
 
 export default function ContractManagement() {
@@ -83,6 +84,10 @@ export default function ContractManagement() {
         return new Date(a.endDate).getTime() - new Date(b.endDate).getTime();
       } else if (sortByTime === 'expiring-late') {
         return new Date(b.endDate).getTime() - new Date(a.endDate).getTime();
+      } else if (sortByTime === 'remaining-hours-low') {
+        return (a.remainingHours ?? 0) - (b.remainingHours ?? 0);
+      } else if (sortByTime === 'remaining-hours-high') {
+        return (b.remainingHours ?? 0) - (a.remainingHours ?? 0);
       }
       return 0;
     });
@@ -238,6 +243,15 @@ export default function ContractManagement() {
     } : null);
   };
 
+  // 處理剩餘時數變更
+  const handleRemainingHoursChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setEditFormData(prev => prev ? {
+      ...prev,
+      remainingHours: value === '' ? undefined : Number(value)
+    } : null);
+  };
+
   // 處理更新合約
   const handleUpdateContract = async () => {
     if (!editFormData) return;
@@ -262,6 +276,7 @@ export default function ContractManagement() {
           TableName: "MetaAge-MSP-Contract-Management",
           Item: {
             ...editFormData,
+            remainingHours: editFormData.remainingHours === undefined ? 0 : Number(editFormData.remainingHours),
             updatedAt: formattedTime
           }
         })
@@ -514,6 +529,8 @@ export default function ContractManagement() {
               <option value="newest">建立時間 - 最新到最舊</option>
               <option value="expiring-soon">到期日期 - 最近到最遠</option>
               <option value="expiring-late">到期日期 - 最遠到最近</option>
+              <option value="remaining-hours-low">剩餘時數 - 最近到最遠</option>
+              <option value="remaining-hours-high">剩餘時數 - 最遠到最近</option>
             </select>
           </div>
         </div>
@@ -552,6 +569,7 @@ export default function ContractManagement() {
                     <th className="px-6 py-3 text-center">產品名稱</th>
                     <th className="px-6 py-3 text-center">狀態</th>
                     <th className="px-6 py-3 text-center">到期日</th>
+                    <th className="px-6 py-3 text-center">剩餘時數</th>
                     <th className="px-6 py-3 text-center">操作</th>
                   </tr>
                 </thead>
@@ -596,6 +614,13 @@ export default function ContractManagement() {
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-500 text-center">
                         {contract.endDate}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500 text-center">
+                        <div className="flex items-center justify-center">
+                          <span className={`${(contract.remainingHours !== undefined && contract.remainingHours <= 10 && contract.remainingHours > 0) ? 'text-red-600 font-medium' : ''}`}>
+                            {contract.remainingHours ?? 0} 小時
+                          </span>
+                        </div>
                       </td>
                       <td className="px-6 py-4 text-sm font-medium">
                         <div className="flex justify-center space-x-2">
@@ -751,6 +776,12 @@ export default function ContractManagement() {
                           <div>
                             <label className="block text-xs font-medium text-gray-500 mb-1">產品名稱</label>
                             <p className="text-sm text-gray-900">{selectedContract.productName}</p>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-500 mb-1">剩餘時數</label>
+                            <p className={`text-sm ${(selectedContract.remainingHours !== undefined && selectedContract.remainingHours <= 10 && selectedContract.remainingHours > 0) ? 'text-red-600 font-medium' : 'text-gray-900'}`}>
+                              {selectedContract.remainingHours ?? 0} 小時
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -976,6 +1007,18 @@ export default function ContractManagement() {
                           <option value="待續約">待續約</option>
                           <option value="已到期">已到期</option>
                         </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">剩餘時數</label>
+                        <input
+                          type="number"
+                          name="remainingHours"
+                          value={editFormData.remainingHours === undefined ? '' : editFormData.remainingHours}
+                          onChange={handleRemainingHoursChange}
+                          min="0"
+                          placeholder="請輸入剩餘時數"
+                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                        />
                       </div>
                     </div>
                     <div>

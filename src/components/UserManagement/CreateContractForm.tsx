@@ -115,7 +115,8 @@ export default function CreateContractForm({ isOpen, onClose, existingProducts }
           endDate: formData.endDate,
           contractStatus: '待簽署',
           createdAt: formattedTime,
-          updatedAt: formattedTime
+          updatedAt: formattedTime,
+          remainingHours: 0
         }
       };
 
