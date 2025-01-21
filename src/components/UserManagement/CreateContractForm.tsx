@@ -95,12 +95,11 @@ export default function CreateContractForm({ isOpen, onClose, existingProducts }
 
       const docClient = DynamoDBDocumentClient.from(client);
 
-      // 取得當前 UTC+8 時間
+      // 取得當前台北時間
       const now = new Date();
-      const utc8Time = new Date(now.getTime() + (8 * 60 * 60 * 1000));
-      
-      // 格式化時間為 "YYYY-MM-DD HH:mm:ss" 格式
-      const formattedTime = utc8Time.toLocaleString('zh-TW', {
+      // 設定為台北時區 (UTC+8)
+      const options: Intl.DateTimeFormatOptions = {
+        timeZone: 'Asia/Taipei',
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',
@@ -108,7 +107,11 @@ export default function CreateContractForm({ isOpen, onClose, existingProducts }
         minute: '2-digit',
         second: '2-digit',
         hour12: false
-      }).replace(/\//g, '-');
+      };
+      
+      // 格式化時間為 "YYYY-MM-DD HH:mm:ss" 格式
+      const formattedTime = now.toLocaleString('zh-TW', options)
+        .replace(/\//g, '-');
 
       // 生成合約編號
       const contractId = generateContractId();
@@ -174,21 +177,6 @@ export default function CreateContractForm({ isOpen, onClose, existingProducts }
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="bg-white rounded-xl space-y-6">
-              {/* 合約名稱 */}
-              <div className="group">
-                <label className="block text-sm font-medium text-gray-700 mb-2 group-hover:text-blue-600 transition-colors">
-                  合約名稱 <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="contractName"
-                  value={formData.contractName}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400"
-                  required
-                  placeholder="請輸入合約名稱"
-                />
-              </div>
 
               {/* 合約類型 */}
               <div className="group">
@@ -210,6 +198,9 @@ export default function CreateContractForm({ isOpen, onClose, existingProducts }
                   ))}
                 </select>
               </div>
+
+            
+
 
               {/* 產品名稱 */}
               <div className="group">
@@ -368,6 +359,21 @@ export default function CreateContractForm({ isOpen, onClose, existingProducts }
                 </div>
               </div>
 
+              {/* 合約名稱 */}
+              <div className="group">
+                <label className="block text-sm font-medium text-gray-700 mb-2 group-hover:text-blue-600 transition-colors">
+                  合約名稱 <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="contractName"
+                  value={formData.contractName}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400"
+                  required
+                  placeholder="請輸入合約名稱"
+                />
+              </div>
               {/* 描述 */}
               <div className="group">
                 <label className="block text-sm font-medium text-gray-700 mb-2 group-hover:text-blue-600 transition-colors">

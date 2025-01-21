@@ -6,9 +6,10 @@ import { DynamoDBDocumentClient, PutCommand, ScanCommand } from "@aws-sdk/lib-dy
 interface CreateOrganizationFormProps {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
-export default function CreateOrganizationForm({ isOpen, onClose }: CreateOrganizationFormProps) {
+export default function CreateOrganizationForm({ isOpen, onClose, onSuccess }: CreateOrganizationFormProps) {
   const [formData, setFormData] = useState({
     organizationName: '',
     contractName: '',
@@ -86,12 +87,11 @@ export default function CreateOrganizationForm({ isOpen, onClose }: CreateOrgani
 
       const docClient = DynamoDBDocumentClient.from(client);
 
-      // 取得當前 UTC+8 時間
+      // 取得當前台北時間
       const now = new Date();
-      const utc8Time = new Date(now.getTime() + (8 * 60 * 60 * 1000));
-      
-      // 格式化時間為 "YYYY-MM-DD HH:mm:ss" 格式
-      const formattedTime = utc8Time.toLocaleString('zh-TW', {
+      // 設定為台北時區 (UTC+8)
+      const options: Intl.DateTimeFormatOptions = {
+        timeZone: 'Asia/Taipei',
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',
@@ -99,7 +99,11 @@ export default function CreateOrganizationForm({ isOpen, onClose }: CreateOrgani
         minute: '2-digit',
         second: '2-digit',
         hour12: false
-      }).replace(/\//g, '-');
+      };
+      
+      // 格式化時間為 "YYYY-MM-DD HH:mm:ss" 格式
+      const formattedTime = now.toLocaleString('zh-TW', options)
+        .replace(/\//g, '-');
 
       const params = {
         TableName: "MetaAge-MSP-Organization-Management",
@@ -115,6 +119,10 @@ export default function CreateOrganizationForm({ isOpen, onClose }: CreateOrgani
       };
 
       await docClient.send(new PutCommand(params));
+      
+      if (onSuccess) {
+        onSuccess();
+      }
       
       onClose();
       setFormData({

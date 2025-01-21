@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, ScanCommand, DeleteCommand, PutCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
 import CreateContractForm from '../components/UserManagement/CreateContractForm';
@@ -21,6 +22,7 @@ interface Contract {
 }
 
 export default function ContractManagement() {
+  const router = useRouter();
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,6 +46,20 @@ export default function ContractManagement() {
   useEffect(() => {
     fetchContracts();
   }, []);
+
+  // 處理 URL 參數
+  useEffect(() => {
+    const { contract } = router.query;
+    if (contract && typeof contract === 'string') {
+      setSearchTerm('');  // 清空搜尋條件
+      setStatusFilter(''); // 清空狀態篩選
+      setTypeFilter('');   // 清空類型篩選
+      setProductFilter(''); // 清空產品篩選
+      // 設置合約名稱篩選
+      const decodedContract = decodeURIComponent(contract);
+      setSearchTerm(decodedContract);
+    }
+  }, [router.query]);
 
   useEffect(() => {
     // 從合約中提取唯一的產品名稱列表
@@ -950,8 +966,8 @@ export default function ContractManagement() {
                           type="text"
                           name="contractName"
                           value={editFormData.contractName}
-                          onChange={handleEditFormChange}
-                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                          disabled
+                          className="w-full px-3 py-2 border rounded-lg bg-gray-50 text-gray-500"
                         />
                       </div>
                       <div>

@@ -21,6 +21,8 @@ export default function OrganizationManagement() {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedOrganization, setSelectedOrganization] = useState<Organization | null>(null);
+  const [editFormData, setEditFormData] = useState<Organization | null>(null);
+  const [contractNames, setContractNames] = useState<string[]>([]);
   const [stats, setStats] = useState({
     totalOrgs: 0,
     totalUsers: 0,
@@ -113,6 +115,34 @@ export default function OrganizationManagement() {
     }
   };
 
+  // 獲取合約名稱列表
+  const fetchContractNames = async () => {
+    try {
+      const client = new DynamoDBClient({
+        region: process.env.NEXT_PUBLIC_AWS_REGION,
+        credentials: {
+          accessKeyId: process.env.NEXT_PUBLIC_AWS_ACCESS_KEY_ID || '',
+          secretAccessKey: process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY || ''
+        }
+      });
+
+      const docClient = DynamoDBDocumentClient.from(client);
+
+      const { Items = [] } = await docClient.send(
+        new ScanCommand({
+          TableName: "MetaAge-MSP-Contract-Management",
+          ProjectionExpression: "contractName"
+        })
+      );
+
+      // 提取唯一的合約名稱
+      const uniqueContractNames = Array.from(new Set(Items.map(item => item.contractName)));
+      setContractNames(uniqueContractNames);
+    } catch (error) {
+      console.error('Error fetching contract names:', error);
+    }
+  };
+
   useEffect(() => {
     fetchOrganizationsWithContracts();
   }, []);
@@ -125,6 +155,7 @@ export default function OrganizationManagement() {
   const handleEdit = (org: Organization) => {
     setSelectedOrganization(org);
     setIsEditModalOpen(true);
+    fetchContractNames();
   };
 
   const handleDelete = async (name: string) => {
@@ -271,7 +302,12 @@ export default function OrganizationManagement() {
                     <tr key={index} className="border-b border-border-color hover:bg-hover-color transition-colors">
                       <td className="px-6 py-4 align-middle">
                         <div className="flex items-center justify-center">
-                          <span className="font-medium text-text-primary">{org.name}</span>
+                          <Link 
+                            href={`/contract-management?contract=${encodeURIComponent(org.contractName)}`}
+                            className="font-medium text-text-primary hover:text-blue-600 cursor-pointer"
+                          >
+                            {org.name}
+                          </Link>
                         </div>
                       </td>
                       <td className="px-6 py-4 align-middle">
@@ -367,6 +403,7 @@ export default function OrganizationManagement() {
         <CreateOrganizationForm 
           isOpen={isCreateFormOpen}
           onClose={() => setIsCreateFormOpen(false)}
+          onSuccess={fetchOrganizationsWithContracts}
         />
       )}
 
@@ -502,7 +539,8 @@ export default function OrganizationManagement() {
                         <input
                           type="text"
                           value={selectedOrganization.contractName}
-                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                          disabled
+                          className="w-full px-3 py-2 border rounded-lg bg-gray-50 text-gray-500"
                         />
                       </div>
                       <div>
@@ -510,6 +548,10 @@ export default function OrganizationManagement() {
                         <input
                           type="text"
                           value={selectedOrganization.manager}
+                          onChange={(e) => setSelectedOrganization({
+                            ...selectedOrganization,
+                            manager: e.target.value
+                          })}
                           className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
@@ -518,8 +560,8 @@ export default function OrganizationManagement() {
                         <input
                           type="number"
                           value={selectedOrganization.members}
-                          min="0"
-                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                          disabled
+                          className="w-full px-3 py-2 border rounded-lg bg-gray-50 text-gray-500"
                         />
                       </div>
                     </div>
