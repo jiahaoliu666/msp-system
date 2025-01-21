@@ -40,6 +40,7 @@ src/
 │   ├── common # 通用組件 (快速建立按鈕、側邊欄、主題切換按鈕)
 │   │   ├── CreateTicketForm.tsx # 建立工單表單
 │   │   ├── CreateTodoForm.tsx # 建立待辦表單
+│   │   ├── CreateOrganizationForm.tsx # 建立組織表單
 │   │   ├── Sidebar.tsx # 側邊欄
 │   │   ├── ThemeToggle.tsx # 主題切換按鈕
 │   ├── UserManagement # 用戶管理

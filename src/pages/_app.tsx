@@ -103,15 +103,15 @@ const AppContent: React.FC<AppProps> = ({ Component, pageProps }) => {
                 {/* 漢堡按鈕 */}
                 <button
                   onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                  className="p-2 rounded-lg hover:bg-hover-color transition-all duration-200"
+                  className="p-2 rounded-lg hover:bg-hover-color transition-all duration-200 relative w-10 h-10 flex items-center justify-center group"
                 >
-                  <div className="w-6 h-5 relative transform transition-all duration-300">
-                    <span className={`absolute h-0.5 w-6 bg-text-primary transform transition-all duration-300 
-                                        ${isSidebarOpen ? 'rotate-45 translate-y-2.5' : 'translate-y-0'}`}></span>
-                    <span className={`absolute h-0.5 w-6 bg-text-primary transform transition-all duration-300 
-                                        ${isSidebarOpen ? 'opacity-0' : 'opacity-100'} top-2`}></span>
-                    <span className={`absolute h-0.5 w-6 bg-text-primary transform transition-all duration-300 
-                                        ${isSidebarOpen ? '-rotate-45 translate-y-2.5' : 'translate-y-4'}`}></span>
+                  <div className="w-6 flex flex-col items-center justify-center gap-[5px]">
+                    <span className={`block h-[2px] bg-text-primary rounded-full transition-all duration-300 ease-in-out transform origin-center
+                      ${isSidebarOpen ? 'w-4 rotate-45 translate-y-[7px]' : 'w-6'}`}></span>
+                    <span className={`block h-[2px] bg-text-primary rounded-full transition-all duration-300 ease-in-out transform
+                      ${isSidebarOpen ? 'w-0 opacity-0' : 'w-6 opacity-100'}`}></span>
+                    <span className={`block h-[2px] bg-text-primary rounded-full transition-all duration-300 ease-in-out transform origin-center
+                      ${isSidebarOpen ? 'w-4 -rotate-45 -translate-y-[7px]' : 'w-6'}`}></span>
                   </div>
                 </button>
 

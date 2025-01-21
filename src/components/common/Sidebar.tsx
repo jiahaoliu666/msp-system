@@ -17,10 +17,10 @@ export default function Sidebar({ isSidebarOpen }: SidebarProps) {
     <div className={`${isSidebarOpen ? 'w-64' : 'w-0'} bg-background-primary dark:bg-background-secondary 
                     shadow-lg h-[calc(100vh-4rem)] overflow-y-auto fixed left-0 top-16 
                     transition-all duration-300 ease-in-out z-40`}>
-      <nav className="mt-5 px-2">
+      <nav className="px-2">
         <div className="space-y-1">
           {/* 主要功能區 */}
-          <div className={`px-3 py-2 text-xs font-semibold text-text-secondary uppercase tracking-wider ${!isSidebarOpen && 'hidden'}`}>
+          <div className={`px-3 py-2 mt-6 text-xs font-semibold text-text-secondary uppercase tracking-wider ${!isSidebarOpen && 'hidden'}`}>
             主要功能
           </div>
           {[

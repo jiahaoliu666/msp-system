@@ -88,6 +88,14 @@ export default function ContractManagement() {
         return (a.remainingHours ?? 0) - (b.remainingHours ?? 0);
       } else if (sortByTime === 'remaining-hours-high') {
         return (b.remainingHours ?? 0) - (a.remainingHours ?? 0);
+      } else if (sortByTime === 'status') {
+        const statusOrder: Record<string, number> = {
+          '生效中': 1,
+          '待簽署': 2,
+          '待續約': 3,
+          '已到期': 4
+        };
+        return (statusOrder[a.contractStatus] || 999) - (statusOrder[b.contractStatus] || 999);
       }
       return 0;
     });
@@ -126,7 +134,7 @@ export default function ContractManagement() {
       return daysUntilExpire <= 30 && daysUntilExpire > 0;
     }).length,
     pendingRenewal: contracts.filter(c => c.contractStatus === '待續約').length,
-    totalAmount: contracts.length // 這裡應該根據實際合約金額計算，目前僅顯示合約數量
+    totalAmount: contracts.length // 顯示合約數量
   };
 
   // 更新合約狀態的函數
@@ -525,6 +533,7 @@ export default function ContractManagement() {
               className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">排序方式</option>
+              <option value="status">依狀態排序</option>
               <option value="oldest">建立時間 - 最舊到最新</option>
               <option value="newest">建立時間 - 最新到最舊</option>
               <option value="expiring-soon">到期日期 - 最近到最遠</option>

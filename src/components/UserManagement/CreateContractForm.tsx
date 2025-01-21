@@ -98,7 +98,17 @@ export default function CreateContractForm({ isOpen, onClose, existingProducts }
       // 取得當前 UTC+8 時間
       const now = new Date();
       const utc8Time = new Date(now.getTime() + (8 * 60 * 60 * 1000));
-      const formattedTime = utc8Time.toISOString().replace('Z', '+08:00');
+      
+      // 格式化時間為 "YYYY-MM-DD HH:mm:ss" 格式
+      const formattedTime = utc8Time.toLocaleString('zh-TW', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      }).replace(/\//g, '-');
 
       // 生成合約編號
       const contractId = generateContractId();
