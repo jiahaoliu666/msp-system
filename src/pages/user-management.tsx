@@ -66,7 +66,7 @@ export default function UserManagement() {
           email: user.email,
           organization: user.organization,
           role: user.role,
-          status: !user.enabled ? '已停用' : user.status === 'FORCE_CHANGE_PASSWORD' ? '待驗證' : '使用中',
+          status: !user.enabled ? '已停用' : user.status === 'FORCE_CHANGE_PASSWORD' ? '使用中' : '使用中',
           emailVerified: user.emailVerified || false,
           lastLogin: formattedLastLogin,
           createdAt: user.createdAt,
@@ -158,7 +158,7 @@ export default function UserManagement() {
   };
 
   // 處理刪除用戶
-  const handleDelete = async (username: string) => {
+  const handleDelete = async (username: string, email: string) => {
     if (window.confirm('確定要刪除此用戶嗎？')) {
       try {
         const response = await fetch('/api/users', {
@@ -166,7 +166,7 @@ export default function UserManagement() {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ username }),
+          body: JSON.stringify({ username, email }),
         });
 
         if (!response.ok) {
@@ -213,18 +213,6 @@ export default function UserManagement() {
         </div>
       </div>
 
-      {loading && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-4 rounded-lg shadow-lg flex items-center space-x-3">
-            <svg className="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <span className="text-gray-700">載入中...</span>
-          </div>
-        </div>
-      )}
-
       {error && (
         <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
           <div className="flex items-center">
@@ -247,7 +235,6 @@ export default function UserManagement() {
                   <th className="px-6 py-3 text-center">組織</th>
                   <th className="px-6 py-3 text-center">角色</th>
                   <th className="px-6 py-3 text-center">狀態</th>
-                  <th className="px-6 py-3 text-center">電子郵件驗證</th>
                   <th className="px-6 py-3 text-center">最後登入</th>
                   <th className="px-6 py-3 text-center">操作</th>
                 </tr>
@@ -278,20 +265,9 @@ export default function UserManagement() {
                       <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
                         user.status === '使用中' 
                           ? 'bg-green-100 text-green-800' 
-                          : user.status === '待驗證'
-                          ? 'bg-yellow-100 text-yellow-800'
                           : 'bg-red-100 text-red-800'
                       }`}>
-                        {user.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        user.emailVerified
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {user.emailVerified ? '已驗證' : '未驗證'}
+                        {user.status === 'FORCE_CHANGE_PASSWORD' ? '使用中' : user.status}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500 text-center">
@@ -312,7 +288,7 @@ export default function UserManagement() {
                           編輯
                         </button>
                         <button
-                          onClick={() => handleDelete(user.username)}
+                          onClick={() => handleDelete(user.username, user.email)}
                           className="text-red-600 hover:text-red-900"
                         >
                           刪除
@@ -402,16 +378,7 @@ export default function UserManagement() {
                           </div>
                           <div>
                             <label className="block text-xs font-medium text-gray-500 mb-1">電子郵件</label>
-                            <div className="flex items-center space-x-2">
-                              <p className="text-sm text-gray-900">{selectedUser.email}</p>
-                              <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
-                                selectedUser.emailVerified
-                                  ? 'bg-green-100 text-green-800'
-                                  : 'bg-yellow-100 text-yellow-800'
-                              }`}>
-                                {selectedUser.emailVerified ? '已驗證' : '未驗證'}
-                              </span>
-                            </div>
+                            <p className="text-sm text-gray-900">{selectedUser.email}</p>
                           </div>
                         </div>
                       </div>

@@ -126,7 +126,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           TemporaryPassword: temporaryPassword,
           UserAttributes: [
             { Name: "email", Value: email },
-            { Name: "email_verified", Value: "false" }
+            { Name: "email_verified", Value: "true" }
           ],
         });
         
@@ -158,7 +158,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 email,
                 organization: userAttributes.organization,
                 role: userAttributes.role,
-                emailVerified: false,
+                emailVerified: true,
                 createdAt: formattedTime,
                 updatedAt: formattedTime
               }
@@ -289,47 +289,55 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(200).json({ message: 'User updated successfully' });
 
       case 'DELETE':
-        const { username: deleteUsername } = req.body;
+        const { username: deleteUsername, email: deleteEmail } = req.body;
         
         try {
+          console.log('開始刪除用戶:', { username: deleteUsername, email: deleteEmail });
+
           // 1. 從 Cognito 刪除用戶
           const deleteCommand = new AdminDeleteUserCommand({
             UserPoolId: process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID,
             Username: deleteUsername,
           });
           await cognitoClient.send(deleteCommand);
+          console.log('Cognito 用戶刪除成功');
 
           // 2. 從 DynamoDB 刪除用戶資訊
-          // 先查詢所有相關記錄
-          const { Items = [] } = await docClient.send(
-            new QueryCommand({
-              TableName: "MetaAge-MSP-User-Management",
-              KeyConditionExpression: "email = :email",
-              ExpressionAttributeValues: {
-                ":email": deleteUsername
-              }
-            })
-          );
-
-          // 刪除所有找到的記錄
-          const deletePromises = Items.map(item => 
-            docClient.send(
+          try {
+            console.log('開始從 DynamoDB 刪除用戶資料，email:', deleteEmail);
+            const deleteResult = await docClient.send(
               new DeleteCommand({
                 TableName: "MetaAge-MSP-User-Management",
                 Key: {
-                  email: deleteUsername
+                  email: deleteEmail
                 }
               })
-            )
-          );
+            );
+            console.log('DynamoDB 刪除結果:', deleteResult);
+            console.log('DynamoDB 用戶資料刪除成功');
+          } catch (dbError: any) {
+            console.error('DynamoDB 刪除錯誤:', {
+              name: dbError.name,
+              message: dbError.message,
+              code: dbError.code,
+              statusCode: dbError.$metadata?.httpStatusCode,
+              requestId: dbError.$metadata?.requestId
+            });
+            // 即使 DynamoDB 刪除失敗，我們仍然返回成功
+            // 因為 Cognito 用戶已經被刪除
+          }
 
-          await Promise.all(deletePromises);
-
-          return res.status(200).json({ message: 'User and all related records deleted successfully' });
-        } catch (error) {
-          console.error('Delete user error:', error);
+          return res.status(200).json({ message: '用戶已成功刪除' });
+        } catch (error: any) {
+          console.error('Delete user error:', {
+            name: error.name,
+            message: error.message,
+            code: error.code,
+            statusCode: error.$metadata?.httpStatusCode,
+            requestId: error.$metadata?.requestId
+          });
           return res.status(500).json({ 
-            error: 'Failed to delete user and related records',
+            error: '刪除用戶失敗',
             details: error
           });
         }
