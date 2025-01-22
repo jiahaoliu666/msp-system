@@ -311,22 +311,13 @@ const Profile = () => (
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-text-primary">基本資料</h3>
             <div className="space-y-4">
-            <div>
-                <label className="block text-sm font-medium text-text-secondary mb-2">姓</label>
-                <input
-                  type="text"
-                  value="Liu"
-                  className="w-full p-3 border border-border-color rounded-lg bg-background-primary"
-                  disabled
-                />
-              </div>
               <div>
-                <label className="block text-sm font-medium text-text-secondary mb-2">名字</label>
+                <label className="block text-sm font-medium text-text-secondary mb-2">姓名</label>
                 <input
                   type="text"
-                  value="JiaHao"
-                  className="w-full p-3 border border-border-color rounded-lg bg-background-primary"
-                  disabled
+                  value="Liu JiaHao"
+                  className="w-full p-3 border border-border-color rounded-lg bg-background-primary text-text-primary focus:ring-2 focus:ring-accent-color focus:border-accent-color"
+                  placeholder="請輸入姓名"
                 />
               </div>
               <div>

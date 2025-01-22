@@ -4,6 +4,7 @@ import { useState, useEffect, Fragment } from 'react';
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, ScanCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
 import { Dialog, Transition } from '@headlessui/react';
+import { useRouter } from 'next/router';
 
 interface Organization {
   name: string;
@@ -29,6 +30,8 @@ export default function OrganizationManagement() {
     newOrgsThisMonth: 0,
     activeOrgs: 0
   });
+  const [searchTerm, setSearchTerm] = useState('');
+  const router = useRouter();
 
   const fetchOrganizationsWithContracts = async () => {
     try {
@@ -142,6 +145,14 @@ export default function OrganizationManagement() {
       console.error('Error fetching contract names:', error);
     }
   };
+
+  // 處理 URL 參數
+  useEffect(() => {
+    const { organization } = router.query;
+    if (organization && typeof organization === 'string') {
+      setSearchTerm(decodeURIComponent(organization));
+    }
+  }, [router.query]);
 
   useEffect(() => {
     fetchOrganizationsWithContracts();
@@ -271,6 +282,8 @@ export default function OrganizationManagement() {
                 <input
                   type="text"
                   placeholder="搜尋組織..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-64 pl-10 pr-4 py-2 border border-border-color rounded-lg text-sm
                          focus:outline-none focus:ring-2 focus:ring-accent-color"
                 />
@@ -298,63 +311,68 @@ export default function OrganizationManagement() {
                   </tr>
                 </thead>
                 <tbody>
-                  {organizations.map((org, index) => (
-                    <tr key={index} className="border-b border-border-color hover:bg-hover-color transition-colors">
-                      <td className="px-6 py-4 align-middle">
-                        <div className="flex items-center justify-center">
-                          <Link 
-                            href={`/contract-management?contract=${encodeURIComponent(org.contractName)}`}
-                            className="font-medium text-text-primary hover:text-blue-600 cursor-pointer"
-                          >
-                            {org.name}
-                          </Link>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 align-middle">
-                        <div className="flex items-center justify-center">
-                          <span className="text-text-primary">{org.contractName}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 align-middle">
-                        <div className="flex items-center justify-center">
-                          <span className="text-text-primary">{org.contractType}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 align-middle">
-                        <div className="flex items-center justify-center">
-                          <span className="text-text-primary">{org.manager}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-center align-middle">
-                        <span className="text-text-primary">{org.members}</span>
-                      </td>
-                      <td className="px-6 py-4 text-center align-middle text-text-secondary">
-                        {org.createdAt}
-                      </td>
-                      <td className="px-6 py-4 align-middle">
-                        <div className="flex justify-center space-x-2">
-                          <button 
-                            onClick={() => handleView(org)}
-                            className="text-blue-600 hover:text-blue-900"
-                          >
-                            查看
-                          </button>
-                          <button 
-                            onClick={() => handleEdit(org)}
-                            className="text-gray-600 hover:text-gray-900"
-                          >
-                            編輯
-                          </button>
-                          <button 
-                            onClick={() => handleDelete(org.name)}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            刪除
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                  {organizations
+                    .filter(org => 
+                      org.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      org.contractName.toLowerCase().includes(searchTerm.toLowerCase())
+                    )
+                    .map((org, index) => (
+                      <tr key={index} className="border-b border-border-color hover:bg-hover-color transition-colors">
+                        <td className="px-6 py-4 align-middle">
+                          <div className="flex items-center justify-center">
+                            <Link 
+                              href={`/contract-management?contract=${encodeURIComponent(org.contractName)}`}
+                              className="font-medium text-text-primary hover:text-blue-600 cursor-pointer"
+                            >
+                              {org.name}
+                            </Link>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 align-middle">
+                          <div className="flex items-center justify-center">
+                            <span className="text-text-primary">{org.contractName}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 align-middle">
+                          <div className="flex items-center justify-center">
+                            <span className="text-text-primary">{org.contractType}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 align-middle">
+                          <div className="flex items-center justify-center">
+                            <span className="text-text-primary">{org.manager}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-center align-middle">
+                          <span className="text-text-primary">{org.members}</span>
+                        </td>
+                        <td className="px-6 py-4 text-center align-middle text-text-secondary">
+                          {org.createdAt}
+                        </td>
+                        <td className="px-6 py-4 align-middle">
+                          <div className="flex justify-center space-x-2">
+                            <button 
+                              onClick={() => handleView(org)}
+                              className="text-blue-600 hover:text-blue-900"
+                            >
+                              查看
+                            </button>
+                            <button 
+                              onClick={() => handleEdit(org)}
+                              className="text-gray-600 hover:text-gray-900"
+                            >
+                              編輯
+                            </button>
+                            <button 
+                              onClick={() => handleDelete(org.name)}
+                              className="text-red-600 hover:text-red-900"
+                            >
+                              刪除
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
                 </tbody>
               </table>
             ) : (

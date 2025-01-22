@@ -231,35 +231,42 @@ export default function UserManagement() {
             <table className="min-w-full">
               <thead>
                 <tr className="bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <th className="px-6 py-3 text-center">使用者資訊</th>
+                  <th className="px-6 py-3 text-center">項次</th>
                   <th className="px-6 py-3 text-center">組織</th>
+                  <th className="px-6 py-3 text-center">電子郵件</th>
                   <th className="px-6 py-3 text-center">角色</th>
+                  <th className="px-6 py-3 text-center">使用者</th>
                   <th className="px-6 py-3 text-center">狀態</th>
                   <th className="px-6 py-3 text-center">最後登入</th>
                   <th className="px-6 py-3 text-center">操作</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {users.map((user) => (
+                {users.map((user, index) => (
                   <tr key={user.username} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 text-center text-sm text-gray-900">
+                      {index + 1}
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <Link
+                        href={`/organization-management?organization=${encodeURIComponent(user.organization || '')}`}
+                        className="font-medium text-text-primary hover:text-blue-600 cursor-pointer"
+                      >
+                        {user.organization || '-'}
+                      </Link>
+                    </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-center">
-                        <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                          <span className="text-blue-600 font-medium">
-                            {user.email.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900">{user.email}</div>
-                          <div className="text-sm text-gray-500">{user.username}</div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900 text-center">
-                      {user.organization || '-'}
+                      {user.role || '-'}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900 text-center">
-                      {user.role || '-'}
+                      {user.username || '-'}
                     </td>
                     <td className="px-6 py-4 text-center">
                       <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
