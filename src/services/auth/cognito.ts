@@ -224,7 +224,7 @@ export class CognitoService {
           if (sendError.message.includes('Password attempts exceeded')) {
             throw new Error('密碼嘗試次數過多，請稍後再試');
           }
-          throw new Error('帳號或密碼錯誤');
+          throw new Error('電子郵件或密碼錯誤');
         }
 
         // 特殊處理 UserNotConfirmedException
@@ -248,16 +248,16 @@ export class CognitoService {
         case 'NotAuthorizedException':
           errorMessage = error.message.includes('Password attempts exceeded') 
             ? '密碼嘗試次數過多，請稍後再試'
-            : '帳號或密碼錯誤';
+            : '電子郵件或密碼錯誤';
           break;
         case 'UserNotConfirmedException':
           errorMessage = '帳號尚未驗證，請查收電子郵件進行驗證';
           break;
         case 'UserNotFoundException':
-          errorMessage = '找不到此帳號';
+          errorMessage = '找不到此電子郵件';
           break;
         case 'InvalidParameterException':
-          errorMessage = '請檢查輸入的帳號密碼格式是否正確';
+          errorMessage = '請檢查輸入的電子郵件密碼格式是否正確';
           break;
         case 'TooManyRequestsException':
           errorMessage = '登入嘗試次數過多，請稍後再試';

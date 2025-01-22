@@ -36,7 +36,7 @@ export const Toast: React.FC = () => {
   const { toasts, removeToast } = useToast();
 
   return (
-    <div className="fixed top-4 right-4 z-50 space-y-4 min-w-[320px]">
+    <div className="fixed top-16 right-4 z-50 space-y-4 min-w-[320px]">
       <AnimatePresence>
         {toasts.map((toast) => (
           <motion.div

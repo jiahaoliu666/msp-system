@@ -12,7 +12,6 @@ export default function Login() {
     email: '',
     password: '',
   });
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -33,7 +32,6 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
     
     console.log('開始處理登入表單提交...', {
       hasEmail: !!formData.email,
@@ -41,7 +39,6 @@ export default function Login() {
     });
     
     if (!formData.email || !formData.password) {
-      setError('請填寫電子郵件和密碼');
       showToast('error', '請填寫電子郵件和密碼');
       setLoading(false);
       return;
@@ -80,37 +77,27 @@ export default function Login() {
         stack: err.stack,
         $metadata: err.$metadata
       });
-
-      let errorMessage = '登入失敗，請檢查您的帳號密碼';
       
       // 處理 Cognito 特定錯誤
       switch (err.name) {
         case 'NotAuthorizedException':
-          errorMessage = '帳號或密碼錯誤';
-          showToast('error', '帳號或密碼錯誤');
+          showToast('error', '電子郵件或密碼錯誤');
           break;
         case 'UserNotConfirmedException':
-          errorMessage = '帳號尚未驗證，請查收電子郵件進行驗證';
           showToast('warning', '帳號尚未驗證，請查收電子郵件進行驗證');
           break;
         case 'UserNotFoundException':
-          errorMessage = '找不到此帳號';
           showToast('error', '找不到此帳號');
           break;
         case 'PasswordResetRequiredException':
-          errorMessage = '需要重設密碼';
           showToast('warning', '需要重設密碼，請聯繫系統管理員');
           break;
         case 'TooManyRequestsException':
-          errorMessage = '登入嘗試次數過多，請稍後再試';
           showToast('error', '登入嘗試次數過多，請稍後再試');
           break;
         default:
-          errorMessage = err.message || '登入失敗，請稍後再試';
-          showToast('error', errorMessage);
+          showToast('error', err.message || '登入失敗，請稍後再試');
       }
-      
-      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -244,12 +231,6 @@ export default function Login() {
                     </button>
                   </div>
                 </div>
-
-                {error && (
-                  <div className="text-red-500 text-sm p-3 bg-red-50 rounded-xl border border-red-100">
-                    {error}
-                  </div>
-                )}
 
                 <button
                   type="submit"
