@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ThemeProvider as NextThemesProvider } from 'next-themes';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { LoadingProvider } from '@/context/LoadingContext';
+import { AuthProvider } from '@/context/AuthContext';
 import Sidebar from '@/components/common/Sidebar';
 import CreateTicketModal from '@/components/common/CreateTicketForm';
 import CreateTodoForm from '@/components/common/CreateTodoForm';
@@ -59,7 +60,8 @@ const AppContent: React.FC<AppProps> = ({ Component, pageProps }) => {
   // 判斷是否為不需要顯示導航的頁面
   const isStandalonePage = router.pathname === '/user-portal' || 
                           router.pathname === '/login' || 
-                          router.pathname === '/404';
+                          router.pathname === '/404' ||
+                          router.pathname === '/change-password';
 
   // 點擊外部關閉用戶選單
   React.useEffect(() => {
@@ -315,8 +317,10 @@ export default function App(props: AppProps) {
         <ThemeProvider>
           <LoadingProvider>
             <ToastProvider>
-              <AppContent {...props} />
-              <Toast />
+              <AuthProvider>
+                <AppContent {...props} />
+                <Toast />
+              </AuthProvider>
             </ToastProvider>
           </LoadingProvider>
         </ThemeProvider>

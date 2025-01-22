@@ -21,7 +21,10 @@ export default function Login() {
     setLoading(true);
     setError('');
     
-    console.log('開始處理登入表單提交...');
+    console.log('開始處理登入表單提交...', {
+      hasEmail: !!formData.email,
+      hasPassword: !!formData.password
+    });
     
     if (!formData.email || !formData.password) {
       setError('請填寫電子郵件和密碼');
@@ -31,17 +34,37 @@ export default function Login() {
     }
 
     try {
-      console.log('嘗試登入...');
-      await login({
+      console.log('嘗試登入...', {
         email: formData.email,
-        password: formData.password,
+        passwordLength: formData.password.length
       });
+
       console.log('登入請求已發送，等待回應...');
+      
+      try {
+        const loginResult = await login({
+          email: formData.email,
+          password: formData.password,
+        });
+        console.log('登入請求已完成，等待處理結果...', { loginResult });
+      } catch (error: any) {
+        console.error('登入過程發生錯誤:', {
+          name: error.name,
+          message: error.message,
+          code: error.code,
+          stack: error.stack,
+          $metadata: error.$metadata
+        });
+        throw error;
+      }
+
     } catch (err: any) {
       console.error('登入錯誤:', {
         name: err.name,
         message: err.message,
-        code: err.__type
+        code: err.__type,
+        stack: err.stack,
+        $metadata: err.$metadata
       });
 
       let errorMessage = '登入失敗，請檢查您的帳號密碼';

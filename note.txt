@@ -20,6 +20,9 @@ MFA功能
 
 是否需要自動完成 已驗證電子郵件地址
 需要驗證電子郵件地址嗎
+
+客戶評分 此回應是否有幫助？請按一下此處進行評分：
+
 --------------------------------
 
 src/pages/user-portal/index.tsx 客戶介面
@@ -188,6 +191,8 @@ src/pages/contract-management/index.tsx 合約管理
 
 當合約快要過期時 要能通知
 
+負責人
+
 --------------------------------
 
 organization-management.tsx # 組織管理
@@ -211,6 +216,10 @@ organization-management.tsx # 組織管理
 組織要有aws 帳戶id 不要有登入資訊 使用SSO登入
 
 組織編號
+
+組織類型
+
+AWS帳戶ID
 --------------------------------
 
 src/pages/user-management/index.tsx 使用者管理
@@ -303,6 +312,13 @@ src/pages/version-record/index.tsx 更版紀錄
 權限上下文
 
 環境變數不要有常數 都使用變數值
+
+服務操作紀錄 例如 瓏山林 等等
+
+符合 sla、slt
+
+suport -> case 到ticket system
+
 --------------------------------
 
 

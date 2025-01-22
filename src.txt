@@ -11,9 +11,9 @@ src/
 │   ├── index.tsx # 首頁
 │   ├── _document.tsx # 自定義文檔
 │   ├── 404.tsx # 404 錯誤頁面
+│   ├── change-password.tsx # 更改密碼頁面
+│   ├── user-portal.tsx # 客戶介面
 │   ├── login # 登入頁面
-│   │   └── index.tsx 
-│   ├── user-portal # 客戶介面
 │   │   └── index.tsx 
 │   │--------------------------------------------------------------側邊欄頁面
 │   ├── check-in.tsx # 值班簽到
