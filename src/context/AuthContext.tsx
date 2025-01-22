@@ -30,6 +30,31 @@ const AuthContext = createContext<AuthContextType>({
 
 export const useAuth = () => useContext(AuthContext);
 
+// 定義不需要驗證的頁面路徑
+const PUBLIC_PATHS = ['/login', '/change-password', '/404'];
+
+// 路由保護 hook
+export function useProtectedRoute() {
+  const { isAuthenticated, isLoading } = useAuth();
+  const router = useRouter();
+  const { showToast } = useToast();
+
+  useEffect(() => {
+    // 檢查是否為 404 頁面
+    const is404Page = router.pathname === '/404';
+    
+    if (!isLoading && !isAuthenticated && !PUBLIC_PATHS.includes(router.pathname) && !is404Page) {
+      showToast('error', '請先登入');
+      router.replace({
+        pathname: '/login',
+        query: { returnUrl: router.asPath }
+      });
+    }
+  }, [isAuthenticated, isLoading, router, showToast]);
+
+  return { isAuthenticated, isLoading };
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -188,11 +213,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = () => {
+    // 清除所有認證相關的 localStorage 數據
     localStorage.removeItem('authToken');
     localStorage.removeItem('idToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('userInfo');
+    localStorage.clear(); // 清除所有其他可能的數據
+    
+    // 重置用戶狀態
     setUser(null);
+    
+    // 顯示登出成功訊息
+    showToast('success', '已成功登出');
+    
+    // 導向登入頁面
     router.push('/login');
   };
 

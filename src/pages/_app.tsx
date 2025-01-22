@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { ThemeProvider as NextThemesProvider } from 'next-themes';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { LoadingProvider } from '@/context/LoadingContext';
-import { AuthProvider } from '@/context/AuthContext';
+import { AuthProvider, useAuth, useProtectedRoute } from '@/context/AuthContext';
 import Sidebar from '@/components/common/Sidebar';
 import CreateTicketModal from '@/components/common/CreateTicketForm';
 import CreateTodoForm from '@/components/common/CreateTodoForm';
@@ -35,6 +35,8 @@ const AppContent: React.FC<AppProps> = ({ Component, pageProps }) => {
   const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false);
   const userMenuRef = React.useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const { logout } = useAuth();
+  const { isLoading, isAuthenticated } = useProtectedRoute();
 
   // 監聽路由變化
   React.useEffect(() => {
@@ -57,7 +59,7 @@ const AppContent: React.FC<AppProps> = ({ Component, pageProps }) => {
     };
   }, [router]);
 
-  // 判斷是否為不需要顯示導航的頁面
+  // 判斷是否為不需要驗證的頁面
   const isStandalonePage = router.pathname === '/user-portal' || 
                           router.pathname === '/login' || 
                           router.pathname === '/404' ||
@@ -92,9 +94,27 @@ const AppContent: React.FC<AppProps> = ({ Component, pageProps }) => {
   };
 
   const handleLogout = () => {
-    // TODO: 實作登出邏輯
-    console.log('登出');
+    logout();
   };
+
+  // 如果正在加載認證狀態，顯示加載中
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background-secondary">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-color"></div>
+          <p className="text-text-secondary">載入中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 如果需要認證但未登入，不渲染頁面內容
+  const PUBLIC_PATHS = ['/login', '/change-password', '/404'];
+  const is404Page = router.pathname === '/404';
+  if (!isAuthenticated && !PUBLIC_PATHS.includes(router.pathname) && !is404Page) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-background-secondary">
@@ -233,7 +253,7 @@ const AppContent: React.FC<AppProps> = ({ Component, pageProps }) => {
                     <div className="absolute right-0 mt-2 w-48 bg-background-primary rounded-lg shadow-lg py-1 z-[60]
                                   border border-border-color">
                       <Link
-                        href="/user-portal"
+                        href="/user-portal?tab=profile"
                         className="block px-4 py-2 text-sm text-text-primary hover:bg-hover-color flex items-center"
                         onClick={() => setIsUserMenuOpen(false)}
                       >
@@ -313,7 +333,7 @@ export default function App(props: AppProps) {
         <title>MetaAge MSP</title>
         <meta name="description" content="MetaAge MSP System" />
       </Head>
-      <NextThemesProvider attribute="class" defaultTheme="system" enableSystem>
+      <NextThemesProvider attribute="class" defaultTheme="light" enableSystem={false}>
         <ThemeProvider>
           <LoadingProvider>
             <ToastProvider>

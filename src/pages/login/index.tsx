@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { FaShieldAlt, FaHeadset, FaRocket, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
@@ -6,7 +6,7 @@ import { useToast } from '@/context/ToastContext';
 
 export default function Login() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const { showToast } = useToast();
   const [formData, setFormData] = useState({
     email: '',
@@ -15,6 +15,20 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  // 檢查登入狀態
+  useEffect(() => {
+    const checkAuthStatus = () => {
+      const token = localStorage.getItem('authToken');
+      if (token || isAuthenticated) {
+        console.log('用戶已登入，重定向到首頁或返回頁面');
+        const returnUrl = router.query.returnUrl as string;
+        router.replace(returnUrl || '/');
+      }
+    };
+
+    checkAuthStatus();
+  }, [isAuthenticated, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,11 +56,11 @@ export default function Login() {
       console.log('登入請求已發送，等待回應...');
       
       try {
-        const loginResult = await login({
+        await login({
           email: formData.email,
           password: formData.password,
         });
-        console.log('登入請求已完成，等待處理結果...', { loginResult });
+        console.log('登入請求已完成，等待處理結果...');
       } catch (error: any) {
         console.error('登入過程發生錯誤:', {
           name: error.name,

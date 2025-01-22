@@ -3,6 +3,8 @@ import Link from 'next/link';
 import Head from 'next/head';
 import Image from 'next/image';
 import NProgress from 'nprogress';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/router';
 
 // 頁面標題組件
 const PageTitle = ({ title, description }: { title: string; description?: string }) => (
@@ -587,9 +589,26 @@ const Chatbot = () => {
 };
 
 export default function UserPortal() {
-  const [activeTab, setActiveTab] = useState('home');
+  const { logout } = useAuth();
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState(() => {
+    // 從 URL 參數讀取初始頁面
+    if (typeof window !== 'undefined') {
+      const { tab } = router.query;
+      return tab || 'home';
+    }
+    return 'home';
+  });
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // 監聽 URL 參數變化
+  useEffect(() => {
+    const { tab } = router.query;
+    if (tab) {
+      setActiveTab(tab as string);
+    }
+  }, [router.query]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -807,7 +826,10 @@ export default function UserPortal() {
                       </Link>
                     </div>
                     <div className="border-t border-slate-700 py-1">
-                      <button className="w-full px-4 py-2 text-sm text-red-400 hover:bg-slate-700 flex items-center">
+                      <button 
+                        className="w-full px-4 py-2 text-sm text-red-400 hover:bg-slate-700 flex items-center"
+                        onClick={logout}
+                      >
                         <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                         </svg>
