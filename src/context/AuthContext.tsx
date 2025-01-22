@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { CognitoService, LoginParams } from '@/services/auth/cognito';
 import { useToast } from '@/context/ToastContext';
@@ -31,19 +31,25 @@ const AuthContext = createContext<AuthContextType>({
 export const useAuth = () => useContext(AuthContext);
 
 // 定義不需要驗證的頁面路徑
-const PUBLIC_PATHS = ['/login', '/change-password', '/404'];
+const PUBLIC_PATHS = ['/login', '/change-password', '/404', '/user-portal'];
 
 // 路由保護 hook
 export function useProtectedRoute() {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const { showToast } = useToast();
+  const previousAuthState = useRef(isAuthenticated);
 
   useEffect(() => {
     // 檢查是否為 404 頁面
     const is404Page = router.pathname === '/404';
     
-    if (!isLoading && !isAuthenticated && !PUBLIC_PATHS.includes(router.pathname) && !is404Page) {
+    // 檢查是否從登入狀態變為登出狀態
+    const isLogoutTransition = previousAuthState.current && !isAuthenticated;
+    previousAuthState.current = isAuthenticated;
+
+    // 只有在非登出過程中，且未登入，且不在公開頁面時，才顯示提示
+    if (!isLoading && !isAuthenticated && !PUBLIC_PATHS.includes(router.pathname) && !is404Page && !isLogoutTransition) {
       showToast('error', '請先登入');
       router.replace({
         pathname: '/login',
@@ -226,8 +232,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // 顯示登出成功訊息
     showToast('success', '已成功登出');
     
-    // 導向登入頁面
-    router.push('/login');
+    // 導向登入頁面，並添加 from=logout 參數
+    router.push({
+      pathname: '/login',
+      query: { from: 'logout' }
+    });
   };
 
   return (

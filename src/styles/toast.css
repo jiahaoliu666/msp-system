@@ -62,37 +62,41 @@
   }
 }
 
-/* 更新 Toast 基礎樣式 */
+/* Toast 容器基礎樣式 */
 .toast {
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: 
-    0 8px 24px rgba(0, 0, 0, 0.06),
-    0 2px 8px rgba(0, 0, 0, 0.04),
-    0 0 1px rgba(0, 0, 0, 0.04);
+    0 8px 24px rgba(0, 0, 0, 0.12),
+    0 2px 8px rgba(0, 0, 0, 0.08),
+    0 0 1px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(12px);
   transform-origin: center;
   max-width: min(calc(100vw - 2rem), 28rem);
   word-break: break-word;
   overflow-wrap: break-word;
+  border-width: 1px;
+  will-change: transform, opacity;
 }
 
 .toast:hover {
-  transform: translateY(-2px);
+  transform: translateY(-2px) scale(1.01);
   box-shadow: 
-    0 12px 36px rgba(0, 0, 0, 0.08),
-    0 4px 12px rgba(0, 0, 0, 0.06),
-    0 0 1px rgba(0, 0, 0, 0.04);
+    0 12px 36px rgba(0, 0, 0, 0.16),
+    0 4px 12px rgba(0, 0, 0, 0.12),
+    0 0 1px rgba(0, 0, 0, 0.12);
 }
 
 /* 進度條樣式 */
 .toast-progress {
-  transition: width 0.1s linear, opacity 0.2s ease;
+  transition: width linear;
   background: currentColor;
   opacity: 0.2;
-  height: 2px;
+  height: 3px;
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
+  border-radius: 0 0 4px 4px;
 }
 
 /* 動畫類 */
@@ -113,10 +117,20 @@
   opacity: 0;
 }
 
-/* 深色主題 */
+/* 深色主題適配 */
 @media (prefers-color-scheme: dark) {
   .toast {
-    --tw-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-    box-shadow: var(--tw-shadow);
+    backdrop-filter: blur(12px);
+    box-shadow: 
+      0 8px 24px rgba(0, 0, 0, 0.3),
+      0 2px 8px rgba(0, 0, 0, 0.2),
+      0 0 1px rgba(0, 0, 0, 0.2);
+  }
+
+  .toast:hover {
+    box-shadow: 
+      0 12px 36px rgba(0, 0, 0, 0.35),
+      0 4px 12px rgba(0, 0, 0, 0.25),
+      0 0 1px rgba(0, 0, 0, 0.2);
   }
 } 
