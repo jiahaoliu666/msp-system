@@ -426,13 +426,13 @@ const Profile = () => (
 
 // 聊天機器人組件
 const Chatbot = () => {
-  const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
     { type: 'bot', content: '您好！我是 MetaAge MSP 智能助理，很高興為您服務。請問有什麼我可以幫您的嗎？', time: '09:00' },
     { type: 'bot', content: '您可以詢問我關於：\n1. 系統使用問題\n2. 帳號相關問題\n3. 技術支援需求\n4. 一般諮詢', time: '09:00' }
   ]);
   const chatWindowRef = useRef<HTMLDivElement>(null);
   const [inputValue, setInputValue] = useState('');
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     if (chatWindowRef.current) {
@@ -441,140 +441,152 @@ const Chatbot = () => {
   }, [messages]);
 
   return (
-    <div className="fixed bottom-8 right-8 z-50">
-      {isOpen && (
-        <div className="absolute bottom-24 right-0 w-[400px] h-[600px] bg-white rounded-3xl shadow-2xl border border-slate-200/50 flex flex-col overflow-hidden animate-slideUp">
-          {/* 聊天視窗標題 */}
-          <div className="p-6 bg-gradient-to-r from-blue-600 to-blue-500">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 rounded-xl bg-white/10 p-1.5 flex items-center justify-center">
-                  <Image
-                    src="/msp-logo.png"
-                    alt="MSP Logo"
-                    width={36}
-                    height={36}
-                    className="object-contain"
-                  />
-                </div>
-                <div>
-                  <h3 className="font-medium text-lg text-white">MetaAge 智能助理</h3>
-                  <div className="flex items-center space-x-2 text-xs text-white/90">
-                    <span className="flex items-center">
-                      <span className="w-2 h-2 bg-emerald-400 rounded-full mr-1.5 animate-pulse"></span>
-                      線上為您服務
-                    </span>
-                    <span className="text-white/60">|</span>
-                    <span className="text-white/90">回應時間：約 1 分鐘</span>
-                  </div>
-                </div>
-              </div>
-              <button
-                onClick={() => setIsOpen(false)}
-                className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white/80 hover:text-white"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          {/* 聊天訊息區域 */}
-          <div className="flex-1 p-6 overflow-y-auto bg-slate-50" ref={chatWindowRef}>
-            <div className="space-y-6">
-              {messages.map((message, index) => (
-                <div
-                  key={index}
-                  className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'} group`}
-                >
-                  {message.type === 'bot' && (
-                    <div className="w-8 h-8 rounded-lg bg-blue-500/10 p-1 mr-3 flex-shrink-0">
-                      <Image
-                        src="/msp-logo.png"
-                        alt="Bot Avatar"
-                        width={24}
-                        height={24}
-                        className="object-contain"
-                      />
-                    </div>
-                  )}
-                  <div
-                    className={`max-w-[80%] p-4 ${
-                      message.type === 'user'
-                        ? 'bg-blue-500 text-white rounded-2xl rounded-br-none shadow-sm'
-                        : 'bg-white text-slate-800 rounded-2xl rounded-bl-none shadow-sm border border-slate-200/50'
-                    }`}
-                  >
-                    <div className="whitespace-pre-line text-sm">{message.content}</div>
-                    <div className={`text-xs mt-1.5 ${message.type === 'user' ? 'text-white/80' : 'text-slate-500'}`}>
-                      {message.time}
-                    </div>
-                  </div>
-                  {message.type === 'user' && (
-                    <div className="w-8 h-8 rounded-full bg-blue-500/10 ml-3 flex items-center justify-center flex-shrink-0">
-                      👤
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* 快速回覆選項 */}
-          <div className="p-4 border-t border-slate-200/50 bg-white">
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
-              {['系統使用問題', '帳號相關', '技術支援', '一般諮詢'].map((option) => (
-                <button
-                  key={option}
-                  className="px-4 py-2 bg-slate-100 text-slate-600 rounded-full hover:bg-blue-50 hover:text-blue-500 transition-colors whitespace-nowrap text-sm font-medium"
-                >
-                  {option}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* 輸入區域 */}
-          <div className="p-4 border-t border-slate-200/50 bg-white">
-            <div className="flex space-x-3">
-              <div className="flex-1 relative">
-                <input
-                  type="text"
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  placeholder="輸入訊息..."
-                  className="w-full px-4 py-3 bg-slate-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 pr-10 text-sm"
+    <div className="fixed bottom-8 right-8 z-50 flex items-end">
+      {/* 聊天視窗 */}
+      <div className={`
+        absolute bottom-20 right-0
+        transform transition-all duration-300 ease-in-out
+        ${isOpen ? 'translate-y-0 opacity-100 visible' : 'translate-y-4 opacity-0 invisible'}
+        w-[400px] bg-white rounded-3xl shadow-2xl border border-slate-200/50 flex flex-col overflow-hidden
+      `}>
+        {/* 聊天視窗標題 */}
+        <div className="p-6 bg-gradient-to-r from-blue-600 to-blue-500">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 rounded-xl bg-white/10 p-1.5 flex items-center justify-center">
+                <Image
+                  src="/msp-logo.png"
+                  alt="MSP Logo"
+                  width={36}
+                  height={36}
+                  className="object-contain"
                 />
-                <button className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-blue-500 transition-colors">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                  </svg>
-                </button>
               </div>
-              <button className="p-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors shadow-sm hover:shadow-md">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
-              </button>
+              <div>
+                <h3 className="font-medium text-lg text-white">MetaAge 智能助理</h3>
+                <div className="flex items-center space-x-2 text-xs text-white/90">
+                  <span className="flex items-center">
+                    <span className="w-2 h-2 bg-emerald-400 rounded-full mr-1.5 animate-pulse"></span>
+                    線上為您服務
+                  </span>
+                  <span className="text-white/60">|</span>
+                  <span className="text-white/90">回應時間：約 1 分鐘</span>
+                </div>
+              </div>
             </div>
+            <button
+              onClick={() => setIsOpen(false)}
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white/80 hover:text-white"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
         </div>
-      )}
 
-      {/* 聊天機器人開關按鈕 */}
-      <button
+        <div className="flex-1 h-[400px] p-6 overflow-y-auto bg-slate-50" ref={chatWindowRef}>
+          <div className="space-y-6">
+            {messages.map((message, index) => (
+              <div
+                key={index}
+                className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'} group`}
+              >
+                {message.type === 'bot' && (
+                  <div className="w-8 h-8 rounded-lg bg-blue-500/10 p-1 mr-3 flex-shrink-0">
+                    <Image
+                      src="/msp-logo.png"
+                      alt="Bot Avatar"
+                      width={24}
+                      height={24}
+                      className="object-contain"
+                    />
+                  </div>
+                )}
+                <div
+                  className={`max-w-[80%] p-4 ${
+                    message.type === 'user'
+                      ? 'bg-blue-500 text-white rounded-2xl rounded-br-none shadow-sm'
+                      : 'bg-white text-slate-800 rounded-2xl rounded-bl-none shadow-sm border border-slate-200/50'
+                  }`}
+                >
+                  <div className="whitespace-pre-line text-sm">{message.content}</div>
+                  <div className={`text-xs mt-1.5 ${message.type === 'user' ? 'text-white/80' : 'text-slate-500'}`}>
+                    {message.time}
+                  </div>
+                </div>
+                {message.type === 'user' && (
+                  <div className="w-8 h-8 rounded-full bg-blue-500/10 ml-3 flex items-center justify-center flex-shrink-0">
+                    👤
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="p-4 border-t border-slate-200/50 bg-white">
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
+            {['系統使用問題', '帳號相關', '技術支援', '一般諮詢'].map((option) => (
+              <button
+                key={option}
+                className="px-4 py-2 bg-slate-100 text-slate-600 rounded-full hover:bg-blue-50 hover:text-blue-500 transition-colors whitespace-nowrap text-sm font-medium"
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="p-4 border-t border-slate-200/50 bg-white">
+          <div className="flex space-x-3">
+            <div className="flex-1 relative">
+              <input
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder="輸入訊息..."
+                className="w-full px-4 py-3 bg-slate-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 pr-10 text-sm"
+              />
+              <button className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-blue-500 transition-colors">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                </svg>
+              </button>
+            </div>
+            <button className="p-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors shadow-sm hover:shadow-md">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 聊天機器人圖標 */}
+      <div
         onClick={() => setIsOpen(!isOpen)}
-        className="w-16 h-16 rounded-full bg-white shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-105 border border-slate-200/50"
+        onMouseEnter={(e) => e.currentTarget.style.transform = 'translateX(-50%)'}
+        onMouseLeave={(e) => e.currentTarget.style.transform = 'translateX(0)'}
+        className={`
+          w-16 h-16 rounded-l-full bg-white
+          shadow-lg hover:shadow-xl flex items-center justify-center
+          transition-all duration-300 cursor-pointer border border-slate-200/50
+          fixed bottom-32 -right-8
+          ${isOpen ? 'translate-x-[-50%]' : 'translate-x-0'}
+        `}
       >
-        <Image
-          src="/msp-logo.png"
-          alt="MSP Logo"
-          width={40}
-          height={40}
-          className="object-contain"
-        />
-      </button>
+        <div className="relative ml-2">
+          <Image
+            src="/msp-logo.png"
+            alt="MSP Logo"
+            width={40}
+            height={40}
+            className="object-contain"
+          />
+          <span className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border-2 border-white animate-pulse"></span>
+        </div>
+      </div>
     </div>
   );
 };
