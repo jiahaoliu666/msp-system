@@ -446,7 +446,7 @@ const Chatbot = () => {
       <div className={`
         absolute bottom-20 right-0
         transform transition-all duration-300 ease-in-out
-        ${isOpen ? 'translate-y-0 opacity-100 visible' : 'translate-y-4 opacity-0 invisible'}
+        ${isOpen ? 'translate-y-0 opacity-100 visible z-50' : 'translate-y-4 opacity-0 invisible'}
         w-[400px] bg-white rounded-3xl shadow-2xl border border-slate-200/50 flex flex-col overflow-hidden
       `}>
         {/* 聊天視窗標題 */}
@@ -565,26 +565,30 @@ const Chatbot = () => {
 
       {/* 聊天機器人圖標 */}
       <div
-        onClick={() => setIsOpen(!isOpen)}
-        onMouseEnter={(e) => e.currentTarget.style.transform = 'translateX(-50%)'}
-        onMouseLeave={(e) => e.currentTarget.style.transform = 'translateX(0)'}
+        onClick={(e) => {
+          setIsOpen(!isOpen);
+        }}
         className={`
-          w-16 h-16 rounded-l-full bg-white
-          shadow-lg hover:shadow-xl flex items-center justify-center
+          w-[200px] h-16 rounded-l-full bg-white
+          shadow-lg hover:shadow-xl flex items-center
           transition-all duration-300 cursor-pointer border border-slate-200/50
-          fixed bottom-32 -right-8
-          ${isOpen ? 'translate-x-[-50%]' : 'translate-x-0'}
+          fixed bottom-32 -right-[135px] z-40
+          ${isOpen ? '-translate-x-[140px]' : ''}
+          hover:-translate-x-[140px]
         `}
       >
-        <div className="relative ml-2">
-          <Image
-            src="/msp-logo.png"
-            alt="MSP Logo"
-            width={40}
-            height={40}
-            className="object-contain"
-          />
-          <span className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border-2 border-white animate-pulse"></span>
+        <div className="relative flex items-center gap-4">
+          <div className="relative flex-shrink-0 ml-3">
+            <Image
+              src="/msp-logo.png"
+              alt="MSP Logo"
+              width={40}
+              height={40}
+              className="object-contain"
+            />
+            <span className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border-2 border-white animate-pulse"></span>
+          </div>
+          <span className="text-slate-600 font-medium whitespace-nowrap pr-8 text-xl">線上客服</span>
         </div>
       </div>
     </div>
@@ -752,7 +756,7 @@ export default function UserPortal() {
                 <div className="flex items-start space-x-6">
                   <div className="w-16 h-16 rounded-2xl bg-violet-500/10 text-violet-500 flex items-center justify-center group-hover:bg-violet-500 group-hover:text-white transition-all duration-300 shadow-lg group-hover:shadow-xl">
                     <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.756 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                   <div>
