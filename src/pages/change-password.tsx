@@ -16,12 +16,22 @@ export default function ChangePassword() {
 
   const { email, session } = router.query;
 
+  // 檢查訪問權限
   useEffect(() => {
-    if (!email || !session) {
-      showToast('error', '無效的請求參數');
-      router.push('/login');
-    }
+    const checkAccess = async () => {
+      if (!email || !session) {
+        // showToast('error', '無效的訪問');
+        router.replace('/login');
+        return;
+      }
+    };
+    checkAccess();
   }, [email, session, router, showToast]);
+
+  // 如果沒有必要的參數，不渲染頁面內容
+  if (!email || !session) {
+    return null;
+  }
 
   // 檢查密碼是否符合規則
   const checkPasswordRules = (password: string) => {
