@@ -49,6 +49,7 @@ export function useProtectedRoute() {
     // 檢查當前頁面是否為登入頁面（包括帶有查詢參數的情況）
     const currentPath = router.pathname;  // 使用 pathname 而不是 asPath
     const isLoginPage = currentPath === '/login';
+    const isRootPath = currentPath === '/';
     
     // 如果是登入頁面或其他公開頁面，直接返回，不執行任何提示或重定向
     if (isLoginPage || PUBLIC_PATHS.includes(currentPath)) {
@@ -69,11 +70,13 @@ export function useProtectedRoute() {
         return;
       }
 
-      // 只有在非登入頁面時才顯示提示
-      showToast('error', '請先登入');
+      // 只有在非根目錄時才顯示提示
+      if (!isRootPath) {
+        showToast('error', '請先登入');
+      }
       
       // 如果當前路徑不是根路徑，則添加 returnUrl
-      const query = currentPath === '/' ? {} : { returnUrl: router.asPath };
+      const query = isRootPath ? {} : { returnUrl: router.asPath };
       
       router.replace({
         pathname: '/login',

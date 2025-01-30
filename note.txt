@@ -321,6 +321,8 @@ src/pages/version-record/index.tsx 更版紀錄
 
 suport -> case 到ticket system
 
+其他功能：excel 估價驗證
+
 --------------------------------
 
 
