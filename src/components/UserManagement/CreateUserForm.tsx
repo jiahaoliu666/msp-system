@@ -4,6 +4,7 @@ import { CognitoService } from '@/services/auth/cognito';
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, ScanCommand } from "@aws-sdk/lib-dynamodb";
 import { useToast } from '@/context/ToastContext';
+import { DB_CONFIG } from '../../config/db-config';
 
 interface CreateUserFormProps {
   isOpen: boolean;
@@ -113,7 +114,7 @@ export default function CreateUserForm({ isOpen, onClose }: CreateUserFormProps)
 
         const { Items = [] } = await docClient.send(
           new ScanCommand({
-            TableName: "MetaAge-MSP-Organization-Management",
+            TableName: DB_CONFIG.tables.ORGANIZATION_MANAGEMENT,
             ProjectionExpression: "organizationName"
           })
         );

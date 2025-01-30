@@ -2,6 +2,7 @@ import { Dialog, Transition } from '@headlessui/react';
 import { Fragment, useState, useEffect } from 'react';
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, PutCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
+import { DB_CONFIG } from '../../config/db-config';
 
 interface CreateOrganizationFormProps {
   isOpen: boolean;
@@ -34,7 +35,7 @@ export default function CreateOrganizationForm({ isOpen, onClose, onSuccess }: C
 
         const { Items = [] } = await docClient.send(
           new ScanCommand({
-            TableName: "MetaAge-MSP-Contract-Management",
+            TableName: DB_CONFIG.tables.CONTRACT_MANAGEMENT,
             ProjectionExpression: "contractName"
           })
         );
@@ -106,7 +107,7 @@ export default function CreateOrganizationForm({ isOpen, onClose, onSuccess }: C
         .replace(/\//g, '-');
 
       const params = {
-        TableName: "MetaAge-MSP-Organization-Management",
+        TableName: DB_CONFIG.tables.ORGANIZATION_MANAGEMENT,
         Item: {
           organizationName: formData.organizationName,
           contractName: formData.contractName,

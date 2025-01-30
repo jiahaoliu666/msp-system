@@ -5,6 +5,7 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, ScanCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
 import { Dialog, Transition } from '@headlessui/react';
 import { useRouter } from 'next/router';
+import { DB_CONFIG } from '../config/db-config';
 
 interface Organization {
   name: string;
@@ -48,7 +49,7 @@ export default function OrganizationManagement() {
       // 獲取合約資訊
       const { Items: contracts = [] } = await docClient.send(
         new ScanCommand({
-          TableName: "MetaAge-MSP-Contract-Management",
+          TableName: DB_CONFIG.tables.CONTRACT_MANAGEMENT,
           ProjectionExpression: "contractName, contractType, contractStatus"
         })
       );
@@ -74,7 +75,7 @@ export default function OrganizationManagement() {
       // 獲取組織資料
       const { Items: organizations = [] } = await docClient.send(
         new ScanCommand({
-          TableName: "MetaAge-MSP-Organization-Management"
+          TableName: DB_CONFIG.tables.ORGANIZATION_MANAGEMENT
         })
       );
 
@@ -133,7 +134,7 @@ export default function OrganizationManagement() {
 
       const { Items = [] } = await docClient.send(
         new ScanCommand({
-          TableName: "MetaAge-MSP-Contract-Management",
+          TableName: DB_CONFIG.tables.CONTRACT_MANAGEMENT,
           ProjectionExpression: "contractName"
         })
       );
@@ -184,7 +185,7 @@ export default function OrganizationManagement() {
 
         await docClient.send(
           new DeleteCommand({
-            TableName: "MetaAge-MSP-Organization-Management",
+            TableName: DB_CONFIG.tables.ORGANIZATION_MANAGEMENT,
             Key: {
               organizationName: name
             }

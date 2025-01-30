@@ -16,7 +16,8 @@ import {
   ScanCommand,
   DeleteCommand,
 } from "@aws-sdk/lib-dynamodb";
-import { cognitoClient } from '@/config/aws-config';
+import { cognitoClient } from '@/config/cognito-config';
+import { DB_CONFIG } from '@/config/db-config';
 
 // 初始化 DynamoDB 客戶端
 const ddbClient = new DynamoDBClient({
@@ -74,7 +75,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           console.log('開始從 DynamoDB 獲取用戶詳細信息...');
           const { Items: userDetails = [] } = await docClient.send(
             new ScanCommand({
-              TableName: "MetaAge-MSP-User-Management"
+              TableName: DB_CONFIG.tables.USER_MANAGEMENT
             })
           );
           console.log('成功從 DynamoDB 獲取用戶詳細信息，數量:', userDetails.length);
@@ -153,7 +154,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
           await docClient.send(
             new PutCommand({
-              TableName: "MetaAge-MSP-User-Management",
+              TableName: DB_CONFIG.tables.USER_MANAGEMENT,
               Item: {
                 email,
                 organization: userAttributes.organization,
@@ -213,7 +214,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             // 1. 獲取當前用戶資訊
             const { Items = [] } = await docClient.send(
               new QueryCommand({
-                TableName: "MetaAge-MSP-User-Management",
+                TableName: DB_CONFIG.tables.USER_MANAGEMENT,
                 KeyConditionExpression: "email = :email",
                 ExpressionAttributeValues: {
                   ":email": username
@@ -265,7 +266,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
             await docClient.send(
               new PutCommand({
-                TableName: "MetaAge-MSP-User-Management",
+                TableName: DB_CONFIG.tables.USER_MANAGEMENT,
                 Item: {
                   email: username,
                   organization,
@@ -307,7 +308,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             console.log('開始從 DynamoDB 刪除用戶資料，email:', deleteEmail);
             const deleteResult = await docClient.send(
               new DeleteCommand({
-                TableName: "MetaAge-MSP-User-Management",
+                TableName: DB_CONFIG.tables.USER_MANAGEMENT,
                 Key: {
                   email: deleteEmail
                 }

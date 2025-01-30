@@ -17,7 +17,8 @@ import {
   AuthFlowType,
   ChallengeNameType
 } from "@aws-sdk/client-cognito-identity-provider";
-import { cognitoClient, AWS_CONFIG } from "@/config/aws-config";
+import { cognitoClient } from "@/config/cognito-config";
+import { COGNITO_CONFIG } from "@/config/cognito-config";
 
 export interface CreateUserParams {
   email: string;
@@ -59,13 +60,13 @@ export class CognitoService {
   static async completeNewPasswordChallenge({ email, session, newPassword }: NewPasswordRequiredData) {
     console.log('CognitoService: 開始處理密碼更改挑戰...');
 
-    if (!AWS_CONFIG.cognito.clientId || !AWS_CONFIG.cognito.userPoolId) {
+    if (!COGNITO_CONFIG.clientId || !COGNITO_CONFIG.userPoolId) {
       throw new Error('系統配置錯誤：Cognito 配置未完整設置');
     }
 
     const params: AdminRespondToAuthChallengeCommandInput = {
-      UserPoolId: AWS_CONFIG.cognito.userPoolId,
-      ClientId: AWS_CONFIG.cognito.clientId,
+      UserPoolId: COGNITO_CONFIG.userPoolId,
+      ClientId: COGNITO_CONFIG.clientId,
       ChallengeName: ChallengeNameType.NEW_PASSWORD_REQUIRED,
       ChallengeResponses: {
         USERNAME: email,
@@ -97,10 +98,10 @@ export class CognitoService {
     
     try {
       // 檢查配置
-      if (!AWS_CONFIG.cognito.clientId || !AWS_CONFIG.cognito.userPoolId) {
+      if (!COGNITO_CONFIG.clientId || !COGNITO_CONFIG.userPoolId) {
         console.error('CognitoService: Cognito 配置未完整設置', {
-          hasClientId: !!AWS_CONFIG.cognito.clientId,
-          hasUserPoolId: !!AWS_CONFIG.cognito.userPoolId
+          hasClientId: !!COGNITO_CONFIG.clientId,
+          hasUserPoolId: !!COGNITO_CONFIG.userPoolId
         });
         throw new Error('系統配置錯誤：Cognito 配置未完整設置');
       }
@@ -111,16 +112,16 @@ export class CognitoService {
       }
 
       console.log('CognitoService: 配置檢查完成，準備發送認證請求...', {
-        region: AWS_CONFIG.region,
-        userPoolId: AWS_CONFIG.cognito.userPoolId,
-        clientId: AWS_CONFIG.cognito.clientId,
+        region: COGNITO_CONFIG.region,
+        userPoolId: COGNITO_CONFIG.userPoolId,
+        clientId: COGNITO_CONFIG.clientId,
         email: email
       });
 
       // 使用 AdminInitiateAuth
       const params: AdminInitiateAuthCommandInput = {
-        UserPoolId: AWS_CONFIG.cognito.userPoolId,
-        ClientId: AWS_CONFIG.cognito.clientId,
+        UserPoolId: COGNITO_CONFIG.userPoolId,
+        ClientId: COGNITO_CONFIG.clientId,
         AuthFlow: "ADMIN_USER_PASSWORD_AUTH",
         AuthParameters: {
           USERNAME: email,
@@ -154,8 +155,8 @@ export class CognitoService {
           region: cognitoClient.config.region,
           endpoint: cognitoClient.config.endpoint,
           credentials: {
-            accessKeyId: AWS_CONFIG.credentials.accessKeyId ? '已設置' : '未設置',
-            secretAccessKey: AWS_CONFIG.credentials.secretAccessKey ? '已設置' : '未設置'
+            accessKeyId: COGNITO_CONFIG.credentials.accessKeyId ? '已設置' : '未設置',
+            secretAccessKey: COGNITO_CONFIG.credentials.secretAccessKey ? '已設置' : '未設置'
           }
         });
 
@@ -390,7 +391,7 @@ export class CognitoService {
   // 獲取用戶詳細資訊
   static async getUser(username: string) {
     const params: AdminGetUserCommandInput = {
-      UserPoolId: AWS_CONFIG.cognito.userPoolId,
+      UserPoolId: COGNITO_CONFIG.userPoolId,
       Username: username,
     };
 
@@ -424,7 +425,7 @@ export class CognitoService {
       }
 
       const command = new AdminUpdateUserAttributesCommand({
-        UserPoolId: AWS_CONFIG.cognito.userPoolId,
+        UserPoolId: COGNITO_CONFIG.userPoolId,
         Username: params.username,
         UserAttributes: userAttributes,
       });
@@ -460,7 +461,7 @@ export class CognitoService {
   static async deleteUser(username: string) {
     try {
       const command = new AdminDeleteUserCommand({
-        UserPoolId: AWS_CONFIG.cognito.userPoolId,
+        UserPoolId: COGNITO_CONFIG.userPoolId,
         Username: username,
       });
 
@@ -492,14 +493,14 @@ export class CognitoService {
       throw new Error('刷新令牌不能為空');
     }
 
-    if (!AWS_CONFIG.cognito.clientId || !AWS_CONFIG.cognito.userPoolId) {
+    if (!COGNITO_CONFIG.clientId || !COGNITO_CONFIG.userPoolId) {
       throw new Error('系統配置錯誤：Cognito 配置未完整設置');
     }
 
     const params: AdminInitiateAuthCommandInput = {
       AuthFlow: "REFRESH_TOKEN_AUTH",
-      ClientId: AWS_CONFIG.cognito.clientId,
-      UserPoolId: AWS_CONFIG.cognito.userPoolId,
+      ClientId: COGNITO_CONFIG.clientId,
+      UserPoolId: COGNITO_CONFIG.userPoolId,
       AuthParameters: {
         REFRESH_TOKEN: refreshToken
       }

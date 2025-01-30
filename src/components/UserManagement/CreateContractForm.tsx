@@ -2,6 +2,7 @@ import { Dialog, Transition } from '@headlessui/react';
 import { Fragment, useState, useEffect } from 'react';
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
+import { DB_CONFIG } from '../../config/db-config';
 
 interface CreateContractFormProps {
   isOpen: boolean;
@@ -117,7 +118,7 @@ export default function CreateContractForm({ isOpen, onClose, existingProducts }
       const contractId = generateContractId();
 
       const params = {
-        TableName: "MetaAge-MSP-Contract-Management",
+        TableName: DB_CONFIG.tables.CONTRACT_MANAGEMENT,
         Item: {
           contractId: contractId,
           contractName: formData.contractName,

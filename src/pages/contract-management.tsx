@@ -6,6 +6,7 @@ import { DynamoDBDocumentClient, ScanCommand, DeleteCommand, PutCommand, GetComm
 import CreateContractForm from '../components/UserManagement/CreateContractForm';
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
+import { DB_CONFIG } from '../config/db-config';
 
 interface Contract {
   contractId: string;
@@ -130,7 +131,7 @@ export default function ContractManagement() {
 
       const { Items = [] } = await docClient.send(
         new ScanCommand({
-          TableName: "MetaAge-MSP-Contract-Management"
+          TableName: DB_CONFIG.tables.CONTRACT_MANAGEMENT
         })
       );
 
@@ -169,7 +170,7 @@ export default function ContractManagement() {
       // 先獲取當前合約資料
       const { Item } = await docClient.send(
         new GetCommand({
-          TableName: "MetaAge-MSP-Contract-Management",
+          TableName: DB_CONFIG.tables.CONTRACT_MANAGEMENT,
           Key: {
             contractId: contractId
           }
@@ -184,7 +185,7 @@ export default function ContractManagement() {
         // 更新合約狀態
         await docClient.send(
           new PutCommand({
-            TableName: "MetaAge-MSP-Contract-Management",
+            TableName: DB_CONFIG.tables.CONTRACT_MANAGEMENT,
             Item: {
               ...Item,
               contractStatus: newStatus,
@@ -297,7 +298,7 @@ export default function ContractManagement() {
 
       await docClient.send(
         new PutCommand({
-          TableName: "MetaAge-MSP-Contract-Management",
+          TableName: DB_CONFIG.tables.CONTRACT_MANAGEMENT,
           Item: {
             ...editFormData,
             remainingHours: editFormData.remainingHours === undefined ? 0 : Number(editFormData.remainingHours),
@@ -330,7 +331,7 @@ export default function ContractManagement() {
 
         await docClient.send(
           new DeleteCommand({
-            TableName: "MetaAge-MSP-Contract-Management",
+            TableName: DB_CONFIG.tables.CONTRACT_MANAGEMENT,
             Key: {
               contractId: contractId
             }
