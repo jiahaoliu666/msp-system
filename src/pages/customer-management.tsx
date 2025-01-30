@@ -69,14 +69,7 @@ const CustomerManagement = () => {
             </h1>
             <p className="text-gray-600 mt-1">管理所有客戶資料與互動記錄</p>
           </div>
-          <div className="flex space-x-3">
-            <button className="group px-4 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200 flex items-center shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
-              <svg className="h-5 w-5 mr-2 transition-transform duration-200 group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              新增客戶
-            </button>
-          </div>
+          
         </div>
       </div>
       {/* 搜尋和篩選區 */}
@@ -180,9 +173,6 @@ const CustomerManagement = () => {
                 <tr key={customer.id} className="border-b border-border-color hover:bg-hover-color transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-accent-color/10 text-accent-color flex items-center justify-center font-bold">
-                        {customer.name.charAt(0)}
-                      </div>
                       <div>
                         <div className="font-medium text-text-primary">{customer.name}</div>
                         <div className="text-sm text-text-secondary">{customer.type}</div>

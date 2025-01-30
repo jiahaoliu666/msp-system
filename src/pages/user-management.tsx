@@ -515,7 +515,7 @@ export default function UserManagement() {
                           <option value="SA">架構師</option>
                           <option value="OP">維運工程師</option>
                           <option value="Admin">系統管理員</option>
-                          <option value="User">一般用戶</option>
+                          <option value="User">客戶</option>
                         </select>
                       </div>
                     </div>

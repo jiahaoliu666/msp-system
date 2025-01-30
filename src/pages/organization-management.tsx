@@ -302,6 +302,7 @@ export default function OrganizationManagement() {
               <table className="min-w-full">
                 <thead>
                   <tr className="border-b border-border-color">
+                    <th className="px-6 py-3 text-center text-text-primary">項次</th>
                     <th className="px-6 py-3 text-center text-text-primary">組織名稱</th>
                     <th className="px-6 py-3 text-center text-text-primary">合約名稱</th>
                     <th className="px-6 py-3 text-center text-text-primary">合約類型</th>
@@ -319,6 +320,9 @@ export default function OrganizationManagement() {
                     )
                     .map((org, index) => (
                       <tr key={index} className="border-b border-border-color hover:bg-hover-color transition-colors">
+                        <td className="px-6 py-4 text-center align-middle">
+                          <span className="text-text-primary">{index + 1}</span>
+                        </td>
                         <td className="px-6 py-4 align-middle">
                           <div className="flex items-center justify-center">
                             <Link 
