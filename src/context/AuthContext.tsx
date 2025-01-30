@@ -41,19 +41,43 @@ export function useProtectedRoute() {
   const previousAuthState = useRef(isAuthenticated);
 
   useEffect(() => {
-    // 檢查是否為 404 頁面
-    const is404Page = router.pathname === '/404';
+    // 如果還在載入中，不做任何處理
+    if (isLoading) {
+      return;
+    }
+
+    // 檢查當前頁面是否為登入頁面（包括帶有查詢參數的情況）
+    const currentPath = router.pathname;  // 使用 pathname 而不是 asPath
+    const isLoginPage = currentPath === '/login';
     
-    // 檢查是否從登入狀態變為登出狀態
-    const isLogoutTransition = previousAuthState.current && !isAuthenticated;
+    // 如果是登入頁面或其他公開頁面，直接返回，不執行任何提示或重定向
+    if (isLoginPage || PUBLIC_PATHS.includes(currentPath)) {
+      return;
+    }
+
+    // 更新前一個認證狀態
+    const wasAuthenticated = previousAuthState.current;
     previousAuthState.current = isAuthenticated;
 
-    // 只有在非登出過程中，且未登入，且不在公開頁面時，才顯示提示
-    if (!isLoading && !isAuthenticated && !PUBLIC_PATHS.includes(router.pathname) && !is404Page && !isLogoutTransition) {
+    // 檢查是否為登出轉換（從已登入變為未登入）
+    const isLogoutTransition = wasAuthenticated && !isAuthenticated;
+
+    // 只在需要認證的頁面且未登入的情況下重定向
+    if (!isAuthenticated && !isLogoutTransition) {
+      // 檢查是否已經在登入頁面
+      if (router.pathname === '/login') {
+        return;
+      }
+
+      // 只有在非登入頁面時才顯示提示
       showToast('error', '請先登入');
+      
+      // 如果當前路徑不是根路徑，則添加 returnUrl
+      const query = currentPath === '/' ? {} : { returnUrl: router.asPath };
+      
       router.replace({
         pathname: '/login',
-        query: { returnUrl: router.asPath }
+        query
       });
     }
   }, [isAuthenticated, isLoading, router, showToast]);

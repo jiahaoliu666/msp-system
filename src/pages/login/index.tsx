@@ -15,13 +15,19 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // 檢查登入狀態
+  // 修改檢查登入狀態的邏輯
   useEffect(() => {
     const checkAuthStatus = () => {
+      // 如果是從登出操作過來的，不做重定向
+      if (router.query.from === 'logout') {
+        return;
+      }
+
       const token = localStorage.getItem('authToken');
       if (token || isAuthenticated) {
         console.log('用戶已登入，重定向到首頁或返回頁面');
         const returnUrl = router.query.returnUrl as string;
+        // 如果沒有 returnUrl，預設導向到首頁
         router.replace(returnUrl || '/');
       }
     };
