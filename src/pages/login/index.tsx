@@ -56,36 +56,26 @@ export default function Login() {
         passwordLength: formData.password.length
       });
 
-      console.log('登入請求已發送，等待回應...');
+      await login({
+        email: formData.email,
+        password: formData.password,
+      });
       
-      try {
-        await login({
-          email: formData.email,
-          password: formData.password,
-        });
-        console.log('登入請求已完成，等待處理結果...');
-      } catch (error: any) {
-        console.error('登入過程發生錯誤:', {
-          name: error.name,
-          message: error.message,
-          code: error.code,
-          stack: error.stack,
-          $metadata: error.$metadata
-        });
-        throw error;
-      }
-
+      console.log('登入成功');
+      
     } catch (err: any) {
       console.error('登入錯誤:', {
         name: err.name,
         message: err.message,
-        code: err.__type,
+        code: err.__type || err.code,
         stack: err.stack,
         $metadata: err.$metadata
       });
       
-      // 處理 Cognito 特定錯誤
-      switch (err.name) {
+      // 統一處理所有 Cognito 錯誤
+      const errorType = err.__type || err.name;
+      
+      switch (errorType) {
         case 'NotAuthorizedException':
           showToast('error', '電子郵件或密碼錯誤');
           break;
@@ -95,14 +85,31 @@ export default function Login() {
         case 'UserNotFoundException':
           showToast('error', '找不到此帳號');
           break;
-        case 'PasswordResetRequiredException':
-          showToast('warning', '需要重設密碼，請聯繫系統管理員');
+        case 'InvalidParameterException':
+          showToast('error', '請檢查輸入的電子郵件密碼格式是否正確');
           break;
         case 'TooManyRequestsException':
           showToast('error', '登入嘗試次數過多，請稍後再試');
           break;
+        case 'UnrecognizedClientException':
+          showToast('error', '系統認證問題，請聯繫系統管理員');
+          break;
+        case 'PasswordResetRequiredException':
+          showToast('warning', '需要重設密碼，請聯繫系統管理員');
+          break;
+        case 'InvalidClientTokenId':
+          showToast('error', '無效的應用程式用戶端 ID，請聯繫系統管理員');
+          break;
+        case 'ResourceNotFoundException':
+          showToast('error', '找不到用戶池資源，請聯繫系統管理員');
+          break;
         default:
-          showToast('error', err.message || '登入失敗，請稍後再試');
+          if (err.message && err.message.includes('系統配置錯誤')) {
+            showToast('error', err.message);
+          } else {
+            showToast('error', '系統錯誤，請稍後再試');
+            console.error('未處理的錯誤類型:', err);
+          }
       }
     } finally {
       setLoading(false);

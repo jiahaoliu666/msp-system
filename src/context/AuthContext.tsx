@@ -125,8 +125,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error('請提供電子郵件和密碼');
       }
 
-      console.log('AuthContext: 調用 CognitoService.login...');
-      
       const response = await CognitoService.login({ email, password });
 
       // 檢查是否需要更改密碼
@@ -149,24 +147,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!('AuthenticationResult' in response)) {
         throw new Error('系統錯誤：收到未知的響應類型');
       }
-      
-      console.log('AuthContext: 收到登入響應', {
-        hasAuthResult: !!response.AuthenticationResult,
-        hasAccessToken: !!response.AuthenticationResult?.AccessToken,
-        hasIdToken: !!response.AuthenticationResult?.IdToken,
-        hasRefreshToken: !!response.AuthenticationResult?.RefreshToken,
-      });
-      
-      if (!response.AuthenticationResult?.AccessToken) {
-        console.error('AuthContext: 驗證失敗 - 未收到有效的認證令牌');
-        throw new Error('驗證失敗：未收到有效的認證令牌');
+
+      if (!response.AuthenticationResult) {
+        throw new Error('系統錯誤：未收到認證結果');
       }
 
       // 保存認證資訊
-      const { AccessToken, IdToken, RefreshToken } = response.AuthenticationResult;
+      const { AccessToken = '', IdToken = '', RefreshToken = '' } = response.AuthenticationResult;
+      
+      if (!AccessToken) {
+        throw new Error('系統錯誤：未收到有效的認證令牌');
+      }
+
       localStorage.setItem('authToken', AccessToken);
-      localStorage.setItem('idToken', IdToken || '');
-      localStorage.setItem('refreshToken', RefreshToken || '');
+      localStorage.setItem('idToken', IdToken);
+      localStorage.setItem('refreshToken', RefreshToken);
       
       // 保存用戶資訊
       const userInfo = { 
@@ -179,20 +174,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('userInfo', JSON.stringify(userInfo));
       setUser(userInfo);
       
-      console.log('AuthContext: 登入成功，準備重定向...');
-      
       // 顯示成功訊息並重定向
       showToast('success', '登入成功');
       router.push('/');
+
     } catch (error: any) {
-      console.error('AuthContext: 登入錯誤:', {
-        name: error.name,
-        message: error.message,
-        code: error.code,
-        stack: error.stack,
-        $metadata: error.$metadata
-      });
-      
       // 清除認證資訊
       localStorage.removeItem('authToken');
       localStorage.removeItem('idToken');
@@ -200,7 +186,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem('userInfo');
       setUser(null);
       
-      // 重新拋出錯誤以便上層組件處理
+      // 直接拋出原始錯誤
       throw error;
     }
   };
