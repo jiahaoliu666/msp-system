@@ -79,6 +79,22 @@ export default function OrganizationManagement() {
         })
       );
 
+      // 獲取用戶資料
+      const { Items: users = [] } = await docClient.send(
+        new ScanCommand({
+          TableName: DB_CONFIG.tables.USER_MANAGEMENT,
+          ProjectionExpression: "organization"
+        })
+      );
+
+      // 計算每個組織的用戶數
+      const organizationUserCount = users.reduce((acc: { [key: string]: number }, user: any) => {
+        if (user.organization) {
+          acc[user.organization] = (acc[user.organization] || 0) + 1;
+        }
+        return acc;
+      }, {});
+
       // 整合組織資料和合約類型
       const updatedOrganizations = organizations.map(org => {
         const contractInfo = contractInfoMap.get(org.contractName) || { type: '未知', status: '未知' };
@@ -88,7 +104,7 @@ export default function OrganizationManagement() {
           contractType: contractInfo.type,
           contractStatus: contractInfo.status,
           manager: org.manager || '',
-          members: org.members || 0,
+          members: organizationUserCount[org.organizationName] || 0,
           createdAt: org.createdAt || ''
         };
       });
@@ -104,7 +120,7 @@ export default function OrganizationManagement() {
 
       const newStats = {
         totalOrgs: updatedOrganizations.length,
-        totalUsers: updatedOrganizations.reduce((sum, org) => sum + org.members, 0),
+        totalUsers: users.length,
         newOrgsThisMonth: updatedOrganizations.filter(org => {
           const createdDate = new Date(org.createdAt);
           return createdDate >= firstDayOfMonth;

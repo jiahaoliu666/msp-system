@@ -159,7 +159,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 email,
                 organization: userAttributes.organization,
                 role: userAttributes.role,
-                emailVerified: true,
                 createdAt: formattedTime,
                 updatedAt: formattedTime
               }
@@ -271,7 +270,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                   email: username,
                   organization,
                   role,
-                  emailVerified: currentUser?.emailVerified || false,
                   createdAt: currentUser?.createdAt,
                   updatedAt: formattedTime
                 }

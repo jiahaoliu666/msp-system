@@ -165,22 +165,6 @@ export default function CreateOrganizationForm({ isOpen, onClose, onSuccess }: C
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="bg-white rounded-xl space-y-6">
-              {/* 組織名稱 */}
-              <div className="group">
-                <label className="block text-sm font-medium text-gray-700 mb-2 group-hover:text-blue-600 transition-colors">
-                  組織名稱 <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="organizationName"
-                  value={formData.organizationName}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400"
-                  required
-                  placeholder="請輸入組織名稱"
-                />
-              </div>
-
               {/* 合約名稱 */}
               <div className="group">
                 <label className="block text-sm font-medium text-gray-700 mb-2 group-hover:text-blue-600 transition-colors">
@@ -201,7 +185,21 @@ export default function CreateOrganizationForm({ isOpen, onClose, onSuccess }: C
                   ))}
                 </select>
               </div>
-
+              {/* 組織名稱 */}
+              <div className="group">
+                <label className="block text-sm font-medium text-gray-700 mb-2 group-hover:text-blue-600 transition-colors">
+                  組織名稱 <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="organizationName"
+                  value={formData.organizationName}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400"
+                  required
+                  placeholder="請輸入組織名稱"
+                />
+              </div>
               {/* 描述 */}
               <div className="group">
                 <label className="block text-sm font-medium text-gray-700 mb-2 group-hover:text-blue-600 transition-colors">

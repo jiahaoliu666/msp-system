@@ -2,7 +2,7 @@ import { Dialog, Transition } from '@headlessui/react';
 import { Fragment, useState, useEffect } from 'react';
 import { CognitoService } from '@/services/auth/cognito';
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, ScanCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, ScanCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 import { useToast } from '@/context/ToastContext';
 import { DB_CONFIG } from '../../config/db-config';
 
@@ -15,7 +15,7 @@ interface Organization {
   organizationName: string;
 }
 
-const roleOptions = [
+export const roleOptions = [
   { value: '架構師', label: '架構師' },
   { value: '維運工程師', label: '維運工程師' },
   { value: '系統管理員', label: '系統管理員' },
@@ -213,33 +213,6 @@ export default function CreateUserForm({ isOpen, onClose }: CreateUserFormProps)
           role: formData.role,
         },
       });
-
-      // 更新組織成員數
-      const client = new DynamoDBClient({
-        region: process.env.NEXT_PUBLIC_AWS_REGION,
-        credentials: {
-          accessKeyId: process.env.NEXT_PUBLIC_AWS_ACCESS_KEY_ID || '',
-          secretAccessKey: process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY || ''
-        }
-      });
-
-      const docClient = DynamoDBDocumentClient.from(client);
-
-      // 更新組織的成員數（+1）
-      await docClient.send(
-        new UpdateCommand({
-          TableName: DB_CONFIG.tables.ORGANIZATION_MANAGEMENT,
-          Key: {
-            organizationName: formData.organization
-          },
-          UpdateExpression: "SET members = if_not_exists(members, :zero) + :inc",
-          ExpressionAttributeValues: {
-            ":inc": 1,
-            ":zero": 0
-          },
-          ReturnValues: "UPDATED_NEW"
-        })
-      );
 
       showToast('success', '用戶創建成功，請通知用戶查收驗證郵件');
 

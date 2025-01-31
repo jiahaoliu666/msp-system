@@ -3,9 +3,12 @@ import { CognitoService } from '@/services/auth/cognito';
 import { UserType, AttributeType } from '@aws-sdk/client-cognito-identity-provider';
 import Link from 'next/link';
 import { Dialog, Transition } from '@headlessui/react';
-import CreateUserForm from '@/components/UserManagement/CreateUserForm';
+import CreateUserForm, { roleOptions } from '@/components/UserManagement/CreateUserForm';
 import { useToast } from '@/context/ToastContext';
 import { useRouter } from 'next/router';
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, ScanCommand, DeleteCommand, PutCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
+import { DB_CONFIG } from '../config/db-config';
 
 interface User {
   username: string;
@@ -29,6 +32,7 @@ export default function UserManagement() {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editFormData, setEditFormData] = useState<User | null>(null);
+  const [organizations, setOrganizations] = useState<string[]>([]);
   const { showToast } = useToast();
   const router = useRouter();
 
@@ -92,6 +96,34 @@ export default function UserManagement() {
     }
   };
 
+  // 獲取組織列表
+  const fetchOrganizations = async () => {
+    try {
+      const client = new DynamoDBClient({
+        region: process.env.NEXT_PUBLIC_AWS_REGION,
+        credentials: {
+          accessKeyId: process.env.NEXT_PUBLIC_AWS_ACCESS_KEY_ID || '',
+          secretAccessKey: process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY || ''
+        }
+      });
+
+      const docClient = DynamoDBDocumentClient.from(client);
+
+      const { Items = [] } = await docClient.send(
+        new ScanCommand({
+          TableName: DB_CONFIG.tables.ORGANIZATION_MANAGEMENT,
+          ProjectionExpression: "organizationName"
+        })
+      );
+
+      const orgNames = Items.map(item => item.organizationName as string);
+      setOrganizations(orgNames);
+    } catch (error) {
+      console.error('Error fetching organizations:', error);
+      showToast('error', '獲取組織列表失敗');
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -125,6 +157,7 @@ export default function UserManagement() {
     setSelectedUser(user);
     setEditFormData(user);
     setIsEditModalOpen(true);
+    fetchOrganizations();
   };
 
   // 處理編輯表單變更
@@ -141,12 +174,57 @@ export default function UserManagement() {
     if (!editFormData) return;
 
     try {
-      await CognitoService.updateUser({
-        username: editFormData.username,
-        email: editFormData.email,
-        organization: editFormData.organization,
-        role: editFormData.role
+      // 建立 DynamoDB 客戶端
+      const client = new DynamoDBClient({
+        region: process.env.NEXT_PUBLIC_AWS_REGION,
+        credentials: {
+          accessKeyId: process.env.NEXT_PUBLIC_AWS_ACCESS_KEY_ID || '',
+          secretAccessKey: process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY || ''
+        }
       });
+
+      const docClient = DynamoDBDocumentClient.from(client);
+
+      // 先獲取現有用戶資料以保留 createdAt
+      const { Item: existingUser } = await docClient.send(
+        new GetCommand({
+          TableName: DB_CONFIG.tables.USER_MANAGEMENT,
+          Key: {
+            email: editFormData.email
+          }
+        })
+      );
+
+      // 格式化更新時間
+      const now = new Date();
+      const formattedUpdatedAt = now.toLocaleString('zh-TW', {
+        timeZone: 'Asia/Taipei',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      }).replace(/\//g, '-');
+
+      // 準備要儲存的用戶資料
+      const userItem = {
+        email: editFormData.email,
+        organization: editFormData.organization || null,
+        role: editFormData.role || null,
+        createdAt: existingUser?.createdAt, // 保留原本的 createdAt
+        updatedAt: formattedUpdatedAt
+      };
+
+      // 更新 DynamoDB 中的用戶資料
+      await docClient.send(
+        new PutCommand({
+          TableName: DB_CONFIG.tables.USER_MANAGEMENT,
+          Item: userItem
+        })
+      );
+
       setIsEditModalOpen(false);
       showToast('success', '用戶資料更新成功');
       fetchUsers();
@@ -235,7 +313,6 @@ export default function UserManagement() {
                   <th className="px-6 py-3 text-center">組織</th>
                   <th className="px-6 py-3 text-center">電子郵件</th>
                   <th className="px-6 py-3 text-center">角色</th>
-                  <th className="px-6 py-3 text-center">使用者</th>
                   <th className="px-6 py-3 text-center">狀態</th>
                   <th className="px-6 py-3 text-center">最後登入</th>
                   <th className="px-6 py-3 text-center">操作</th>
@@ -264,9 +341,6 @@ export default function UserManagement() {
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900 text-center">
                       {user.role || '-'}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900 text-center">
-                      {user.username || '-'}
                     </td>
                     <td className="px-6 py-4 text-center">
                       <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
@@ -378,11 +452,7 @@ export default function UserManagement() {
                           </svg>
                           基本資訊
                         </h4>
-                        <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-                          <div>
-                            <label className="block text-xs font-medium text-gray-500 mb-1">使用者名稱</label>
-                            <p className="text-sm text-gray-900">{selectedUser.username}</p>
-                          </div>
+                        <div className="grid grid-cols-1 gap-x-8 gap-y-4">
                           <div>
                             <label className="block text-xs font-medium text-gray-500 mb-1">電子郵件</label>
                             <p className="text-sm text-gray-900">{selectedUser.email}</p>
@@ -474,16 +544,6 @@ export default function UserManagement() {
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">使用者名稱</label>
-                        <input
-                          type="text"
-                          name="username"
-                          value={editFormData.username}
-                          disabled
-                          className="w-full px-3 py-2 border rounded-lg bg-gray-50 text-gray-500"
-                        />
-                      </div>
-                      <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">電子郵件</label>
                         <input
                           type="email"
@@ -495,13 +555,17 @@ export default function UserManagement() {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">組織</label>
-                        <input
-                          type="text"
+                        <select
                           name="organization"
                           value={editFormData.organization || ''}
                           onChange={handleEditFormChange}
                           className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                        />
+                        >
+                          <option value="">請選擇組織</option>
+                          {organizations.map((org, index) => (
+                            <option key={index} value={org}>{org}</option>
+                          ))}
+                        </select>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">角色</label>
@@ -512,10 +576,11 @@ export default function UserManagement() {
                           className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="">請選擇角色</option>
-                          <option value="SA">架構師</option>
-                          <option value="OP">維運工程師</option>
-                          <option value="Admin">系統管理員</option>
-                          <option value="User">客戶</option>
+                          {roleOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
                         </select>
                       </div>
                     </div>
