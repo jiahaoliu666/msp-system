@@ -31,7 +31,7 @@ const AuthContext = createContext<AuthContextType>({
 export const useAuth = () => useContext(AuthContext);
 
 // 定義不需要驗證的頁面路徑
-const PUBLIC_PATHS = ['/login', '/404'];
+const PUBLIC_PATHS = ['/login', '/404', '/change-password'];
 
 // 路由保護 hook
 export function useProtectedRoute() {
@@ -222,7 +222,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('userInfo', JSON.stringify(userInfo));
       setUser(userInfo);
 
-      showToast('success', '密碼更改成功');
       router.push('/');
     } catch (error: any) {
       console.error('密碼更改失敗:', error);
