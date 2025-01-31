@@ -2,10 +2,11 @@ import Link from 'next/link';
 import CreateOrganizationForm from '../components/UserManagement/CreateOrganizationForm';
 import { useState, useEffect, Fragment } from 'react';
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, ScanCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, ScanCommand, DeleteCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 import { Dialog, Transition } from '@headlessui/react';
 import { useRouter } from 'next/router';
 import { DB_CONFIG } from '../config/db-config';
+import { useToast } from '../context/ToastContext';
 
 interface Organization {
   name: string;
@@ -33,6 +34,7 @@ export default function OrganizationManagement() {
   });
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
+  const { showToast } = useToast();
 
   const fetchOrganizationsWithContracts = async () => {
     try {
@@ -83,7 +85,7 @@ export default function OrganizationManagement() {
       const { Items: users = [] } = await docClient.send(
         new ScanCommand({
           TableName: DB_CONFIG.tables.USER_MANAGEMENT,
-          ProjectionExpression: "organization"
+          ProjectionExpression: "email, organization"
         })
       );
 
@@ -94,6 +96,22 @@ export default function OrganizationManagement() {
         }
         return acc;
       }, {});
+
+      // 更新組織資料中的成員數量
+      for (const org of organizations) {
+        const memberCount = organizationUserCount[org.organizationName] || 0;
+        
+        // 更新 DynamoDB 中的成員數量
+        await docClient.send(
+          new PutCommand({
+            TableName: DB_CONFIG.tables.ORGANIZATION_MANAGEMENT,
+            Item: {
+              ...org,
+              members: memberCount
+            }
+          })
+        );
+      }
 
       // 整合組織資料和合約類型
       const updatedOrganizations = organizations.map(org => {
@@ -199,6 +217,23 @@ export default function OrganizationManagement() {
 
         const docClient = DynamoDBDocumentClient.from(client);
 
+        // 先檢查是否有關聯的用戶
+        const { Items: relatedUsers = [] } = await docClient.send(
+          new ScanCommand({
+            TableName: DB_CONFIG.tables.USER_MANAGEMENT,
+            FilterExpression: "organization = :org",
+            ExpressionAttributeValues: {
+              ":org": name
+            }
+          })
+        );
+
+        if (relatedUsers.length > 0) {
+          showToast('error', `無法刪除組織：該組織還有 ${relatedUsers.length} 個關聯用戶。請先刪除所有關聯用戶後再試。`);
+          return;
+        }
+
+        // 如果沒有關聯用戶，則執行刪除操作
         await docClient.send(
           new DeleteCommand({
             TableName: DB_CONFIG.tables.ORGANIZATION_MANAGEMENT,
@@ -208,11 +243,12 @@ export default function OrganizationManagement() {
           })
         );
 
+        showToast('success', '組織已成功刪除');
         // 重新獲取組織列表
         fetchOrganizationsWithContracts();
       } catch (error) {
         console.error('Error deleting organization:', error);
-        alert('刪除組織時發生錯誤');
+        showToast('error', '刪除組織時發生錯誤');
       }
     }
   };
