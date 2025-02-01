@@ -117,7 +117,7 @@ export default function Login() {
   };
 
   const handleForgotPassword = () => {
-    showToast('info', '請聯繫系統管理員重設密碼');
+    router.push('/forgot-password');
   };
 
   return (

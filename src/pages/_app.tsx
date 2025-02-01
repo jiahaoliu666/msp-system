@@ -63,7 +63,8 @@ const AppContent: React.FC<AppProps> = ({ Component, pageProps }) => {
   const isStandalonePage = router.pathname === '/user-portal' || 
                           router.pathname === '/login' || 
                           router.pathname === '/404' ||
-                          router.pathname === '/change-password';
+                          router.pathname === '/change-password' ||
+                          router.pathname === '/forgot-password';
 
   // 點擊外部關閉用戶選單
   React.useEffect(() => {
@@ -110,7 +111,7 @@ const AppContent: React.FC<AppProps> = ({ Component, pageProps }) => {
   }
 
   // 如果需要認證但未登入，不渲染頁面內容
-  const PUBLIC_PATHS = ['/login', '/change-password', '/404'];
+  const PUBLIC_PATHS = ['/login', '/change-password', '/404', '/forgot-password'];
   const is404Page = router.pathname === '/404';
   if (!isAuthenticated && !PUBLIC_PATHS.includes(router.pathname) && !is404Page) {
     return null;

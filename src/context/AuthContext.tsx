@@ -31,7 +31,7 @@ const AuthContext = createContext<AuthContextType>({
 export const useAuth = () => useContext(AuthContext);
 
 // 定義不需要驗證的頁面路徑
-const PUBLIC_PATHS = ['/login', '/404', '/change-password'];
+const PUBLIC_PATHS = ['/login', '/404', '/change-password', '/forgot-password'];
 
 // 路由保護 hook
 export function useProtectedRoute() {

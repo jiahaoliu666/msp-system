@@ -130,19 +130,24 @@ export default function UserManagement() {
 
   // 停用/啟用用戶
   const handleToggleUserStatus = async (username: string, currentStatus: string) => {
-    try {
-      if (currentStatus === '使用中') {
-        await CognitoService.disableUser(username);
-        showToast('success', '已成功停用用戶');
-      } else {
-        await CognitoService.enableUser(username);
-        showToast('success', '已成功啟用用戶');
+    const action = currentStatus === '使用中' ? '停用' : '啟用';
+    const confirmMessage = `確定要${action}此用戶嗎？`;
+    
+    if (window.confirm(confirmMessage)) {
+      try {
+        if (currentStatus === '使用中') {
+          await CognitoService.disableUser(username);
+          showToast('success', '已成功停用用戶');
+        } else {
+          await CognitoService.enableUser(username);
+          showToast('success', '已成功啟用用戶');
+        }
+        await fetchUsers();
+      } catch (err) {
+        console.error('Toggle user status error:', err);
+        setError('更改用戶狀態失敗');
+        showToast('error', '更改用戶狀態失敗');
       }
-      await fetchUsers();
-    } catch (err) {
-      console.error('Toggle user status error:', err);
-      setError('更改用戶狀態失敗');
-      showToast('error', '更改用戶狀態失敗');
     }
   };
 

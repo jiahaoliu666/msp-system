@@ -15,7 +15,9 @@ import {
   AdminDeleteUserCommand,
   AdminUpdateUserAttributesCommand,
   AuthFlowType,
-  ChallengeNameType
+  ChallengeNameType,
+  ForgotPasswordCommand,
+  ConfirmForgotPasswordCommand
 } from "@aws-sdk/client-cognito-identity-provider";
 import { cognitoClient } from "@/config/cognito-config";
 import { COGNITO_CONFIG } from "@/config/cognito-config";
@@ -52,6 +54,16 @@ export interface UpdateUserParams {
 export interface NewPasswordRequiredData {
   email: string;
   session: string;
+  newPassword: string;
+}
+
+export interface ForgotPasswordParams {
+  email: string;
+}
+
+export interface ConfirmForgotPasswordParams {
+  email: string;
+  code: string;
   newPassword: string;
 }
 
@@ -395,6 +407,221 @@ export class CognitoService {
     } catch (error: any) {
       console.error('刷新令牌失敗:', error);
       throw new Error('刷新令牌失敗：' + (error.message || '請重新登入'));
+    }
+  }
+
+  // 發送忘記密碼驗證碼
+  static async forgotPassword({ email }: ForgotPasswordParams) {
+    console.log('CognitoService: 開始發送忘記密碼驗證碼...', { email });
+
+    if (!COGNITO_CONFIG.clientId || !COGNITO_CONFIG.userPoolId) {
+      console.error('CognitoService: Cognito 配置未完整設置', {
+        hasClientId: !!COGNITO_CONFIG.clientId,
+        hasUserPoolId: !!COGNITO_CONFIG.userPoolId
+      });
+      return {
+        success: false,
+        error: {
+          name: 'ConfigError',
+          message: '系統配置錯誤：Cognito 配置未完整設置'
+        }
+      };
+    }
+
+    try {
+      console.log('CognitoService: 準備發送 ForgotPassword 命令...');
+      const command = new ForgotPasswordCommand({
+        ClientId: COGNITO_CONFIG.clientId,
+        Username: email,
+      });
+
+      console.log('CognitoService: 發送 ForgotPassword 請求...');
+      const result = await cognitoClient.send(command);
+      console.log('CognitoService: 驗證碼發送成功', { result });
+
+      return {
+        success: true,
+        data: result
+      };
+    } catch (error: any) {
+      console.error('CognitoService: 發送驗證碼失敗:', {
+        errorName: error.name,
+        errorMessage: error.message,
+        errorStack: error.stack
+      });
+      
+      let errorMessage = '發送驗證碼失敗，請稍後再試';
+      let errorName = error.name || 'UnknownError';
+      
+      // 處理特定的錯誤類型
+      switch (errorName) {
+        case 'LimitExceededException':
+          errorMessage = '已超過請求限制，請稍後再試';
+          break;
+        case 'UserNotFoundException':
+          errorMessage = '找不到此電子郵件帳號';
+          break;
+        case 'InvalidParameterException':
+          errorMessage = '請輸入有效的電子郵件地址';
+          break;
+        case 'InvalidEmailRoleAccessPolicyException':
+          errorMessage = '此電子郵件無法接收驗證碼，請聯繫管理員';
+          break;
+        case 'UserNotConfirmedException':
+          errorMessage = '此帳號尚未驗證，請先完成帳號驗證';
+          break;
+        case 'NotAuthorizedException':
+          errorMessage = '無法發送驗證碼，請確認帳號狀態';
+          break;
+      }
+
+      return {
+        success: false,
+        error: {
+          name: errorName,
+          message: errorMessage,
+          originalError: error,
+          timestamp: new Date().toISOString(),
+          service: 'CognitoService',
+          method: 'forgotPassword'
+        }
+      };
+    }
+  }
+
+  // 確認忘記密碼並重設
+  static async confirmForgotPassword({ email, code, newPassword }: ConfirmForgotPasswordParams) {
+    console.log('CognitoService: 開始確認忘記密碼...');
+
+    if (!COGNITO_CONFIG.clientId || !COGNITO_CONFIG.userPoolId) {
+      return {
+        success: false,
+        error: {
+          name: 'ConfigError',
+          message: '系統配置錯誤：Cognito 配置未完整設置'
+        }
+      };
+    }
+
+    try {
+      const command = new ConfirmForgotPasswordCommand({
+        ClientId: COGNITO_CONFIG.clientId,
+        Username: email,
+        ConfirmationCode: code,
+        Password: newPassword
+      });
+
+      const response = await cognitoClient.send(command);
+      console.log('CognitoService: 密碼重設成功');
+      return {
+        success: true,
+        data: response
+      };
+    } catch (error: any) {
+      console.error('CognitoService: 密碼重設失敗:', {
+        name: error.name,
+        message: error.message,
+        code: error.code,
+        $metadata: error.$metadata
+      });
+      
+      let errorMessage = '密碼重設失敗，請稍後再試';
+      let errorName = error.name || 'UnknownError';
+      
+      // 處理特定的錯誤類型
+      switch (errorName) {
+        case 'ExpiredCodeException':
+          errorMessage = '驗證碼已過期，請重新發送驗證碼';
+          break;
+        case 'CodeMismatchException':
+          errorMessage = '驗證碼錯誤，請重新輸入';
+          break;
+        case 'LimitExceededException':
+          errorMessage = '已超過請求限制，請稍後再試';
+          break;
+        case 'InvalidPasswordException':
+          errorMessage = '密碼格式不正確，請確保符合所有要求';
+          break;
+        case 'UserNotFoundException':
+          errorMessage = '找不到此電子郵件帳號';
+          break;
+        case 'InvalidParameterException':
+          errorMessage = '請檢查輸入的資料格式是否正確';
+          break;
+        case 'NotAuthorizedException':
+          errorMessage = '無效的請求，請重新發送驗證碼';
+          break;
+        case 'TooManyFailedAttemptsException':
+          errorMessage = '嘗試次數過多，請稍後再試';
+          break;
+        case 'TooManyRequestsException':
+          errorMessage = '請求次數過多，請稍後再試';
+          break;
+      }
+
+      return {
+        success: false,
+        error: {
+          name: errorName,
+          message: errorMessage,
+          originalError: error,
+          timestamp: new Date().toISOString(),
+          service: 'CognitoService',
+          method: 'confirmForgotPassword'
+        }
+      };
+    }
+  }
+
+  // 檢查用戶是否存在
+  static async checkUserExists(email: string): Promise<{ success: boolean; exists?: boolean; error?: any }> {
+    console.log('CognitoService: 檢查用戶是否存在...');
+
+    if (!COGNITO_CONFIG.userPoolId) {
+      return {
+        success: false,
+        error: {
+          name: 'ConfigError',
+          message: '系統配置錯誤：Cognito 配置未完整設置'
+        }
+      };
+    }
+
+    try {
+      const command = new AdminGetUserCommand({
+        UserPoolId: COGNITO_CONFIG.userPoolId,
+        Username: email
+      });
+
+      await cognitoClient.send(command);
+      console.log('CognitoService: 用戶存在');
+      return {
+        success: true,
+        exists: true
+      };
+    } catch (error: any) {
+      if (error.name === 'UserNotFoundException') {
+        console.log('CognitoService: 用戶不存在');
+        return {
+          success: true,
+          exists: false
+        };
+      }
+      console.error('CognitoService: 檢查用戶存在時發生錯誤:', error);
+      
+      let errorMessage = '檢查用戶時發生錯誤，請稍後再試';
+      if (error.name === 'LimitExceededException') {
+        errorMessage = '已超過請求限制，請稍後再試';
+      }
+
+      return {
+        success: false,
+        error: {
+          name: error.name,
+          message: errorMessage,
+          originalError: error
+        }
+      };
     }
   }
 } 
