@@ -260,6 +260,11 @@ src/pages/customer-management/index.tsx 客戶管理
 
 新增群組 例如 邁達特 山隆 等等
 
+當 MetaAge-MSP-User-Management 資料表的role欄位為客戶時，要在src/pages/customer-management.tsx的客戶列表中顯示對應的客戶資料，而客戶列表的客戶資料從 
+'MetaAge-MSP-Customer-Management 資料表中獲取
+
+
+
 --------------------------------
 
 src/pages/permission-setting/index.tsx 權限設定

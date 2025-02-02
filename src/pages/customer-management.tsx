@@ -1,56 +1,51 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FiEye, FiEdit2, FiTrash2 } from 'react-icons/fi';
 import Link from 'next/link';
-
-interface Customer {
-  id: string;
-  name: string;
-  type: string;
-  contact: string;
-  status: string;
-  service: string;
-  lastActivity: string;
-  manager: {
-    name: string;
-    avatar: string;
-  };
-}
+import { CustomerData } from '../services/customer';
 
 const CustomerManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [customerType, setCustomerType] = useState('');
   const [contractStatus, setContractStatus] = useState('');
   const [serviceType, setServiceType] = useState('');
+  const [customers, setCustomers] = useState<CustomerData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // 模擬客戶數據
-  const customers: Customer[] = [
-    {
-      id: 'tw',
-      name: '台灣電子股份有限公司',
-      type: '企業客戶',
-      contact: '張小明',
-      status: '使用中',
-      service: '全方位服務',
-      lastActivity: '2024/03/15',
-      manager: {
-        name: '王小華',
-        avatar: ''
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      try {
+        const response = await fetch('/api/customers');
+        if (!response.ok) {
+          throw new Error('獲取客戶數據失敗');
+        }
+        const data = await response.json();
+        setCustomers(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : '獲取客戶數據失敗');
+      } finally {
+        setLoading(false);
       }
-    },
-    {
-      id: 'innovation',
-      name: '創新科技有限公司',
-      type: '企業客戶',
-      contact: '李小明',
-      status: '待續約',
-      service: '基礎維護',
-      lastActivity: '2024/03/14',
-      manager: {
-        name: '陳小明',
-        avatar: ''
-      }
-    }
-  ];
+    };
+
+    fetchCustomers();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-color"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-error-color">{error}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8 bg-background-secondary">
@@ -124,7 +119,7 @@ const CustomerManagement = () => {
                    text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-color
                    focus:border-transparent transition-all duration-200"
         >
-          <option value="">服務類型</option>
+          <option value="">合約類型</option>
           <option value="full">全方位服務</option>
           <option value="basic">基礎維護</option>
           <option value="custom">客製服務</option>
@@ -162,7 +157,7 @@ const CustomerManagement = () => {
                 <th className="px-6 py-3 text-left text-text-primary">客戶名稱</th>
                 <th className="px-6 py-3 text-left text-text-primary">聯絡人</th>
                 <th className="px-6 py-3 text-left text-text-primary">合約狀態</th>
-                <th className="px-6 py-3 text-left text-text-primary">服務類型</th>
+                <th className="px-6 py-3 text-left text-text-primary">合約類型</th>
                 <th className="px-6 py-3 text-left text-text-primary">上次登入</th>
                 <th className="px-6 py-3 text-left text-text-primary">負責人</th>
                 <th className="px-6 py-3 text-left text-text-primary">操作</th>

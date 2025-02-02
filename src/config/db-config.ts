@@ -3,7 +3,8 @@ export const DB_CONFIG = {
   tables: {
     CONTRACT_MANAGEMENT: 'MetaAge-MSP-Contract-Management',
     ORGANIZATION_MANAGEMENT: 'MetaAge-MSP-Organization-Management',
-    USER_MANAGEMENT: 'MetaAge-MSP-User-Management'
+    USER_MANAGEMENT: 'MetaAge-MSP-User-Management',
+    CUSTOMER_MANAGEMENT: 'MetaAge-MSP-Customer-Management'
   }
 } as const;
 
