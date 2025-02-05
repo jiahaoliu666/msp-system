@@ -7,20 +7,7 @@ import CreateContractForm from '../components/UserManagement/CreateContractForm'
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
 import { DB_CONFIG } from '../config/db-config';
-
-interface Contract {
-  contractId: string;
-  contractName: string;
-  contractType: string;
-  description: string;
-  startDate: string;
-  endDate: string;
-  contractStatus: string;
-  createdAt: string;
-  updatedAt: string;
-  productName: string;
-  remainingHours?: number;
-}
+import { CONTRACT_TYPES, CONTRACT_STATUS, Contract, getContractTypeLabel, getContractStatusLabel, getContractStatusStyle } from '../config/contract-config';
 
 export default function ContractManagement() {
   const router = useRouter();
@@ -86,9 +73,21 @@ export default function ContractManagement() {
       const matchesSearch = contract.contractName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          contract.contractId.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          contract.description.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = !statusFilter || contract.contractStatus === statusFilter;
-      const matchesType = !typeFilter || contract.contractType === typeFilter;
+      const matchesStatus = !statusFilter || contract.contractStatus === getContractStatusLabel(statusFilter);
+      const matchesType = !typeFilter || getContractTypeLabel(typeFilter) === getContractTypeLabel(contract.contractType);
       const matchesProduct = !productFilter || contract.productName === productFilter;
+
+      // 添加詳細的日誌輸出
+      if (typeFilter) {
+        console.log('Contract Type Filtering:', {
+          typeFilter,
+          typeFilterLabel: getContractTypeLabel(typeFilter),
+          contractType: contract.contractType,
+          contractTypeLabel: getContractTypeLabel(contract.contractType),
+          matches: matchesType,
+          allTypes: Object.values(CONTRACT_TYPES).map(t => ({value: t.value, label: t.label}))
+        });
+      }
 
       return matchesSearch && matchesStatus && matchesType && matchesProduct;
     })
@@ -459,7 +458,7 @@ export default function ContractManagement() {
                   <div className="flex justify-between items-start">
                     <div>
                       <h3 className="font-medium text-gray-900">{contract.contractName}</h3>
-                      <p className="text-sm text-gray-600">{contract.contractType}</p>
+                      <p className="text-sm text-gray-600">{contract.contractType ? getContractTypeLabel(contract.contractType) : '-'}</p>
                       <p className="text-sm text-gray-500 mt-1">到期日：{contract.endDate}</p>
                     </div>
                     <span className={`px-2 py-1 rounded-full text-xs ${
@@ -477,7 +476,7 @@ export default function ContractManagement() {
             <div className="col-span-3 text-center py-8">
               <div className="text-gray-500">
                 <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002-2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
                 <p className="mt-2 text-sm">目前沒有即將到期的合約</p>
               </div>
@@ -510,10 +509,11 @@ export default function ContractManagement() {
               className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">合約狀態</option>
-              <option value="生效中">生效中</option>
-              <option value="待簽署">待簽署</option>
-              <option value="待續約">待續約</option>
-              <option value="已到期">已到期</option>
+              {Object.values(CONTRACT_STATUS).map(status => (
+                <option key={status.value} value={status.label}>
+                  {status.label}
+                </option>
+              ))}
             </select>
           </div>
           <div>
@@ -523,10 +523,11 @@ export default function ContractManagement() {
               className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">合約類型</option>
-              <option value="帳務託管">帳務託管</option>
-              <option value="5*8 雲顧問">5*8 雲顧問</option>
-              <option value="7*24 雲託管">7*24 雲託管</option>
-              <option value="內部合約">內部合約</option>
+              {Object.values(CONTRACT_TYPES).map((type) => (
+                <option key={type.value} value={type.value}>
+                  {type.label}
+                </option>
+              ))}
             </select>
           </div>
           <div>
@@ -617,7 +618,7 @@ export default function ContractManagement() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm text-gray-900 text-center">
-                          {contract.contractType}
+                          {getContractTypeLabel(contract.contractType)}
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -628,10 +629,10 @@ export default function ContractManagement() {
                       <td className="px-6 py-4">
                         <div className="flex justify-center">
                           <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            contract.contractStatus === '生效中' ? 'bg-green-100 text-green-800' :
-                            contract.contractStatus === '待續約' ? 'bg-yellow-100 text-yellow-800' :
-                            contract.contractStatus === '待簽署' ? 'bg-blue-100 text-blue-800' :
-                            contract.contractStatus === '已到期' ? 'bg-red-100 text-red-800' :
+                            contract.contractStatus === CONTRACT_STATUS.ACTIVE.label ? 'bg-green-100 text-green-800' :
+                            contract.contractStatus === CONTRACT_STATUS.PENDING_SIGNATURE.label ? 'bg-blue-100 text-blue-800' :
+                            contract.contractStatus === CONTRACT_STATUS.PENDING_RENEWAL.label ? 'bg-yellow-100 text-yellow-800' :
+                            contract.contractStatus === CONTRACT_STATUS.EXPIRED.label ? 'bg-red-100 text-red-800' :
                             'bg-gray-100 text-gray-800'
                           }`}>
                             {contract.contractStatus}
@@ -678,7 +679,7 @@ export default function ContractManagement() {
               <div className="text-center py-16">
                 <div className="text-gray-500">
                   <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002-2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
                   <h3 className="mt-2 text-sm font-medium text-gray-900">尚無合約資料</h3>
                   <p className="mt-1 text-sm text-gray-500">點擊新增合約按鈕開始建立您的第一份合約。</p>
@@ -754,13 +755,13 @@ export default function ContractManagement() {
                     合約詳細資訊
                   </Dialog.Title>
                   <span className={`px-3 py-1.5 text-sm font-semibold rounded-full ${
-                    selectedContract?.contractStatus === '生效中' ? 'bg-green-100 text-green-800 border border-green-200' :
-                    selectedContract?.contractStatus === '待續約' ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' :
-                    selectedContract?.contractStatus === '待簽署' ? 'bg-blue-100 text-blue-800 border border-blue-200' :
-                    selectedContract?.contractStatus === '已到期' ? 'bg-red-100 text-red-800 border border-red-200' :
-                    'bg-gray-100 text-gray-800 border border-gray-200'
-                  }`}>
-                    {selectedContract?.contractStatus}
+                    selectedContract?.contractStatus === '生效中' ? 'bg-green-100 text-green-800 border-green-200' :
+                    selectedContract?.contractStatus === '待簽署' ? 'bg-blue-100 text-blue-800 border-blue-200' :
+                    selectedContract?.contractStatus === '待續約' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
+                    selectedContract?.contractStatus === '已到期' ? 'bg-red-100 text-red-800 border-red-200' :
+                    'bg-gray-100 text-gray-800 border-gray-200'
+                  } border`}>
+                    {selectedContract?.contractStatus || '-'}
                   </span>
                 </div>
                 {selectedContract && (
@@ -797,7 +798,9 @@ export default function ContractManagement() {
                         <div className="grid grid-cols-2 gap-x-8 gap-y-4">
                           <div>
                             <label className="block text-xs font-medium text-gray-500 mb-1">合約類型</label>
-                            <p className="text-sm text-gray-900">{selectedContract.contractType}</p>
+                            <p className="text-sm text-gray-900">
+                              {selectedContract.contractType ? getContractTypeLabel(selectedContract.contractType) : '-'}
+                            </p>
                           </div>
                           <div>
                             <label className="block text-xs font-medium text-gray-500 mb-1">產品名稱</label>
@@ -914,12 +917,8 @@ export default function ContractManagement() {
       </Transition>
 
       {/* 編輯合約模態框 */}
-      <Transition appear show={isEditModalOpen} as={Fragment}>
-        <Dialog
-          as="div"
-          className="fixed inset-0 z-50 overflow-y-auto"
-          onClose={() => setIsEditModalOpen(false)}
-        >
+      <Transition.Root show={isEditModalOpen} as={Fragment}>
+        <Dialog as="div" className="fixed inset-0 z-50 overflow-y-auto" onClose={() => setIsEditModalOpen(false)}>
           <div className="min-h-screen px-4 text-center">
             <Transition.Child
               as={Fragment}
@@ -944,7 +943,7 @@ export default function ContractManagement() {
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <div className="inline-block w-full max-w-2xl p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
+              <Dialog.Panel className="inline-block w-full max-w-2xl p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
                 <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900 mb-4">
                   編輯合約
                 </Dialog.Title>
@@ -975,14 +974,15 @@ export default function ContractManagement() {
                         <label className="block text-sm font-medium text-gray-700 mb-1">合約類型</label>
                         <select
                           name="contractType"
-                          value={editFormData.contractType}
+                          value={editFormData.contractType || ''}
                           onChange={handleEditFormChange}
                           className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                         >
-                          <option value="帳務託管">帳務託管</option>
-                          <option value="5*8 雲顧問">5*8 雲顧問</option>
-                          <option value="7*24 雲託管">7*24 雲託管</option>
-                          <option value="內部合約">內部合約</option>
+                          {Object.values(CONTRACT_TYPES).map((type) => (
+                            <option key={type.value} value={type.value}>
+                              {type.label}
+                            </option>
+                          ))}
                         </select>
                       </div>
                       <div>
@@ -1024,14 +1024,15 @@ export default function ContractManagement() {
                         <label className="block text-sm font-medium text-gray-700 mb-1">狀態</label>
                         <select
                           name="contractStatus"
-                          value={editFormData.contractStatus}
+                          value={editFormData.contractStatus || ''}
                           onChange={handleEditFormChange}
                           className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                         >
-                          <option value="生效中">生效中</option>
-                          <option value="待簽署">待簽署</option>
-                          <option value="待續約">待續約</option>
-                          <option value="已到期">已到期</option>
+                          {Object.values(CONTRACT_STATUS).map(status => (
+                            <option key={status.value} value={status.value}>
+                              {status.label}
+                            </option>
+                          ))}
                         </select>
                       </div>
                       <div>
@@ -1075,11 +1076,11 @@ export default function ContractManagement() {
                     保存
                   </button>
                 </div>
-              </div>
+              </Dialog.Panel>
             </Transition.Child>
           </div>
         </Dialog>
-      </Transition>
+      </Transition.Root>
 
       {/* 新增合約表單 */}
       {isCreateFormOpen && (

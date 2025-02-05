@@ -3,6 +3,7 @@ import { FiEye, FiEdit2, FiTrash2 } from 'react-icons/fi';
 import Link from 'next/link';
 import { DynamoDB } from 'aws-sdk';
 import { DB_CONFIG } from '../config/db-config';
+import { CONTRACT_TYPES, CONTRACT_STATUS, getContractTypeLabel, getContractStatusLabel, getContractStatusStyle } from '../config/contract-config';
 
 const dynamoDB = new DynamoDB.DocumentClient();
 
@@ -77,10 +78,14 @@ export const customerService = {
         const contractName = orgContractMap.get(customer.customerName);
         const contractInfo = contractName ? contractInfoMap.get(contractName) : null;
         
+        // 使用原始的中文狀態和類型
+        const status = contractInfo?.status || '未知';
+        const service = contractInfo?.type ? getContractTypeLabel(contractInfo.type) : '未知';
+
         return {
           ...customer,
-          service: contractInfo?.type || '未知', // 使用合約類型替換 service 欄位
-          status: contractInfo?.status || '未知' // 使用合約狀態替換 status 欄位
+          service,
+          status
         };
       });
       
@@ -128,6 +133,16 @@ const CustomerManagement = () => {
       </div>
     );
   }
+
+  // 篩選客戶列表
+  const filteredCustomers = customers.filter(customer => {
+    const matchesSearch = customer.customerName.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesType = !customerType || customer.type === customerType;
+    const matchesStatus = !contractStatus || getContractStatusLabel(contractStatus) === customer.status;
+    const matchesService = !serviceType || getContractTypeLabel(serviceType) === customer.service;
+
+    return matchesSearch && matchesType && matchesStatus && matchesService;
+  });
 
   return (
     <div className="p-8 bg-background-secondary">
@@ -189,9 +204,11 @@ const CustomerManagement = () => {
                    focus:border-transparent transition-all duration-200"
         >
           <option value="">合約狀態</option>
-          <option value="active">使用中</option>
-          <option value="pending">待續約</option>
-          <option value="expired">已到期</option>
+          {Object.values(CONTRACT_STATUS).map(status => (
+            <option key={status.value} value={status.value}>
+              {status.label}
+            </option>
+          ))}
         </select>
 
         <select
@@ -202,9 +219,11 @@ const CustomerManagement = () => {
                    focus:border-transparent transition-all duration-200"
         >
           <option value="">合約類型</option>
-          <option value="full">全方位服務</option>
-          <option value="basic">基礎維護</option>
-          <option value="custom">客製服務</option>
+          {Object.values(CONTRACT_TYPES).map(type => (
+            <option key={type.value} value={type.value}>
+              {type.label}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -222,7 +241,7 @@ const CustomerManagement = () => {
         {contractStatus && (
           <span className="px-3 py-1 bg-accent-color/10 text-accent-color rounded-full
                         flex items-center gap-2 text-sm">
-            使用中
+            {getContractStatusLabel(contractStatus)}
             <button onClick={() => setContractStatus('')} className="hover:text-accent-hover">
               ×
             </button>
@@ -247,20 +266,20 @@ const CustomerManagement = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {customers.length === 0 ? (
+                {filteredCustomers.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
                       <div className="flex flex-col items-center justify-center gap-2">
                         <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                         </svg>
-                        <p className="text-lg font-medium">目前沒有客戶資料</p>
-                        <p className="text-sm">請新增客戶或調整搜尋條件</p>
+                        <p className="text-lg font-medium">找不到符合條件的客戶資料</p>
+                        <p className="text-sm">請調整搜尋條件後重試</p>
                       </div>
                     </td>
                   </tr>
                 ) : (
-                  customers.map((customer, index) => (
+                  filteredCustomers.map((customer, index) => (
                     <tr key={customer.customerName} className="hover:bg-gray-50">
                       <td className="px-6 py-4 text-center text-sm text-gray-900">
                         {index + 1}
@@ -276,19 +295,15 @@ const CustomerManagement = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-900 text-center">
-                        {customer.service}
+                        {getContractTypeLabel(customer.service)}
                       </td>
                       <td className="px-6 py-4 text-center">
                         <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          customer.status === '生效中' 
-                            ? 'bg-green-100 text-green-600' 
-                            : customer.status === '待簽署'
-                            ? 'bg-blue-100 text-blue-600'
-                            : customer.status === '待續約'
-                            ? 'bg-yellow-100 text-yellow-600'
-                            : customer.status === '已到期'
-                            ? 'bg-red-100 text-red-600'
-                            : 'bg-gray-100 text-gray-800'
+                          customer.status === '生效中' ? 'bg-green-100 text-green-800' :
+                          customer.status === '待簽署' ? 'bg-blue-100 text-blue-800' :
+                          customer.status === '待續約' ? 'bg-yellow-100 text-yellow-800' :
+                          customer.status === '已到期' ? 'bg-red-100 text-red-800' :
+                          'bg-gray-100 text-gray-800'
                         }`}>
                           {customer.status}
                         </span>

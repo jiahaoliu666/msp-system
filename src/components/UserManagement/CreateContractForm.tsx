@@ -3,19 +3,13 @@ import { Fragment, useState, useEffect } from 'react';
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
 import { DB_CONFIG } from '../../config/db-config';
+import { CONTRACT_TYPES, CONTRACT_STATUS } from '../../config/contract-config';
 
 interface CreateContractFormProps {
   isOpen: boolean;
   onClose: () => void;
   existingProducts: string[];
 }
-
-const contractTypeOptions = [
-  { value: 'service', label: '帳務託管' },
-  { value: 'maintenance-8', label: '5*8 雲顧問' },
-  { value: 'maintenance-24', label: '7*24 雲託管' },
-  { value: 'internal', label: '內部合約' }
-];
 
 export default function CreateContractForm({ isOpen, onClose, existingProducts }: CreateContractFormProps) {
   const [formData, setFormData] = useState({
@@ -192,9 +186,9 @@ export default function CreateContractForm({ isOpen, onClose, existingProducts }
                   required
                 >
                   <option value="">請選擇合約類型</option>
-                  {contractTypeOptions.map(option => (
-                    <option key={option.value} value={option.label}>
-                      {option.label}
+                  {Object.values(CONTRACT_TYPES).map(type => (
+                    <option key={type.value} value={type.value}>
+                      {type.label}
                     </option>
                   ))}
                 </select>
