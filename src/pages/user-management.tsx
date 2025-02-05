@@ -33,8 +33,60 @@ export default function UserManagement() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editFormData, setEditFormData] = useState<User | null>(null);
   const [organizations, setOrganizations] = useState<string[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const { showToast } = useToast();
   const router = useRouter();
+
+  // 新增篩選狀態
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedOrganization, setSelectedOrganization] = useState('');
+  const [selectedRole, setSelectedRole] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('');
+
+  // 處理篩選邏輯
+  useEffect(() => {
+    let filtered = [...users];
+
+    // 根據 URL 參數篩選組織
+    const { organization } = router.query;
+    if (organization && typeof organization === 'string') {
+      const decodedOrg = decodeURIComponent(organization);
+      filtered = filtered.filter(user => user.organization === decodedOrg);
+      setSelectedOrganization(decodedOrg);
+    }
+
+    // 根據搜尋詞篩選
+    if (searchTerm) {
+      filtered = filtered.filter(user => 
+        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.organization?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.role?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // 根據選擇的組織篩選
+    if (selectedOrganization && !organization) {
+      filtered = filtered.filter(user => user.organization === selectedOrganization);
+    }
+
+    // 根據選擇的角色篩選
+    if (selectedRole) {
+      filtered = filtered.filter(user => user.role === selectedRole);
+    }
+
+    // 根據選擇的狀態篩選
+    if (selectedStatus) {
+      filtered = filtered.filter(user => user.status === selectedStatus);
+    }
+
+    setFilteredUsers(filtered);
+  }, [users, searchTerm, selectedOrganization, selectedRole, selectedStatus, router.query]);
+
+  // 獲取所有可用的組織和角色選項
+  useEffect(() => {
+    const orgs = Array.from(new Set(users.map(user => user.organization).filter(Boolean))) as string[];
+    setOrganizations(orgs);
+  }, [users]);
 
   // 獲取用戶列表
   const fetchUsers = async () => {
@@ -331,6 +383,94 @@ export default function UserManagement() {
         </div>
       </div>
 
+      {/* 篩選區域 */}
+      <div className="mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="搜尋使用者..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg
+                       text-gray-700 placeholder-gray-500
+                       focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <div className="absolute left-3 top-2.5 text-gray-500">
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+          </div>
+
+          <select
+            value={selectedOrganization}
+            onChange={(e) => setSelectedOrganization(e.target.value)}
+            className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg
+                     text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">所有組織</option>
+            {organizations.map((org) => (
+              <option key={org} value={org}>{org}</option>
+            ))}
+          </select>
+
+          <select
+            value={selectedRole}
+            onChange={(e) => setSelectedRole(e.target.value)}
+            className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg
+                     text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">所有角色</option>
+            {roleOptions.map((option) => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
+
+          <select
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+            className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg
+                     text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">所有狀態</option>
+            <option value="使用中">使用中</option>
+            <option value="已停用">已停用</option>
+          </select>
+        </div>
+
+        {/* 已選擇的篩選標籤 */}
+        <div className="flex flex-wrap gap-2 mt-4">
+          {selectedOrganization && (
+            <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full
+                         flex items-center gap-2 text-sm">
+              組織：{selectedOrganization}
+              <button onClick={() => setSelectedOrganization('')} className="hover:text-blue-800">
+                ×
+              </button>
+            </span>
+          )}
+          {selectedRole && (
+            <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full
+                         flex items-center gap-2 text-sm">
+              角色：{selectedRole}
+              <button onClick={() => setSelectedRole('')} className="hover:text-blue-800">
+                ×
+              </button>
+            </span>
+          )}
+          {selectedStatus && (
+            <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full
+                         flex items-center gap-2 text-sm">
+              狀態：{selectedStatus}
+              <button onClick={() => setSelectedStatus('')} className="hover:text-blue-800">
+                ×
+              </button>
+            </span>
+          )}
+        </div>
+      </div>
+
       {error && (
         <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
           <div className="flex items-center">
@@ -359,7 +499,7 @@ export default function UserManagement() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {users.map((user, index) => (
+                {filteredUsers.map((user, index) => (
                   <tr key={user.username} className="hover:bg-gray-50">
                     <td className="px-6 py-4 text-center text-sm text-gray-900">
                       {index + 1}

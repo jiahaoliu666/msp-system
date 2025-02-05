@@ -24,7 +24,8 @@ export interface CustomerData {
 export const customerService = {
   async getAllCustomers(): Promise<CustomerData[]> {
     try {
-      const params = {
+      // 1. 獲取客戶資料
+      const customerParams = {
         TableName: DB_CONFIG.tables.CUSTOMER_MANAGEMENT,
         ProjectionExpression: "customerName, email, #type, #status, service, lastActivity, #manager, createdAt, updatedAt",
         ExpressionAttributeNames: {
@@ -34,11 +35,57 @@ export const customerService = {
         }
       };
 
-      const result = await dynamoDB.scan(params).promise();
-      const customers = (result.Items || []) as CustomerData[];
+      const customerResult = await dynamoDB.scan(customerParams).promise();
+      const customers = (customerResult.Items || []) as CustomerData[];
+
+      // 2. 獲取組織資料
+      const orgParams = {
+        TableName: DB_CONFIG.tables.ORGANIZATION_MANAGEMENT,
+        ProjectionExpression: "organizationName, contractName"
+      };
+
+      const orgResult = await dynamoDB.scan(orgParams).promise();
+      const organizations = orgResult.Items || [];
+
+      // 3. 獲取合約資料
+      const contractParams = {
+        TableName: DB_CONFIG.tables.CONTRACT_MANAGEMENT,
+        ProjectionExpression: "contractName, contractType, contractStatus"
+      };
+
+      const contractResult = await dynamoDB.scan(contractParams).promise();
+      const contracts = contractResult.Items || [];
+
+      // 建立合約名稱到合約資訊的映射
+      const contractInfoMap = new Map(
+        contracts.map(contract => [
+          contract.contractName, 
+          {
+            type: contract.contractType,
+            status: contract.contractStatus
+          }
+        ])
+      );
+
+      // 建立組織名稱到合約名稱的映射
+      const orgContractMap = new Map(
+        organizations.map(org => [org.organizationName, org.contractName])
+      );
+
+      // 更新客戶資料，加入對應的合約類型和狀態
+      const updatedCustomers = customers.map(customer => {
+        const contractName = orgContractMap.get(customer.customerName);
+        const contractInfo = contractName ? contractInfoMap.get(contractName) : null;
+        
+        return {
+          ...customer,
+          service: contractInfo?.type || '未知', // 使用合約類型替換 service 欄位
+          status: contractInfo?.status || '未知' // 使用合約狀態替換 status 欄位
+        };
+      });
       
       // 根據 customerName 排序
-      return customers.sort((a, b) => a.customerName.localeCompare(b.customerName));
+      return updatedCustomers.sort((a, b) => a.customerName.localeCompare(b.customerName));
     } catch (error) {
       console.error('獲取客戶數據失敗:', error);
       throw error;
@@ -220,7 +267,12 @@ const CustomerManagement = () => {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-center">
-                          <div className="text-sm font-medium text-gray-900">{customer.customerName}</div>
+                          <Link
+                            href={`/user-management?organization=${encodeURIComponent(customer.customerName)}`}
+                            className="font-medium text-text-primary hover:text-blue-600 cursor-pointer"
+                          >
+                            {customer.customerName}
+                          </Link>
                         </div>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-900 text-center">
@@ -228,11 +280,15 @@ const CustomerManagement = () => {
                       </td>
                       <td className="px-6 py-4 text-center">
                         <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          customer.status === '使用中' 
-                            ? 'bg-green-100 text-green-800' 
+                          customer.status === '生效中' 
+                            ? 'bg-green-100 text-green-600' 
+                            : customer.status === '待簽署'
+                            ? 'bg-blue-100 text-blue-600'
                             : customer.status === '待續約'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-red-100 text-red-800'
+                            ? 'bg-yellow-100 text-yellow-600'
+                            : customer.status === '已到期'
+                            ? 'bg-red-100 text-red-600'
+                            : 'bg-gray-100 text-gray-800'
                         }`}>
                           {customer.status}
                         </span>
