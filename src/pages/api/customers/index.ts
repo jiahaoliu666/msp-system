@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { customerService } from '../../../services/customer';
+import { customerService } from '../../customer-management';
 
 export default async function handler(
   req: NextApiRequest,

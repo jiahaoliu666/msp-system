@@ -218,7 +218,7 @@ export default function UserManagement() {
         email: editFormData.email,
         organization: editFormData.organization || null,
         role: editFormData.role || null,
-        createdAt: existingUser?.createdAt, // 保留原本的 createdAt
+        createdAt: existingUser?.createdAt,
         updatedAt: formattedUpdatedAt
       };
 
@@ -229,6 +229,41 @@ export default function UserManagement() {
           Item: userItem
         })
       );
+
+      // 如果角色是客戶，則同時更新客戶管理資料表
+      if (editFormData.role === '客戶' && editFormData.organization) {
+        // 先檢查是否已存在客戶資料
+        const { Item: existingCustomer } = await docClient.send(
+          new GetCommand({
+            TableName: DB_CONFIG.tables.CUSTOMER_MANAGEMENT,
+            Key: {
+              customerName: editFormData.organization
+            }
+          })
+        );
+
+        const customerItem = {
+          customerName: editFormData.organization,
+          email: editFormData.email,
+          type: existingCustomer?.type || '企業客戶',
+          status: existingCustomer?.status || '使用中',
+          service: existingCustomer?.service || '基礎維護',
+          lastActivity: formattedUpdatedAt,
+          manager: existingCustomer?.manager || {
+            name: '系統管理員',
+            avatar: ''
+          },
+          createdAt: existingCustomer?.createdAt || formattedUpdatedAt,
+          updatedAt: formattedUpdatedAt
+        };
+
+        await docClient.send(
+          new PutCommand({
+            TableName: DB_CONFIG.tables.CUSTOMER_MANAGEMENT,
+            Item: customerItem
+          })
+        );
+      }
 
       setIsEditModalOpen(false);
       showToast('success', '用戶資料更新成功');

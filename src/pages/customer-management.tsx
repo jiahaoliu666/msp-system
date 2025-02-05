@@ -1,7 +1,50 @@
 import React, { useState, useEffect } from 'react';
 import { FiEye, FiEdit2, FiTrash2 } from 'react-icons/fi';
 import Link from 'next/link';
-import { CustomerData } from '../services/customer';
+import { DynamoDB } from 'aws-sdk';
+import { DB_CONFIG } from '../config/db-config';
+
+const dynamoDB = new DynamoDB.DocumentClient();
+
+export interface CustomerData {
+  customerName: string;  // 分區索引
+  email: string;
+  type: string;
+  status: string;
+  service: string;
+  lastActivity: string;
+  manager: {
+    name: string;
+    avatar: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const customerService = {
+  async getAllCustomers(): Promise<CustomerData[]> {
+    try {
+      const params = {
+        TableName: DB_CONFIG.tables.CUSTOMER_MANAGEMENT,
+        ProjectionExpression: "customerName, email, #type, #status, service, lastActivity, #manager, createdAt, updatedAt",
+        ExpressionAttributeNames: {
+          "#type": "type",
+          "#status": "status",
+          "#manager": "manager"
+        }
+      };
+
+      const result = await dynamoDB.scan(params).promise();
+      const customers = (result.Items || []) as CustomerData[];
+      
+      // 根據 customerName 排序
+      return customers.sort((a, b) => a.customerName.localeCompare(b.customerName));
+    } catch (error) {
+      console.error('獲取客戶數據失敗:', error);
+      throw error;
+    }
+  }
+};
 
 const CustomerManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -30,14 +73,6 @@ const CustomerManagement = () => {
 
     fetchCustomers();
   }, []);
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-color"></div>
-      </div>
-    );
-  }
 
   if (error) {
     return (
@@ -149,67 +184,86 @@ const CustomerManagement = () => {
       </div>
 
       {/* 客戶列表 */}
-      <div className="bg-background-primary rounded-lg shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-border-color">
-                <th className="px-6 py-3 text-left text-text-primary">客戶名稱</th>
-                <th className="px-6 py-3 text-left text-text-primary">聯絡人</th>
-                <th className="px-6 py-3 text-left text-text-primary">合約狀態</th>
-                <th className="px-6 py-3 text-left text-text-primary">合約類型</th>
-                <th className="px-6 py-3 text-left text-text-primary">上次登入</th>
-                <th className="px-6 py-3 text-left text-text-primary">負責人</th>
-                <th className="px-6 py-3 text-left text-text-primary">操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              {customers.map((customer) => (
-                <tr key={customer.id} className="border-b border-border-color hover:bg-hover-color transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div>
-                        <div className="font-medium text-text-primary">{customer.name}</div>
-                        <div className="text-sm text-text-secondary">{customer.type}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-text-primary">{customer.contact}</td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 rounded-full text-sm
-                      ${customer.status === '使用中' ? 'bg-success-color/10 text-success-color' : 
-                        customer.status === '待續約' ? 'bg-warning-color/10 text-warning-color' : 
-                        'bg-error-color/10 text-error-color'}`}>
-                      {customer.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-text-primary">{customer.service}</td>
-                  <td className="px-6 py-4 text-text-primary">{customer.lastActivity}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-accent-color/10 text-accent-color flex items-center justify-center">
-                        {customer.manager.name.charAt(0)}
-                      </div>
-                      <span className="text-text-primary">{customer.manager.name}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <button className="p-2 hover:bg-hover-color rounded-lg text-text-secondary hover:text-accent-color transition-colors">
-                        <FiEye className="w-5 h-5" />
-                      </button>
-                      <button className="p-2 hover:bg-hover-color rounded-lg text-text-secondary hover:text-accent-color transition-colors">
-                        <FiEdit2 className="w-5 h-5" />
-                      </button>
-                      <button className="p-2 hover:bg-hover-color rounded-lg text-text-secondary hover:text-error-color transition-colors">
-                        <FiTrash2 className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </td>
+      <div className="bg-white rounded-lg shadow-md">
+        <div className="p-6">
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead>
+                <tr className="bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center">項次</th>
+                  <th className="px-6 py-3 text-center">客戶名稱</th>
+                  <th className="px-6 py-3 text-center">合約類型</th>
+                  <th className="px-6 py-3 text-center">合約狀態</th>
+                  <th className="px-6 py-3 text-center">最後登入</th>
+                  <th className="px-6 py-3 text-center">負責人</th>
+                  <th className="px-6 py-3 text-center">操作</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {customers.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                        </svg>
+                        <p className="text-lg font-medium">目前沒有客戶資料</p>
+                        <p className="text-sm">請新增客戶或調整搜尋條件</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  customers.map((customer, index) => (
+                    <tr key={customer.customerName} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 text-center text-sm text-gray-900">
+                        {index + 1}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center justify-center">
+                          <div className="text-sm font-medium text-gray-900">{customer.customerName}</div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900 text-center">
+                        {customer.service}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          customer.status === '使用中' 
+                            ? 'bg-green-100 text-green-800' 
+                            : customer.status === '待續約'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {customer.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500 text-center">
+                        {customer.lastActivity}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <div className="flex items-center justify-center">
+                          <span className="ml-2 text-sm text-gray-900">{customer.manager.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-sm font-medium text-center">
+                        <div className="flex justify-center space-x-2">
+                          <button className="text-blue-600 hover:text-blue-900">
+                            查看
+                          </button>
+                          <button className="text-gray-600 hover:text-gray-900">
+                            編輯
+                          </button>
+                          <button className="text-red-600 hover:text-red-900">
+                            刪除
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 

@@ -258,9 +258,11 @@ msp人員 早晚夜班
 
 src/pages/customer-management/index.tsx 客戶管理
 
-新增群組 例如 邁達特 山隆 等等
+當 src/components/UserManagement/CreateUserForm.tsx 角色欄選擇下拉選單為"客戶" 並點擊建立使用者按鈕 或 當用戶在 src/pages/user-management.tsx 點擊編輯按鈕 並將角色欄切換為 "客戶"時 要將用戶資料同步儲存到 MetaAge-MSP-User-Management 資料表中 
 
-當 MetaAge-MSP-User-Management 資料表的role欄位為客戶時，要在src/pages/customer-management.tsx的客戶列表中顯示對應的客戶資料，而客戶列表的客戶資料從 
+若被切換為非客戶時 要將用戶資料從 MetaAge-MSP-User-Management 資料表中刪除
+
+也就是說當 MetaAge-MSP-User-Management 資料表的role欄位為客戶時，要在src/pages/customer-management.tsx的客戶列表中顯示對應的客戶資料，而客戶列表的客戶資料從 
 'MetaAge-MSP-Customer-Management 資料表中獲取
 
 
