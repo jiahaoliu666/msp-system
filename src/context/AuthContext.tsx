@@ -84,7 +84,7 @@ export function useProtectedRoute() {
     // 檢查客戶角色的訪問權限
     if (isAuthenticated && userRole === '客戶') {
       if (!CUSTOMER_PATHS.includes(currentPath)) {
-        showToast('error', '您沒有權限訪問此頁面');
+        // showToast('error', '您沒有權限訪問此頁面');
         router.replace('/user-portal');
       }
     }

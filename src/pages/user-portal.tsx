@@ -596,7 +596,7 @@ const Chatbot = () => {
 };
 
 export default function UserPortal() {
-  const { logout } = useAuth();
+  const { logout, userRole, user } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState(() => {
     // 從 URL 參數讀取初始頁面
@@ -785,13 +785,13 @@ export default function UserPortal() {
               <div className="w-28 h-28 rounded-3xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 flex items-center justify-center text-5xl text-blue-300 shadow-lg hover:shadow-blue-500/10 transition-all duration-300">
                 👤
               </div>
-              <h2 className="mt-5 text-xl font-bold text-white/90">提摩超人</h2>
+              <h2 className="mt-5 text-xl font-bold text-white/90">{user?.email?.split('@')[0] || '使用者'}</h2>
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="mt-1 text-sm text-slate-300 hover:text-blue-300 hover:underline cursor-pointer flex items-center"
                 >
-                  teemo@metaage.com
+                  {user?.email || '未登入'}
                   <svg
                     className={`ml-1 h-4 w-4 transform transition-transform duration-200 ${
                       isDropdownOpen ? 'rotate-180' : ''
@@ -809,9 +809,18 @@ export default function UserPortal() {
                   <div className="absolute z-10 mt-2 w-48 -left-8 bg-slate-800 rounded-xl shadow-lg border border-slate-700 py-2">
                     <div className="px-4 py-2 border-b border-slate-700">
                       <p className="text-xs text-slate-400">登入身份</p>
-                      <p className="text-sm font-medium text-slate-200">系統管理員</p>
+                      <p className="text-sm font-medium text-slate-200">{userRole || '使用者'}</p>
                     </div>
                     <div className="py-1">
+                      <button
+                        onClick={() => handleSectionChange('home')}
+                        className="w-full px-4 py-2 text-sm text-slate-200 hover:bg-slate-700 hover:text-blue-300 flex items-center"
+                      >
+                        <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                        </svg>
+                        首頁
+                      </button>
                       <button
                         onClick={() => handleSectionChange('profile')}
                         className="w-full px-4 py-2 text-sm text-slate-200 hover:bg-slate-700 hover:text-blue-300 flex items-center"
@@ -821,16 +830,6 @@ export default function UserPortal() {
                         </svg>
                         我的資料
                       </button>
-                      <Link
-                        href="/"
-                        className="w-full px-4 py-2 text-sm text-slate-200 hover:bg-slate-700 hover:text-blue-300 flex items-center"
-                      >
-                        <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        後台管理
-                      </Link>
                     </div>
                     <div className="border-t border-slate-700 py-1">
                       <button 
