@@ -282,8 +282,12 @@ export default function UserManagement() {
         })
       );
 
-      // 如果角色是客戶，則同時更新客戶管理資料表
-      if (editFormData.role === '客戶' && editFormData.organization) {
+      // 檢查角色變更情況
+      const oldRole = selectedUser?.role;
+      const newRole = editFormData.role;
+
+      // 如果新角色是客戶，則更新或創建客戶管理資料表記錄
+      if (newRole === '客戶' && editFormData.organization) {
         // 先檢查是否已存在客戶資料
         const { Item: existingCustomer } = await docClient.send(
           new GetCommand({
@@ -315,6 +319,23 @@ export default function UserManagement() {
             Item: customerItem
           })
         );
+      }
+      // 如果舊角色是客戶，但新角色不是客戶，則刪除客戶管理資料表記錄
+      else if (oldRole === '客戶' && newRole !== '客戶' && selectedUser?.organization) {
+        try {
+          await docClient.send(
+            new DeleteCommand({
+              TableName: DB_CONFIG.tables.CUSTOMER_MANAGEMENT,
+              Key: {
+                customerName: selectedUser.organization
+              }
+            })
+          );
+          console.log('成功刪除客戶管理資料表記錄');
+        } catch (deleteError) {
+          console.error('刪除客戶管理資料表記錄時發生錯誤:', deleteError);
+          // 不中斷流程，繼續執行
+        }
       }
 
       setIsEditModalOpen(false);
@@ -776,7 +797,12 @@ export default function UserManagement() {
                   </button>
                   <button
                     type="button"
-                    className="px-4 py-2 text-sm font-medium text-white bg-blue-500 border border-transparent rounded-md hover:bg-blue-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500"
+                    disabled={!editFormData?.role || !editFormData?.organization}
+                    className={`px-4 py-2 text-sm font-medium text-white border border-transparent rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 ${
+                      editFormData?.role && editFormData?.organization
+                        ? 'bg-blue-500 hover:bg-blue-600' 
+                        : 'bg-gray-300 cursor-not-allowed'
+                    }`}
                     onClick={handleUpdateUser}
                   >
                     保存

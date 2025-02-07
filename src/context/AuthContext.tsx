@@ -3,6 +3,9 @@ import { useRouter } from 'next/router';
 import { CognitoService, LoginParams } from '@/services/auth/cognito';
 import { useToast } from '@/context/ToastContext';
 import { AdminInitiateAuthCommandOutput } from '@aws-sdk/client-cognito-identity-provider';
+import { DynamoDB } from '@aws-sdk/client-dynamodb';
+import { AWS_CONFIG } from '@/config/aws-config';
+import { DB_CONFIG } from '@/config/db-config';
 
 interface AuthContextType {
   user: any | null;
@@ -11,6 +14,7 @@ interface AuthContextType {
   login: (params: LoginParams) => Promise<void>;
   logout: () => void;
   completeNewPasswordChallenge: (newPassword: string, session: string, email: string) => Promise<void>;
+  userRole: string | null;
 }
 
 interface NewPasswordRequiredResponse {
@@ -26,88 +30,118 @@ const AuthContext = createContext<AuthContextType>({
   login: async () => {},
   logout: () => {},
   completeNewPasswordChallenge: async () => {},
+  userRole: null,
 });
 
 export const useAuth = () => useContext(AuthContext);
 
 // 定義不需要驗證的頁面路徑
 const PUBLIC_PATHS = ['/login', '/404', '/change-password', '/forgot-password'];
+// 定義客戶角色只能訪問的頁面
+const CUSTOMER_PATHS = ['/user-portal'];
 
 // 路由保護 hook
 export function useProtectedRoute() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, userRole } = useAuth();
   const router = useRouter();
   const { showToast } = useToast();
   const previousAuthState = useRef(isAuthenticated);
 
   useEffect(() => {
-    // 如果還在載入中，不做任何處理
     if (isLoading) {
       return;
     }
 
-    // 檢查當前頁面是否為登入頁面（包括帶有查詢參數的情況）
-    const currentPath = router.pathname;  // 使用 pathname 而不是 asPath
+    const currentPath = router.pathname;
     const isLoginPage = currentPath === '/login';
     const isRootPath = currentPath === '/';
     
-    // 如果是登入頁面或其他公開頁面，直接返回，不執行任何提示或重定向
     if (isLoginPage || PUBLIC_PATHS.includes(currentPath)) {
       return;
     }
 
-    // 更新前一個認證狀態
     const wasAuthenticated = previousAuthState.current;
     previousAuthState.current = isAuthenticated;
-
-    // 檢查是否為登出轉換（從已登入變為未登入）
     const isLogoutTransition = wasAuthenticated && !isAuthenticated;
 
-    // 只在需要認證的頁面且未登入的情況下重定向
     if (!isAuthenticated && !isLogoutTransition) {
-      // 檢查是否已經在登入頁面
       if (router.pathname === '/login') {
         return;
       }
 
-      // 只有在非根目錄時才顯示提示
       if (!isRootPath) {
         showToast('error', '請先登入');
       }
       
-      // 如果當前路徑不是根路徑，則添加 returnUrl
       const query = isRootPath ? {} : { returnUrl: router.asPath };
-      
       router.replace({
         pathname: '/login',
         query
       });
+      return;
     }
-  }, [isAuthenticated, isLoading, router, showToast]);
 
-  return { isAuthenticated, isLoading };
+    // 檢查客戶角色的訪問權限
+    if (isAuthenticated && userRole === '客戶') {
+      if (!CUSTOMER_PATHS.includes(currentPath)) {
+        showToast('error', '您沒有權限訪問此頁面');
+        router.replace('/user-portal');
+      }
+    }
+  }, [isAuthenticated, isLoading, router, showToast, userRole]);
+
+  return { isAuthenticated, isLoading, userRole };
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const router = useRouter();
   const { showToast } = useToast();
 
+  // 檢查用戶角色
+  const checkUserRole = async (email: string) => {
+    try {
+      const dynamodb = new DynamoDB({ ...AWS_CONFIG });
+      const params = {
+        TableName: DB_CONFIG.tables.USER_MANAGEMENT,
+        KeyConditionExpression: 'email = :email',
+        ExpressionAttributeValues: {
+          ':email': { S: email }
+        }
+      };
+
+      const response = await dynamodb.query(params);
+      if (response.Items && response.Items.length > 0) {
+        const role = response.Items[0].role?.S || null;
+        setUserRole(role);
+        return role;
+      }
+      return null;
+    } catch (error) {
+      console.error('檢查用戶角色失敗:', error);
+      return null;
+    }
+  };
+
   useEffect(() => {
-    // 檢查本地存儲的認證狀態
     const checkAuth = async () => {
       try {
         const token = localStorage.getItem('authToken');
         if (token) {
           const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
           setUser(userInfo);
+          if (userInfo.email) {
+            await checkUserRole(userInfo.email);
+          }
         }
       } catch (error) {
         console.error('Auth check error:', error);
         localStorage.removeItem('authToken');
         localStorage.removeItem('userInfo');
         setUser(null);
+        setUserRole(null);
       } finally {
         setIsLoading(false);
       }
@@ -127,7 +161,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const response = await CognitoService.login({ email, password });
 
-      // 檢查是否需要更改密碼
       if ('challengeName' in response && response.challengeName === 'NEW_PASSWORD_REQUIRED') {
         console.log('AuthContext: 需要更改密碼');
         if (!response.session) {
@@ -143,7 +176,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // 如果不是密碼更改挑戰，則必須是一個成功的認證響應
       if (!('AuthenticationResult' in response)) {
         throw new Error('系統錯誤：收到未知的響應類型');
       }
@@ -152,7 +184,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error('系統錯誤：未收到認證結果');
       }
 
-      // 保存認證資訊
       const { AccessToken = '', IdToken = '', RefreshToken = '' } = response.AuthenticationResult;
       
       if (!AccessToken) {
@@ -163,7 +194,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('idToken', IdToken);
       localStorage.setItem('refreshToken', RefreshToken);
       
-      // 保存用戶資訊
       const userInfo = { 
         email,
         accessToken: AccessToken,
@@ -173,20 +203,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       };
       localStorage.setItem('userInfo', JSON.stringify(userInfo));
       setUser(userInfo);
+
+      // 檢查用戶角色並根據角色重定向
+      const role = await checkUserRole(email);
+      if (role === '客戶') {
+        router.push('/user-portal');
+      } else {
+        router.push('/');
+      }
       
-      // 顯示成功訊息並重定向
       showToast('success', '登入成功');
-      router.push('/');
 
     } catch (error: any) {
-      // 清除認證資訊
       localStorage.removeItem('authToken');
       localStorage.removeItem('idToken');
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('userInfo');
       setUser(null);
-      
-      // 直接拋出原始錯誤
+      setUserRole(null);
       throw error;
     }
   };
@@ -260,6 +294,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         logout,
         completeNewPasswordChallenge,
+        userRole,
       }}
     >
       {children}

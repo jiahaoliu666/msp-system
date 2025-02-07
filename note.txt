@@ -83,6 +83,8 @@ src/pages/chat-room.tsx 聊天對話
 
 查看合約狀況
 
+要顯示客戶的資訊 例如 帳戶id 等等
+
 --------------------------------
 
 src/components/common/CreateTicketForm.tsx 建立工單表單
@@ -336,9 +338,16 @@ suport -> case 到ticket system
 
 組織用戶數
 
+添加其他二線資訊、purestoreage 或 其他產品的資訊
+
+
+
 --------------------------------
 
+若為登入狀態時 要檢查MetaAge-MSP-User-Management
+資料表 分區索引為email 的role值是否為 客戶 ，若值為客戶則只能訪問user-portal頁面，而其他角色都正常訪問，修改的同時不要影響到現行功能
 
+_app.tsx 右上角要顯示對應的 id 和 mail
 
 --------------------------------
 
