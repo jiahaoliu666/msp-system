@@ -74,7 +74,7 @@ export function useProtectedRoute() {
         return;
       }
 
-      if (!isRootPath) {
+      if (!isRootPath && !router.query.from) {
         showToast('error', '請先登入');
       }
       
@@ -89,7 +89,6 @@ export function useProtectedRoute() {
     // 檢查客戶角色的訪問權限
     if (isAuthenticated && userRole === '客戶') {
       if (!CUSTOMER_PATHS.includes(currentPath)) {
-        // showToast('error', '您沒有權限訪問此頁面');
         router.replace('/user-portal');
       }
     }
@@ -120,16 +119,63 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (response.Enabled === false) {
         console.log('用戶已被停用，執行強制登出...');
-        showToast('error', '此用戶已被停用，系統將自動登出');
-        logout();
+        handleDisabledUser();
       }
     } catch (error: any) {
       console.error('檢查用戶狀態失敗:', error);
       if (error.name === 'UserNotFoundException') {
-        showToast('error', '用戶帳號已被刪除，系統將自動登出');
-        logout();
+        handleDeletedUser();
       }
     }
+  };
+
+  // 處理用戶被停用的情況
+  const handleDisabledUser = () => {
+    // 清除所有認證相關的 localStorage 數據
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('idToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('userInfo');
+    localStorage.clear();
+    
+    // 停止定期檢查
+    stopStatusCheck();
+    
+    // 重置用戶狀態
+    setUser(null);
+    setUserRole(null);
+
+    // 顯示停用訊息
+    showToast('error', '此用戶暫停使用中，請洽詢系統管理員');
+    
+    // 導向登入頁面，添加 from=disabled 參數
+    router.push({
+      pathname: '/login',
+      query: { from: 'disabled' }
+    });
+  };
+
+  // 處理用戶被刪除的情況
+  const handleDeletedUser = () => {
+    // 清除所有認證相關的 localStorage 數據
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('idToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('userInfo');
+    localStorage.clear();
+    
+    // 停止定期檢查
+    stopStatusCheck();
+    
+    // 重置用戶狀態
+    setUser(null);
+    setUserRole(null);
+
+    // 顯示刪除訊息
+    showToast('error', '用戶帳號已被刪除，系統將自動登出');
+    
+    // 導向登入頁面
+    router.push('/login');
   };
 
   // 開始定期檢查用戶狀態
@@ -198,6 +244,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // 開始定期檢查
             startStatusCheck(userInfo.email);
           }
+        } else {
+          setUser(null);
+          setUserRole(null);
         }
       } catch (error) {
         console.error('Auth check error:', error);
@@ -212,7 +261,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     checkAuth();
 
-    // 組件卸載時清理定時器
     return () => {
       stopStatusCheck();
     };
@@ -342,7 +390,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('idToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('userInfo');
-    localStorage.clear(); // 清除所有其他可能的數據
+    localStorage.clear();
     
     // 停止定期檢查
     stopStatusCheck();
@@ -354,7 +402,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // 顯示登出成功訊息
     showToast('success', '已成功登出');
     
-    // 導向登入頁面，並添加 from=logout 參數
+    // 導向登入頁面
     router.push({
       pathname: '/login',
       query: { from: 'logout' }
