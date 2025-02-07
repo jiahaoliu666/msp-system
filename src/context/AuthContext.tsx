@@ -2,16 +2,19 @@ import React, { createContext, useContext, useState, useEffect, useRef } from 'r
 import { useRouter } from 'next/router';
 import { CognitoService, LoginParams } from '@/services/auth/cognito';
 import { useToast } from '@/context/ToastContext';
-import { AdminInitiateAuthCommandOutput } from '@aws-sdk/client-cognito-identity-provider';
-import { DynamoDB } from '@aws-sdk/client-dynamodb';
+import { AdminInitiateAuthCommandOutput, AdminGetUserCommand } from '@aws-sdk/client-cognito-identity-provider';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocumentClient, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { AWS_CONFIG } from '@/config/aws-config';
 import { DB_CONFIG } from '@/config/db-config';
+import { COGNITO_CONFIG } from '@/config/cognito-config';
+import { cognitoClient } from '@/config/cognito-config';
 
 interface AuthContextType {
   user: any | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (params: LoginParams) => Promise<void>;
+  login: (params: { email: string; password: string }) => Promise<void>;
   logout: () => void;
   completeNewPasswordChallenge: (newPassword: string, session: string, email: string) => Promise<void>;
   userRole: string | null;
@@ -27,9 +30,11 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   isAuthenticated: false,
   isLoading: true,
-  login: async () => {},
-  logout: () => {},
-  completeNewPasswordChallenge: async () => {},
+  login: async ({ email, password }) => { throw new Error('Context not initialized') },
+  logout: () => { throw new Error('Context not initialized') },
+  completeNewPasswordChallenge: async (newPassword, session, email) => { 
+    throw new Error('Context not initialized') 
+  },
   userRole: null,
 });
 
@@ -99,22 +104,76 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userRole, setUserRole] = useState<string | null>(null);
   const router = useRouter();
   const { showToast } = useToast();
+  const statusCheckInterval = useRef<NodeJS.Timeout | undefined>(undefined);
+
+  // 檢查用戶狀態
+  const checkUserStatus = async (email: string) => {
+    try {
+      if (!email) return;
+      
+      const command = new AdminGetUserCommand({
+        UserPoolId: COGNITO_CONFIG.userPoolId,
+        Username: email
+      });
+
+      const response = await cognitoClient.send(command);
+      
+      if (response.Enabled === false) {
+        console.log('用戶已被停用，執行強制登出...');
+        showToast('error', '此用戶已被停用，系統將自動登出');
+        logout();
+      }
+    } catch (error: any) {
+      console.error('檢查用戶狀態失敗:', error);
+      if (error.name === 'UserNotFoundException') {
+        showToast('error', '用戶帳號已被刪除，系統將自動登出');
+        logout();
+      }
+    }
+  };
+
+  // 開始定期檢查用戶狀態
+  const startStatusCheck = (email: string) => {
+    if (statusCheckInterval.current) {
+      clearInterval(statusCheckInterval.current);
+    }
+    
+    // 每 5 分鐘檢查一次用戶狀態
+    statusCheckInterval.current = setInterval(() => {
+      checkUserStatus(email);
+    }, 5 * 60 * 1000);
+  };
+
+  // 停止定期檢查
+  const stopStatusCheck = () => {
+    if (statusCheckInterval.current) {
+      clearInterval(statusCheckInterval.current);
+      statusCheckInterval.current = undefined;
+    }
+  };
 
   // 檢查用戶角色
   const checkUserRole = async (email: string) => {
     try {
-      const dynamodb = new DynamoDB({ ...AWS_CONFIG });
-      const params = {
+      const client = new DynamoDBClient({
+        region: AWS_CONFIG.region,
+        credentials: AWS_CONFIG.credentials
+      });
+
+      const docClient = DynamoDBDocumentClient.from(client);
+      
+      const command = new QueryCommand({
         TableName: DB_CONFIG.tables.USER_MANAGEMENT,
         KeyConditionExpression: 'email = :email',
         ExpressionAttributeValues: {
-          ':email': { S: email }
+          ':email': email
         }
-      };
+      });
 
-      const response = await dynamodb.query(params);
+      const response = await docClient.send(command);
+
       if (response.Items && response.Items.length > 0) {
-        const role = response.Items[0].role?.S || null;
+        const role = response.Items[0].role || null;
         setUserRole(role);
         return role;
       }
@@ -134,6 +193,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(userInfo);
           if (userInfo.email) {
             await checkUserRole(userInfo.email);
+            // 初始檢查用戶狀態
+            await checkUserStatus(userInfo.email);
+            // 開始定期檢查
+            startStatusCheck(userInfo.email);
           }
         }
       } catch (error) {
@@ -148,6 +211,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     checkAuth();
+
+    // 組件卸載時清理定時器
+    return () => {
+      stopStatusCheck();
+    };
   }, []);
 
   const login = async ({ email, password }: LoginParams) => {
@@ -204,6 +272,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('userInfo', JSON.stringify(userInfo));
       setUser(userInfo);
 
+      // 開始定期檢查用戶狀態
+      startStatusCheck(email);
+
       // 檢查用戶角色並根據角色重定向
       const role = await checkUserRole(email);
       if (role === '客戶') {
@@ -221,6 +292,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem('userInfo');
       setUser(null);
       setUserRole(null);
+      stopStatusCheck();
       throw error;
     }
   };
@@ -272,8 +344,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('userInfo');
     localStorage.clear(); // 清除所有其他可能的數據
     
+    // 停止定期檢查
+    stopStatusCheck();
+    
     // 重置用戶狀態
     setUser(null);
+    setUserRole(null);
     
     // 顯示登出成功訊息
     showToast('success', '已成功登出');

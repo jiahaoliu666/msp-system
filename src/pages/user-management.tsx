@@ -231,6 +231,15 @@ export default function UserManagement() {
     if (!editFormData) return;
 
     try {
+      // 檢查是否正在編輯自己的帳號
+      const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+      const currentUserEmail = userInfo.email;
+      
+      if (currentUserEmail === editFormData.email && editFormData.role === '客戶') {
+        showToast('error', '無法將自己的角色更改為客戶');
+        return;
+      }
+
       // 建立 DynamoDB 客戶端
       const client = new DynamoDBClient({
         region: process.env.NEXT_PUBLIC_AWS_REGION,

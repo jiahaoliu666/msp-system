@@ -73,11 +73,18 @@ export default function Login() {
       });
       
       // 統一處理所有 Cognito 錯誤
-      const errorType = err.__type || err.name;
+      const errorType = err.__type || err.code || err.name;
       
       switch (errorType) {
+        case 'UserDisabled':
+          showToast('error', '此用戶暫停使用中，請洽詢系統管理員');
+          break;
         case 'NotAuthorizedException':
-          showToast('error', '電子郵件或密碼錯誤');
+          if (err.message === 'User is disabled.') {
+            showToast('error', '此用戶暫停使用中，請洽詢系統管理員');
+          } else {
+            showToast('error', '電子郵件或密碼錯誤');
+          }
           break;
         case 'UserNotConfirmedException':
           showToast('warning', '帳號尚未驗證，請查收電子郵件進行驗證');

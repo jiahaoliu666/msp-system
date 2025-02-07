@@ -35,7 +35,7 @@ const AppContent: React.FC<AppProps> = ({ Component, pageProps }) => {
   const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false);
   const userMenuRef = React.useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const { logout } = useAuth();
+  const { logout, user, userRole } = useAuth();
   const { isLoading, isAuthenticated } = useProtectedRoute();
 
   // 監聽路由變化
@@ -238,8 +238,8 @@ const AppContent: React.FC<AppProps> = ({ Component, pageProps }) => {
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                   >
                     <div className="text-right hidden sm:block">
-                      <div className="text-sm font-medium text-text-primary">管理員</div>
-                      <div className="text-xs text-text-secondary">admin@metaage.com.tw</div>
+                      <div className="text-sm font-medium text-text-primary">{userRole || '用戶'}</div>
+                      <div className="text-xs text-text-secondary">{user?.email || ''}</div>
                     </div>
                     <div className="h-8 w-8 rounded-full bg-gradient-to-r from-accent-color to-accent-hover 
                                         flex items-center justify-center text-white">

@@ -163,7 +163,11 @@ export class CognitoService {
         stack: error.stack
       });
 
-      // 直接拋出原始錯誤
+      // 處理用戶已停用的情況
+      if (error.name === 'NotAuthorizedException' && error.message === 'User is disabled.') {
+        error.code = 'UserDisabled';
+      }
+
       throw error;
     }
   }

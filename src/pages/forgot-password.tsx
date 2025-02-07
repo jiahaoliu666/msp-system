@@ -35,6 +35,8 @@ export default function ForgotPassword() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const [cooldownInterval, setCooldownInterval] = useState<NodeJS.Timeout | null>(null);
+  const [verificationAttempts, setVerificationAttempts] = useState<number>(0);
+  const MAX_VERIFICATION_ATTEMPTS = 3; // 最大嘗試次數
 
   // 處理組件卸載時清理定時器
   useEffect(() => {
@@ -185,98 +187,127 @@ export default function ForgotPassword() {
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (verificationAttempts >= MAX_VERIFICATION_ATTEMPTS) {
+        showToast('error', '驗證碼輸入錯誤次數過多，請重新發送驗證碼');
+        setCodeSent(false);
+        setVerificationCode('');
+        setNewPassword('');
+        setConfirmPassword('');
+        setVerificationAttempts(0);
+        startCooldown(300); // 5分鐘冷卻時間
+        return;
+    }
+
     if (newPassword !== confirmPassword) {
-      showToast('error', '兩次輸入的密碼不一致');
-      return;
+        showToast('error', '兩次輸入的密碼不一致');
+        return;
     }
 
     const passwordErrors = validatePassword(newPassword);
     if (passwordErrors.length > 0) {
-      showToast('error', passwordErrors[0]);
-      return;
+        showToast('error', passwordErrors[0]);
+        return;
     }
 
     setLoading(true);
 
-    const result = await CognitoService.confirmForgotPassword({
-      email,
-      code: verificationCode,
-      newPassword
-    });
+    try {
+        const result = await CognitoService.confirmForgotPassword({
+            email,
+            code: verificationCode,
+            newPassword
+        });
 
-    if (!result.success) {
-      if (result.error) {
-        showToast('error', result.error.message);
-        
-        switch (result.error.name) {
-          case 'CodeMismatchException':
-            setVerificationCode('');
-            break;
-          case 'ExpiredCodeException':
-            setVerificationCode('');
-            setNewPassword('');
-            setConfirmPassword('');
-            // 自動重新發送驗證碼
-            const resendResult = await CognitoService.forgotPassword({ email });
-            if (resendResult.success) {
-              showToast('success', '新的驗證碼已發送到您的電子郵件');
-            } else if (resendResult.error?.name === 'LimitExceededException') {
-              showToast('error', '請求次數過多，請稍後再嘗試重新發送驗證碼');
-              setCodeSent(false);
-              startCooldown(300); // 5 分鐘冷卻
+        if (!result.success) {
+            if (result.error) {
+                switch (result.error.name) {
+                    case 'CodeMismatchException':
+                        setVerificationAttempts(prev => prev + 1);
+                        const remainingAttempts = MAX_VERIFICATION_ATTEMPTS - (verificationAttempts + 1);
+                        showToast('error', `驗證碼錯誤，還剩 ${remainingAttempts} 次嘗試機會`);
+                        setVerificationCode('');
+                        break;
+                        
+                    case 'ExpiredCodeException':
+                        showToast('error', '驗證碼已過期，將自動重新發送新的驗證碼');
+                        setVerificationCode('');
+                        setNewPassword('');
+                        setConfirmPassword('');
+                        // 自動重新發送驗證碼
+                        const resendResult = await CognitoService.forgotPassword({ email });
+                        if (resendResult.success) {
+                            showToast('success', '新的驗證碼已發送到您的電子郵件');
+                            setVerificationAttempts(0);
+                            startCooldown(60);
+                        } else {
+                            showToast('error', '重新發送驗證碼失敗，請手動重試');
+                            setCodeSent(false);
+                        }
+                        break;
+                        
+                    case 'LimitExceededException':
+                        showToast('error', '請求次數過多，請稍後再試');
+                        setCodeSent(false);
+                        setVerificationCode('');
+                        setNewPassword('');
+                        setConfirmPassword('');
+                        setVerificationAttempts(0);
+                        startCooldown(300);
+                        break;
+                        
+                    default:
+                        showToast('error', result.error.message || '重設密碼失敗，請稍後再試');
+                }
             }
-            break;
-          case 'LimitExceededException':
-            setCodeSent(false);
-            setVerificationCode('');
-            setNewPassword('');
-            setConfirmPassword('');
-            startCooldown(300); // 5 分鐘冷卻
-            break;
+            setLoading(false);
+            return;
         }
-      }
-      setLoading(false);
-      return;
-    }
 
-    showToast('success', '密碼重設成功');
-    router.push('/login');
-    setLoading(false);
+        showToast('success', '密碼重設成功');
+        router.push('/login');
+        
+    } catch (error: any) {
+        console.error('重設密碼時發生錯誤:', error);
+        showToast('error', '重設密碼時發生錯誤，請稍後再試');
+    } finally {
+        setLoading(false);
+    }
   };
 
   // 重新發送驗證碼
   const handleResendCode = async () => {
     if (cooldown > 0) {
-      showToast('error', `請等待 ${cooldown} 秒後再試`);
-      return;
+        showToast('error', `請等待 ${cooldown} 秒後再試`);
+        return;
     }
 
     setLoading(true);
     try {
-      const result = await CognitoService.forgotPassword({ email }) as ForgotPasswordResult;
-      
-      if (!result.success && result.error) {
-        showToast('error', result.error.message);
+        const result = await CognitoService.forgotPassword({ email });
         
-        if (result.error.name === 'LimitExceededException') {
-          startCooldown(300); // 5 分鐘冷卻
-          setCodeSent(false);
-          setVerificationCode('');
-          setNewPassword('');
-          setConfirmPassword('');
+        if (!result.success && result.error) {
+            showToast('error', result.error.message);
+            
+            if (result.error.name === 'LimitExceededException') {
+                startCooldown(300);
+                setCodeSent(false);
+                setVerificationCode('');
+                setNewPassword('');
+                setConfirmPassword('');
+            }
+            return;
         }
-        return;
-      }
 
-      showToast('success', '新的驗證碼已發送到您的電子郵件');
-      startCooldown(60); // 開始 60 秒冷卻時間
-      // 清空驗證碼輸入框
-      setVerificationCode('');
+        // 重設驗證嘗試次數
+        setVerificationAttempts(0);
+        showToast('success', '新的驗證碼已發送到您的電子郵件');
+        startCooldown(60);
+        setVerificationCode('');
     } catch (error: any) {
-      console.error('重新發送驗證碼失敗:', error);
-      showToast('error', '發送驗證碼失敗，請稍後再試');
+        console.error('重新發送驗證碼失敗:', error);
+        showToast('error', '發送驗證碼失敗，請稍後再試');
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
   };
 
@@ -367,9 +398,19 @@ export default function ForgotPassword() {
                   required
                   value={verificationCode}
                   onChange={(e) => setVerificationCode(e.target.value)}
-                  className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 bg-white/50 backdrop-blur-sm"
+                  className={`appearance-none relative block w-full px-4 py-3 border ${
+                    verificationAttempts > 0 ? 'border-yellow-300' : 'border-gray-300'
+                  } placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 bg-white/50 backdrop-blur-sm`}
                   placeholder="請輸入驗證碼"
                 />
+                {verificationAttempts > 0 && (
+                    <p className="mt-2 text-sm text-yellow-600">
+                        <svg className="inline w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        還剩 {MAX_VERIFICATION_ATTEMPTS - verificationAttempts} 次嘗試機會
+                    </p>
+                )}
               </div>
 
               <div className="group">
