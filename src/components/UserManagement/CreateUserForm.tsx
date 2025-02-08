@@ -5,24 +5,19 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, ScanCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 import { useToast } from '@/context/ToastContext';
 import { DB_CONFIG } from '../../config/db-config';
+import { ROLE_CONFIG } from '@/config/role-config';
 
 interface CreateUserFormProps {
   isOpen: boolean;
   onClose: () => void;
+  userRole: string;
 }
 
 interface Organization {
   organizationName: string;
 }
 
-export const roleOptions = [
-  { value: '架構師', label: '架構師' },
-  { value: '維運工程師', label: '維運工程師' },
-  { value: '系統管理員', label: '系統管理員' },
-  { value: '客戶', label: '客戶' },
-];
-
-export default function CreateUserForm({ isOpen, onClose }: CreateUserFormProps) {
+export default function CreateUserForm({ isOpen, onClose, userRole }: CreateUserFormProps) {
   const [formData, setFormData] = useState({
     email: '',
     temporaryPassword: '',
@@ -461,7 +456,7 @@ export default function CreateUserForm({ isOpen, onClose }: CreateUserFormProps)
                         required
                       >
                         <option value="">請選擇角色</option>
-                        {roleOptions.map(option => (
+                        {ROLE_CONFIG.getRoleOptions(userRole).map(option => (
                           <option key={option.value} value={option.value}>
                             {option.label}
                           </option>

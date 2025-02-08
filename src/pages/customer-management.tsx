@@ -5,6 +5,7 @@ import { DynamoDB } from 'aws-sdk';
 import { DB_CONFIG } from '../config/db-config';
 import { CONTRACT_TYPES, CONTRACT_STATUS, getContractTypeLabel, getContractStatusLabel, getContractStatusStyle } from '../config/contract-config';
 import { useAuth } from '@/context/AuthContext';
+import { ROLE_CONFIG } from '@/config/role-config';
 
 const dynamoDB = new DynamoDB.DocumentClient();
 
@@ -323,15 +324,15 @@ const CustomerManagement = () => {
                           <button className="text-blue-600 hover:text-blue-900">
                             查看
                           </button>
-                          {userRole === '系統管理員' && (
-                            <>
-                              <button className="text-gray-600 hover:text-gray-900">
-                                編輯
-                              </button>
-                              <button className="text-red-600 hover:text-red-900">
-                                刪除
-                              </button>
-                            </>
+                          {ROLE_CONFIG.hasPermission(userRole || '', 'edit') && (
+                            <button className="text-gray-600 hover:text-gray-900">
+                              編輯
+                            </button>
+                          )}
+                          {ROLE_CONFIG.hasPermission(userRole || '', 'delete') && (
+                            <button className="text-red-600 hover:text-red-900">
+                              刪除
+                            </button>
                           )}
                         </div>
                       </td>

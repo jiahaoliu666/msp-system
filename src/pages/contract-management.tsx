@@ -8,6 +8,7 @@ import { Dialog, Transition } from '@headlessui/react';
 import { DB_CONFIG } from '../config/db-config';
 import { CONTRACT_TYPES, CONTRACT_STATUS, Contract, getContractTypeLabel, getContractStatusLabel, getContractStatusStyle } from '../config/contract-config';
 import { useAuth } from '@/context/AuthContext';
+import { ROLE_CONFIG } from '@/config/role-config';
 
 export default function ContractManagement() {
   const router = useRouter();
@@ -364,7 +365,7 @@ export default function ContractManagement() {
             <p className="text-gray-600 mt-1">管理所有客戶合約與續約狀態</p>
           </div>
           <div className="flex space-x-3">
-            {userRole === '系統管理員' && (
+            {ROLE_CONFIG.hasPermission(userRole || '', 'create') && (
               <button 
                 onClick={() => setIsCreateFormOpen(true)}
                 className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-150 flex items-center"
@@ -660,21 +661,21 @@ export default function ContractManagement() {
                           >
                             查看
                           </button>
-                          {userRole === '系統管理員' && (
-                            <>
-                              <button 
-                                onClick={() => handleEdit(contract)}
-                                className="text-gray-600 hover:text-gray-900"
-                              >
-                                編輯
-                              </button>
-                              <button 
-                                onClick={() => handleDelete(contract.contractId)}
-                                className="text-red-600 hover:text-red-900"
-                              >
-                                刪除
-                              </button>
-                            </>
+                          {ROLE_CONFIG.hasPermission(userRole || '', 'edit') && (
+                            <button 
+                              onClick={() => handleEdit(contract)}
+                              className="text-gray-600 hover:text-gray-900"
+                            >
+                              編輯
+                            </button>
+                          )}
+                          {ROLE_CONFIG.hasPermission(userRole || '', 'delete') && (
+                            <button 
+                              onClick={() => handleDelete(contract.contractId)}
+                              className="text-red-600 hover:text-red-900"
+                            >
+                              刪除
+                            </button>
                           )}
                         </div>
                       </td>
