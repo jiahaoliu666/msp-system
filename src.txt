@@ -39,7 +39,7 @@ src/
 │   ├── users
 │   │   └── index.ts # 使用者管理 API (獲取用戶列表、創建 & 更新 & 刪除用戶請求、DynamoDB 組織 & 角色)
 │   ├── customers
-│   │   └── index.ts # 客戶管理 API (獲取客戶列表、創建 & 更新 & 刪除客戶請求、DynamoDB 客戶 & 角色)
+│   │   └── index.ts # 客戶管理 API (獲取客戶列表)
 ├── components-----------------------------------------------------------組件
 │   ├── common # 通用組件 (快速建立按鈕、側邊欄、主題切換按鈕)
 │   │   ├── CreateTicketForm.tsx # 建立工單表單

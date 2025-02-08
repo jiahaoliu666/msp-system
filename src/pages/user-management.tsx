@@ -9,6 +9,7 @@ import { useRouter } from 'next/router';
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, ScanCommand, DeleteCommand, PutCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
 import { DB_CONFIG } from '../config/db-config';
+import { useAuth } from '@/context/AuthContext';
 
 interface User {
   username: string;
@@ -36,6 +37,7 @@ export default function UserManagement() {
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const { showToast } = useToast();
   const router = useRouter();
+  const { userRole } = useAuth();
 
   // 新增篩選狀態
   const [searchTerm, setSearchTerm] = useState('');
@@ -400,15 +402,17 @@ export default function UserManagement() {
             <p className="text-gray-600 mt-1">管理系統使用者帳號與權限設定</p>
           </div>
           <div className="flex space-x-3">
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-150 flex items-center"
-            >
-              <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              新增使用者
-            </button>
+            {userRole === '系統管理員' && (
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-150 flex items-center"
+              >
+                <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                新增使用者
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -572,28 +576,32 @@ export default function UserManagement() {
                         >
                           查看
                         </button>
-                        <button
-                          onClick={() => handleEdit(user)}
-                          className="text-gray-600 hover:text-gray-900"
-                        >
-                          編輯
-                        </button>
-                        <button
-                          onClick={() => handleDelete(user.username, user.email)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          刪除
-                        </button>
-                        <button
-                          onClick={() => handleToggleUserStatus(user.username, user.status)}
-                          className={`${
-                            user.status === '使用中'
-                              ? 'text-red-600 hover:text-red-900'
-                              : 'text-green-600 hover:text-green-900'
-                          }`}
-                        >
-                          {user.status === '使用中' ? '停用' : '啟用'}
-                        </button>
+                        {userRole === '系統管理員' && (
+                          <>
+                            <button
+                              onClick={() => handleEdit(user)}
+                              className="text-gray-600 hover:text-gray-900"
+                            >
+                              編輯
+                            </button>
+                            <button
+                              onClick={() => handleDelete(user.username, user.email)}
+                              className="text-red-600 hover:text-red-900"
+                            >
+                              刪除
+                            </button>
+                            <button
+                              onClick={() => handleToggleUserStatus(user.username, user.status)}
+                              className={`${
+                                user.status === '使用中'
+                                  ? 'text-red-600 hover:text-red-900'
+                                  : 'text-green-600 hover:text-green-900'
+                              }`}
+                            >
+                              {user.status === '使用中' ? '停用' : '啟用'}
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>

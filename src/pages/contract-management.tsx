@@ -1,16 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, ScanCommand, DeleteCommand, PutCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
 import CreateContractForm from '../components/UserManagement/CreateContractForm';
 import { Dialog, Transition } from '@headlessui/react';
-import { Fragment } from 'react';
 import { DB_CONFIG } from '../config/db-config';
 import { CONTRACT_TYPES, CONTRACT_STATUS, Contract, getContractTypeLabel, getContractStatusLabel, getContractStatusStyle } from '../config/contract-config';
+import { useAuth } from '@/context/AuthContext';
 
 export default function ContractManagement() {
   const router = useRouter();
+  const { userRole } = useAuth();
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
@@ -363,15 +364,17 @@ export default function ContractManagement() {
             <p className="text-gray-600 mt-1">管理所有客戶合約與續約狀態</p>
           </div>
           <div className="flex space-x-3">
-            <button 
-              onClick={() => setIsCreateFormOpen(true)}
-              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-150 flex items-center"
-            >
-              <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              新增合約
-            </button>
+            {userRole === '系統管理員' && (
+              <button 
+                onClick={() => setIsCreateFormOpen(true)}
+                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-150 flex items-center"
+              >
+                <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                新增合約
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -657,18 +660,22 @@ export default function ContractManagement() {
                           >
                             查看
                           </button>
-                          <button 
-                            onClick={() => handleEdit(contract)}
-                            className="text-gray-600 hover:text-gray-900"
-                          >
-                            編輯
-                          </button>
-                          <button 
-                            onClick={() => handleDelete(contract.contractId)}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            刪除
-                          </button>
+                          {userRole === '系統管理員' && (
+                            <>
+                              <button 
+                                onClick={() => handleEdit(contract)}
+                                className="text-gray-600 hover:text-gray-900"
+                              >
+                                編輯
+                              </button>
+                              <button 
+                                onClick={() => handleDelete(contract.contractId)}
+                                className="text-red-600 hover:text-red-900"
+                              >
+                                刪除
+                              </button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>

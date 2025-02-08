@@ -7,6 +7,7 @@ import { Dialog, Transition } from '@headlessui/react';
 import { useRouter } from 'next/router';
 import { DB_CONFIG } from '../config/db-config';
 import { useToast } from '../context/ToastContext';
+import { useAuth } from '@/context/AuthContext';
 
 interface Organization {
   name: string;
@@ -35,6 +36,7 @@ export default function OrganizationManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
   const { showToast } = useToast();
+  const { userRole } = useAuth();
 
   const fetchOrganizationsWithContracts = async () => {
     try {
@@ -270,15 +272,17 @@ export default function OrganizationManagement() {
             <p className="text-text-secondary mt-1">管理客戶的組織架構與人員配置</p>
           </div>
           <div className="flex space-x-3">
-            <button 
-              onClick={() => setIsCreateFormOpen(true)}
-              className="px-4 py-2 bg-accent-color text-white rounded-lg hover:bg-accent-hover transition-colors duration-150 flex items-center"
-            >
-              <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              新增組織
-            </button>
+            {userRole === '系統管理員' && (
+              <button 
+                onClick={() => setIsCreateFormOpen(true)}
+                className="px-4 py-2 bg-accent-color text-white rounded-lg hover:bg-accent-hover transition-colors duration-150 flex items-center"
+              >
+                <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                新增組織
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -287,7 +291,7 @@ export default function OrganizationManagement() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         {[
           { title: '組織總數', value: stats.totalOrgs.toString(), color: 'accent', icon: '🏢' },
-          { title: '總用戶數', value: stats.totalUsers.toString(), color: 'success', icon: '👥' },
+          { title: '用戶總數', value: stats.totalUsers.toString(), color: 'success', icon: '👥' },
           { 
             title: '有效組織', 
             value: stats.activeOrgs.toString(), 
@@ -414,18 +418,22 @@ export default function OrganizationManagement() {
                             >
                               查看
                             </button>
-                            <button 
-                              onClick={() => handleEdit(org)}
-                              className="text-gray-600 hover:text-gray-900"
-                            >
-                              編輯
-                            </button>
-                            <button 
-                              onClick={() => handleDelete(org.name)}
-                              className="text-red-600 hover:text-red-900"
-                            >
-                              刪除
-                            </button>
+                            {userRole === '系統管理員' && (
+                              <>
+                                <button 
+                                  onClick={() => handleEdit(org)}
+                                  className="text-gray-600 hover:text-gray-900"
+                                >
+                                  編輯
+                                </button>
+                                <button 
+                                  onClick={() => handleDelete(org.name)}
+                                  className="text-red-600 hover:text-red-900"
+                                >
+                                  刪除
+                                </button>
+                              </>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -441,15 +449,17 @@ export default function OrganizationManagement() {
                   <h3 className="mt-2 text-sm font-medium text-gray-900">尚無組織資料</h3>
                   <p className="mt-1 text-sm text-gray-500">點擊新增組織按鈕開始建立您的第一個組織。</p>
                   <div className="mt-6">
-                    <button
-                      onClick={() => setIsCreateFormOpen(true)}
-                      className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
-                      <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                      </svg>
-                      新增組織
-                    </button>
+                    {userRole === '系統管理員' && (
+                      <button
+                        onClick={() => setIsCreateFormOpen(true)}
+                        className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      >
+                        <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                        新增組織
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
