@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useDropzone } from 'react-dropzone';
 import { toast } from 'react-toastify';
@@ -8,13 +8,27 @@ import {
   deleteFile, 
   deleteFolder,
   deleteMultipleFiles,
-  getFileDownloadUrl, 
+  getFileDownloadUrl,
+  getFilePreviewUrl,
   testCORSConfiguration,
   createFolder,
   formatDateTime,
-  S3File 
+  S3File,
+  moveFile,
+  copyFile,
+  renameFile,
+  generateShareLink,
+  getStorageQuota,
+  batchOperation,
+  isPreviewable
 } from '@/services/storage/s3';
-import { formatFileSize, getFileTypeIcon } from '@/config/s3-config';
+import { 
+  formatFileSize, 
+  getFileTypeIcon, 
+  PREVIEW_CONFIG,
+  CONTEXT_MENU_CONFIG,
+  STATUS_BAR_CONFIG 
+} from '@/config/s3-config';
 import { S3_CONFIG } from '@/config/s3-config';
 
 // 檔案類型介面
@@ -87,6 +101,278 @@ const getFormattedSize = (size: number | undefined): string => {
   return formatFileSize(size);
 };
 
+// 檔案預覽組件
+const FilePreview: React.FC<{
+  file: FileItem;
+  onClose: () => void;
+}> = ({ file, onClose }) => {
+  const [previewUrl, setPreviewUrl] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadPreview = async () => {
+      try {
+        const url = await getFilePreviewUrl(file.Key || '');
+        setPreviewUrl(url);
+      } catch (error) {
+        setError('無法載入預覽');
+        console.error('預覽載入失敗:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPreview();
+  }, [file]);
+
+  const renderPreview = () => {
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center h-full">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-color"></div>
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="flex items-center justify-center h-full text-error-color">
+          {error}
+        </div>
+      );
+    }
+
+    const extension = file.Key?.split('.').pop()?.toLowerCase() || '';
+    const mimeType = file.type;
+
+    if (PREVIEW_CONFIG.supportedTypes.images.includes(mimeType)) {
+      return (
+        <img 
+          src={previewUrl} 
+          alt={file.Key} 
+          className="max-w-full max-h-full object-contain"
+        />
+      );
+    }
+
+    if (PREVIEW_CONFIG.supportedTypes.documents.includes(mimeType)) {
+      return (
+        <iframe 
+          src={previewUrl} 
+          className="w-full h-full border-0"
+          title={file.Key}
+        />
+      );
+    }
+
+    if (PREVIEW_CONFIG.supportedTypes.videos.includes(mimeType)) {
+      return (
+        <video 
+          src={previewUrl} 
+          controls 
+          className="max-w-full max-h-full"
+        >
+          您的瀏覽器不支援影片播放
+        </video>
+      );
+    }
+
+    if (PREVIEW_CONFIG.supportedTypes.audio.includes(mimeType)) {
+      return (
+        <audio 
+          src={previewUrl} 
+          controls 
+          className="w-full"
+        >
+          您的瀏覽器不支援音訊播放
+        </audio>
+      );
+    }
+
+    return (
+      <div className="flex items-center justify-center h-full text-text-secondary">
+        不支援此檔案類型的預覽
+      </div>
+    );
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+      <div className="bg-background-primary rounded-xl p-6 max-w-4xl w-full max-h-[90vh] overflow-hidden">
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <h3 className="text-xl font-bold text-text-primary">{file.Key}</h3>
+            <p className="text-sm text-text-secondary">
+              {formatFileSize(file.Size || 0)} · {formatDateTime(file.LastModified || new Date())}
+            </p>
+          </div>
+          <button 
+            onClick={onClose}
+            className="p-2 hover:bg-hover-color rounded-lg transition-colors"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div className="preview-content overflow-auto max-h-[calc(90vh-100px)]">
+          {renderPreview()}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// 右鍵菜單組件
+const ContextMenu: React.FC<{
+  file: FileItem;
+  position: { x: number; y: number };
+  onClose: () => void;
+  onAction: (action: string) => void;
+}> = ({ file, position, onClose, onAction }) => {
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [onClose]);
+
+  const handleAction = (action: string) => {
+    onAction(action);
+    onClose();
+  };
+
+  const adjustedPosition = {
+    x: Math.min(position.x, window.innerWidth - (menuRef.current?.offsetWidth || 0) - CONTEXT_MENU_CONFIG.position.offset),
+    y: Math.min(position.y, window.innerHeight - (menuRef.current?.offsetHeight || 0) - CONTEXT_MENU_CONFIG.position.offset)
+  };
+
+  return (
+    <div
+      ref={menuRef}
+      className="fixed bg-background-primary rounded-lg shadow-lg py-2 z-50 min-w-[200px]"
+      style={{ 
+        top: adjustedPosition.y,
+        left: adjustedPosition.x
+      }}
+    >
+      {CONTEXT_MENU_CONFIG.items.map((item, index) => {
+        if (item.supportedTypes === 'all' || 
+            (Array.isArray(item.supportedTypes) && item.supportedTypes.includes(file.type))) {
+          return (
+            <div key={item.id}>
+              {item.divider && index > 0 && (
+                <hr className="my-2 border-border-color" />
+              )}
+              <button
+                onClick={() => handleAction(item.id)}
+                className="w-full px-4 py-2 text-left hover:bg-hover-color flex items-center space-x-2"
+              >
+                <span className="w-5">{item.icon}</span>
+                <span>{item.label}</span>
+              </button>
+              {item.children && (
+                <div className="pl-4">
+                  {item.children.map(child => (
+                    <button
+                      key={child.id}
+                      onClick={() => handleAction(child.id)}
+                      className="w-full px-4 py-2 text-left hover:bg-hover-color flex items-center space-x-2"
+                    >
+                      <span className="w-5">{child.icon}</span>
+                      <span>{child.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        }
+        return null;
+      })}
+    </div>
+  );
+};
+
+// 狀態欄組件
+const StatusBar: React.FC<{
+  selectedItems: Set<string>;
+  totalItems: number;
+  totalSize: number;
+  uploadProgress?: number;
+  currentOperation?: string;
+}> = ({ selectedItems, totalItems, totalSize, uploadProgress, currentOperation }) => {
+  const [quota, setQuota] = useState<{ used: number; total: number } | null>(null);
+
+  useEffect(() => {
+    const loadQuota = async () => {
+      try {
+        const quotaData = await getStorageQuota();
+        setQuota(quotaData);
+      } catch (error) {
+        console.error('無法載入儲存空間資訊:', error);
+      }
+    };
+
+    if (STATUS_BAR_CONFIG.showQuota) {
+      loadQuota();
+      const interval = setInterval(loadQuota, STATUS_BAR_CONFIG.refreshInterval);
+      return () => clearInterval(interval);
+    }
+  }, []);
+
+  return (
+    <div className="fixed bottom-0 left-0 right-0 bg-background-primary border-t border-border-color px-4 py-2">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <span className="text-text-secondary">
+            已選擇: {selectedItems.size} / {totalItems} 個項目
+          </span>
+          <span className="text-text-secondary">
+            總大小: {formatFileSize(totalSize)}
+          </span>
+          {quota && STATUS_BAR_CONFIG.showQuota && (
+            <div className="flex items-center space-x-2">
+              <span className="text-text-secondary">
+                儲存空間: {formatFileSize(quota.used)} / {formatFileSize(quota.total)}
+              </span>
+              <div className="w-32 h-2 bg-border-color rounded-full">
+                <div 
+                  className="h-full bg-accent-color rounded-full transition-all duration-300"
+                  style={{ width: `${(quota.used / quota.total) * 100}%` }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="flex items-center space-x-4">
+          {uploadProgress !== undefined && STATUS_BAR_CONFIG.showUploadProgress && (
+            <div className="flex items-center space-x-2">
+              <span className="text-text-secondary">上傳進度: {uploadProgress}%</span>
+              <div className="w-32 h-2 bg-border-color rounded-full">
+                <div 
+                  className="h-full bg-accent-color rounded-full transition-all duration-300"
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              </div>
+            </div>
+          )}
+          {currentOperation && STATUS_BAR_CONFIG.showOperationStatus && (
+            <span className="text-text-secondary">{currentOperation}</span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function Storage() {
   // 狀態管理
   const [files, setFiles] = useState<FileItem[]>([]);
@@ -125,6 +411,13 @@ export default function Storage() {
     key: 'name',
     direction: 'asc'
   });
+  const [previewFile, setPreviewFile] = useState<FileItem | null>(null);
+  const [contextMenu, setContextMenu] = useState<{
+    file: FileItem;
+    position: { x: number; y: number };
+  } | null>(null);
+  const [currentOperation, setCurrentOperation] = useState<string>('');
+  const [totalSize, setTotalSize] = useState<number>(0);
 
   // 載入檔案列表
   const loadFiles = useCallback(async () => {
@@ -242,6 +535,12 @@ export default function Storage() {
   useEffect(() => {
     loadFiles();
   }, [loadFiles]);
+
+  // 計算總大小
+  useEffect(() => {
+    const size = files.reduce((sum, file) => sum + (file.Size || 0), 0);
+    setTotalSize(size);
+  }, [files]);
 
   // 檔案上傳處理
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
@@ -587,6 +886,66 @@ export default function Storage() {
     }));
   };
 
+  // 處理右鍵菜單動作
+  const handleContextMenuAction = async (action: string) => {
+    if (!contextMenu?.file) return;
+
+    const file = contextMenu.file;
+    setCurrentOperation(`正在處理: ${action}`);
+
+    try {
+      switch (action) {
+        case 'preview':
+          if (isPreviewable(file.Key || '')) {
+            setPreviewFile(file);
+          } else {
+            toast.warning('此檔案類型不支援預覽');
+          }
+          break;
+
+        case 'download':
+          await handleDownload(file.Key || '', file.Key?.split('/').pop() || '');
+          break;
+
+        case 'copy-link':
+          const shareUrl = await generateShareLink(file.Key || '');
+          await navigator.clipboard.writeText(shareUrl);
+          toast.success('已複製分享連結');
+          break;
+
+        case 'share-email':
+          const mailtoUrl = `mailto:?subject=分享檔案：${file.Key}&body=請使用以下連結下載檔案：%0D%0A${await generateShareLink(file.Key || '')}`;
+          window.open(mailtoUrl);
+          break;
+
+        case 'move':
+          // 實現移動檔案的邏輯
+          break;
+
+        case 'copy':
+          // 實現複製檔案的邏輯
+          break;
+
+        case 'rename':
+          // 實現重命名的邏輯
+          break;
+
+        case 'delete':
+          setItemToDelete({
+            type: file.type === 'folder' ? 'folder' : 'file',
+            path: file.Key || ''
+          });
+          setIsDeleteConfirmOpen(true);
+          break;
+      }
+    } catch (error) {
+      toast.error('操作失敗');
+      console.error('操作失敗:', error);
+    } finally {
+      setCurrentOperation('');
+    }
+  };
+
   // 檔案列表渲染
   const renderFileList = () => {
     if (viewMode === 'grid') {
@@ -868,7 +1227,7 @@ export default function Storage() {
   };
 
   return (
-    <div className="flex-1 bg-background-secondary p-8">
+    <div className="flex-1 bg-background-secondary p-8 pb-16">
       {/* 頁面標題與麵包屑導航 */}
       <div className="mb-4">
         <div className="flex items-center text-sm text-text-secondary mb-4">
@@ -1275,6 +1634,33 @@ export default function Storage() {
           </div>
         </div>
       )}
+
+      {/* 檔案預覽 */}
+      {previewFile && (
+        <FilePreview
+          file={previewFile}
+          onClose={() => setPreviewFile(null)}
+        />
+      )}
+
+      {/* 右鍵菜單 */}
+      {contextMenu && (
+        <ContextMenu
+          file={contextMenu.file}
+          position={contextMenu.position}
+          onClose={() => setContextMenu(null)}
+          onAction={handleContextMenuAction}
+        />
+      )}
+
+      {/* 狀態欄 */}
+      <StatusBar
+        selectedItems={selectedItems}
+        totalItems={files.length + folders.length}
+        totalSize={totalSize}
+        uploadProgress={isUploading ? uploadProgress : undefined}
+        currentOperation={currentOperation}
+      />
     </div>
   );
 }

@@ -1,7 +1,7 @@
-import { S3Client, ListObjectsV2Command, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, ListObjectsV2Command, PutObjectCommand, DeleteObjectCommand, GetObjectCommand, CopyObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { AWS_CONFIG } from '@/config/aws-config';
-import { S3_CONFIG, getAllowedFileTypes } from '@/config/s3-config';
+import { S3_CONFIG, getAllowedFileTypes, PREVIEW_CONFIG } from '@/config/s3-config';
 import { FetchHttpHandler } from '@smithy/fetch-http-handler';
 
 // S3 檔案類型介面
@@ -571,4 +571,184 @@ export async function deleteMultipleFiles(keys: string[]): Promise<boolean> {
     handleS3Error(error);
     return false;
   }
+}
+
+// 獲取檔案預覽 URL
+export async function getFilePreviewUrl(key: string): Promise<string> {
+  try {
+    validateS3Config();
+    
+    const command = new GetObjectCommand({
+      Bucket: S3_CONFIG.bucketName,
+      Key: key,
+      ResponseContentDisposition: 'inline'
+    });
+
+    const signedUrl = await getSignedUrl(s3Client, command, { 
+      expiresIn: 3600,
+    });
+    return signedUrl;
+  } catch (error) {
+    handleS3Error(error);
+    return '';
+  }
+}
+
+// 生成分享連結
+export async function generateShareLink(key: string, expiresIn: number = 3600): Promise<string> {
+  try {
+    validateS3Config();
+    
+    const command = new GetObjectCommand({
+      Bucket: S3_CONFIG.bucketName,
+      Key: key
+    });
+
+    const signedUrl = await getSignedUrl(s3Client, command, { 
+      expiresIn
+    });
+    return signedUrl;
+  } catch (error) {
+    handleS3Error(error);
+    return '';
+  }
+}
+
+// 移動檔案
+export async function moveFile(sourceKey: string, destinationKey: string): Promise<boolean> {
+  try {
+    validateS3Config();
+    
+    // 複製檔案到新位置
+    const copyCommand = new CopyObjectCommand({
+      Bucket: S3_CONFIG.bucketName,
+      CopySource: `${S3_CONFIG.bucketName}/${sourceKey}`,
+      Key: destinationKey
+    });
+    
+    await s3Client.send(copyCommand);
+    
+    // 刪除原始檔案
+    const deleteCommand = new DeleteObjectCommand({
+      Bucket: S3_CONFIG.bucketName,
+      Key: sourceKey
+    });
+    
+    await s3Client.send(deleteCommand);
+    return true;
+  } catch (error) {
+    handleS3Error(error);
+    return false;
+  }
+}
+
+// 複製檔案
+export async function copyFile(sourceKey: string, destinationKey: string): Promise<boolean> {
+  try {
+    validateS3Config();
+    
+    const command = new CopyObjectCommand({
+      Bucket: S3_CONFIG.bucketName,
+      CopySource: `${S3_CONFIG.bucketName}/${sourceKey}`,
+      Key: destinationKey
+    });
+    
+    await s3Client.send(command);
+    return true;
+  } catch (error) {
+    handleS3Error(error);
+    return false;
+  }
+}
+
+// 重命名檔案
+export async function renameFile(oldKey: string, newKey: string): Promise<boolean> {
+  return await moveFile(oldKey, newKey);
+}
+
+// 獲取儲存空間配額
+export async function getStorageQuota(): Promise<{
+  used: number;
+  total: number;
+}> {
+  try {
+    validateS3Config();
+    
+    const command = new ListObjectsV2Command({
+      Bucket: S3_CONFIG.bucketName
+    });
+    
+    const response = await s3Client.send(command);
+    const totalSize = (response.Contents || [])
+      .reduce((sum, item) => sum + (item.Size || 0), 0);
+    
+    return {
+      used: totalSize,
+      total: 1024 * 1024 * 1024 * 1024 // 1TB 或從配置中獲取
+    };
+  } catch (error) {
+    handleS3Error(error);
+    return {
+      used: 0,
+      total: 0
+    };
+  }
+}
+
+// 批次操作函數
+export async function batchOperation(
+  keys: string[],
+  operation: 'move' | 'copy' | 'delete',
+  destination?: string
+): Promise<boolean> {
+  try {
+    validateS3Config();
+    
+    const operations = keys.map(key => {
+      switch (operation) {
+        case 'move':
+          return moveFile(key, `${destination}/${key.split('/').pop()}`);
+        case 'copy':
+          return copyFile(key, `${destination}/${key.split('/').pop()}`);
+        case 'delete':
+          return deleteFile(key);
+      }
+    });
+    
+    const results = await Promise.all(operations);
+    return results.every(result => result);
+  } catch (error) {
+    handleS3Error(error);
+    return false;
+  }
+}
+
+// 檢查檔案是否可預覽
+export function isPreviewable(key: string): boolean {
+  const extension = key.split('.').pop()?.toLowerCase() || '';
+  const mimeType = getMimeType(extension);
+  
+  return Object.values(PREVIEW_CONFIG.supportedTypes)
+    .flat()
+    .includes(mimeType);
+}
+
+// 獲取 MIME 類型
+function getMimeType(extension: string): string {
+  const mimeTypes: { [key: string]: string } = {
+    'pdf': 'application/pdf',
+    'doc': 'application/msword',
+    'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'jpg': 'image/jpeg',
+    'jpeg': 'image/jpeg',
+    'png': 'image/png',
+    'gif': 'image/gif',
+    'webp': 'image/webp',
+    'mp4': 'video/mp4',
+    'mov': 'video/quicktime',
+    'mp3': 'audio/mpeg',
+    'wav': 'audio/wav'
+  };
+  
+  return mimeTypes[extension] || 'application/octet-stream';
 } 

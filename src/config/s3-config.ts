@@ -78,6 +78,98 @@ export const S3_CONFIG = {
   }
 };
 
+// 預覽配置
+export const PREVIEW_CONFIG = {
+  supportedTypes: {
+    images: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+    documents: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+    videos: ['video/mp4', 'video/quicktime'],
+    audio: ['audio/mpeg', 'audio/wav']
+  },
+  maxPreviewSize: 10 * 1024 * 1024, // 10MB
+  thumbnailSize: {
+    width: 200,
+    height: 200
+  },
+  previewWindow: {
+    width: '80vw',
+    height: '80vh'
+  }
+};
+
+// 右鍵菜單配置
+export const CONTEXT_MENU_CONFIG = {
+  items: [
+    {
+      id: 'preview',
+      label: '預覽',
+      icon: '👁️',
+      supportedTypes: [...PREVIEW_CONFIG.supportedTypes.images, ...PREVIEW_CONFIG.supportedTypes.documents]
+    },
+    {
+      id: 'download',
+      label: '下載',
+      icon: '⬇️',
+      supportedTypes: 'all'
+    },
+    {
+      id: 'share',
+      label: '分享',
+      icon: '🔗',
+      supportedTypes: 'all',
+      children: [
+        {
+          id: 'copy-link',
+          label: '複製連結',
+          icon: '📋'
+        },
+        {
+          id: 'share-email',
+          label: '透過郵件分享',
+          icon: '📧'
+        }
+      ]
+    },
+    {
+      id: 'move',
+      label: '移動到',
+      icon: '📦',
+      supportedTypes: 'all'
+    },
+    {
+      id: 'copy',
+      label: '複製到',
+      icon: '📋',
+      supportedTypes: 'all'
+    },
+    {
+      id: 'rename',
+      label: '重命名',
+      icon: '✏️',
+      supportedTypes: 'all'
+    },
+    {
+      id: 'delete',
+      label: '刪除',
+      icon: '🗑️',
+      supportedTypes: 'all',
+      divider: true
+    }
+  ],
+  position: {
+    offset: 5,
+    preventOverflow: true
+  }
+};
+
+// 狀態欄配置
+export const STATUS_BAR_CONFIG = {
+  refreshInterval: 5000, // 5秒更新一次
+  showQuota: true,
+  showUploadProgress: true,
+  showOperationStatus: true
+};
+
 // 驗證 S3 配置
 export function validateS3Config() {
   const requiredConfigs = {
