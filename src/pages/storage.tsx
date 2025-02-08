@@ -3,12 +3,13 @@ import Link from 'next/link';
 import { useDropzone } from 'react-dropzone';
 import { toast } from 'react-toastify';
 import { 
-  listFiles, 
+  listFilesInFolder,
   uploadFile, 
   deleteFile, 
   getFileDownloadUrl, 
   getStorageStats, 
   testCORSConfiguration,
+  createFolder,
   S3File 
 } from '@/services/storage/s3';
 import { formatFileSize, getFileTypeIcon } from '@/config/s3-config';
@@ -47,6 +48,11 @@ export default function Storage() {
   const itemsPerPage = 10;
   const maxRetries = 3;
   const retryDelay = 2000;
+  const [currentPath, setCurrentPath] = useState('');
+  const [folders, setFolders] = useState<string[]>([]);
+  const [parentPath, setParentPath] = useState<string | null>(null);
+  const [isCreatingFolder, setIsCreatingFolder] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
 
   // 載入檔案列表
   const loadFiles = useCallback(async () => {
@@ -59,13 +65,15 @@ export default function Storage() {
         throw new Error('網路連線已斷開，請檢查您的網路狀態');
       }
 
-      const fileList = await listFiles();
+      const { files: fileList, folders: folderList, parentPath: parent } = await listFilesInFolder(currentPath);
       const stats = await getStorageStats();
       
       setFiles(fileList.map(file => ({
         ...file,
         type: file.Key.split('.').pop() || 'unknown'
       })));
+      setFolders(folderList);
+      setParentPath(parent);
       setStats(stats);
       setRetryCount(0);
       setIsRetrying(false);
@@ -99,7 +107,7 @@ export default function Storage() {
         setIsLoading(false);
       }
     }
-  }, [retryCount, isRetrying, retryDelay, maxRetries]);
+  }, [currentPath, retryCount, isRetrying, retryDelay, maxRetries]);
 
   // 重試處理
   const handleRetry = useCallback(() => {
@@ -282,6 +290,45 @@ export default function Storage() {
     currentPage * itemsPerPage
   );
 
+  // 建立資料夾
+  const handleCreateFolder = async () => {
+    if (!newFolderName.trim()) {
+      toast.error('請輸入資料夾名稱');
+      return;
+    }
+
+    try {
+      const folderPath = currentPath 
+        ? `${currentPath}/${newFolderName.trim()}`
+        : newFolderName.trim();
+
+      const success = await createFolder(folderPath);
+      if (success) {
+        toast.success('資料夾建立成功');
+        setNewFolderName('');
+        setIsCreatingFolder(false);
+        loadFiles();
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '建立資料夾失敗');
+    }
+  };
+
+  // 進入資料夾
+  const handleEnterFolder = (folderName: string) => {
+    const newPath = currentPath 
+      ? `${currentPath}/${folderName}`
+      : folderName;
+    setCurrentPath(newPath);
+  };
+
+  // 返回上層資料夾
+  const handleGoBack = () => {
+    if (parentPath !== null) {
+      setCurrentPath(parentPath);
+    }
+  };
+
   return (
     <div className="flex-1 bg-background-secondary p-8">
       {/* 頁面標題與麵包屑導航 */}
@@ -327,6 +374,89 @@ export default function Storage() {
           </div>
         </div>
       </div>
+
+      {/* 資料夾路徑導航 */}
+      <div className="bg-background-primary rounded-xl shadow-sm mb-6 p-4">
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => setCurrentPath('')}
+            className="text-accent-color hover:underline"
+          >
+            根目錄
+          </button>
+          {currentPath.split('/').map((folder, index, array) => (
+            <div key={index} className="flex items-center">
+              <span className="mx-2 text-text-secondary">/</span>
+              <button
+                onClick={() => setCurrentPath(array.slice(0, index + 1).join('/'))}
+                className="text-accent-color hover:underline"
+              >
+                {folder}
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 操作按鈕 */}
+      <div className="mb-6 flex justify-between items-center">
+        <div className="flex space-x-4">
+          {parentPath !== null && (
+            <button
+              onClick={handleGoBack}
+              className="px-4 py-2 bg-background-primary text-text-primary rounded-lg hover:bg-hover-color transition-colors flex items-center"
+            >
+              <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
+              </svg>
+              返回上層
+            </button>
+          )}
+          <button
+            onClick={() => setIsCreatingFolder(true)}
+            className="px-4 py-2 bg-accent-color text-white rounded-lg hover:bg-accent-hover transition-colors flex items-center"
+          >
+            <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            新增資料夾
+          </button>
+        </div>
+      </div>
+
+      {/* 建立資料夾對話框 */}
+      {isCreatingFolder && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-background-primary rounded-xl p-6 w-96">
+            <h3 className="text-xl font-bold mb-4">建立新資料夾</h3>
+            <input
+              type="text"
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+              placeholder="輸入資料夾名稱"
+              className="w-full px-3 py-2 border border-border-color rounded-lg mb-4
+                     focus:outline-none focus:ring-2 focus:ring-accent-color"
+            />
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => {
+                  setIsCreatingFolder(false);
+                  setNewFolderName('');
+                }}
+                className="px-4 py-2 text-text-primary hover:bg-hover-color rounded-lg transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleCreateFolder}
+                className="px-4 py-2 bg-accent-color text-white rounded-lg hover:bg-accent-hover transition-colors"
+              >
+                建立
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 儲存空間統計 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
@@ -431,14 +561,45 @@ export default function Storage() {
               <table className="min-w-full">
                 <thead>
                   <tr className="border-b border-border-color">
-                    <th className="px-6 py-3 text-left text-text-primary">檔案名稱</th>
+                    <th className="px-6 py-3 text-left text-text-primary">名稱</th>
                     <th className="px-6 py-3 text-left text-text-primary">類型</th>
                     <th className="px-6 py-3 text-left text-text-primary">大小</th>
-                    <th className="px-6 py-3 text-left text-text-primary">上傳時間</th>
+                    <th className="px-6 py-3 text-left text-text-primary">修改時間</th>
                     <th className="px-6 py-3 text-left text-text-primary">操作</th>
                   </tr>
                 </thead>
                 <tbody>
+                  {/* 資料夾列表 */}
+                  {folders.map((folder, index) => (
+                    <tr key={`folder-${index}`} className="border-b border-border-color hover:bg-hover-color transition-colors">
+                      <td className="px-6 py-4">
+                        <button
+                          onClick={() => handleEnterFolder(folder)}
+                          className="flex items-center text-accent-color hover:underline"
+                        >
+                          <span className="text-2xl mr-3">📁</span>
+                          <span>{folder}</span>
+                        </button>
+                      </td>
+                      <td className="px-6 py-4 text-text-primary">資料夾</td>
+                      <td className="px-6 py-4 text-text-primary">-</td>
+                      <td className="px-6 py-4 text-text-primary">-</td>
+                      <td className="px-6 py-4">
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleEnterFolder(folder)}
+                            className="p-2 hover:bg-hover-color rounded-lg text-text-secondary hover:text-accent-color transition-colors"
+                          >
+                            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                            </svg>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+
+                  {/* 檔案列表 */}
                   {paginatedFiles.map((file, index) => {
                     const fileName = file.Key?.split('/').pop() || '';
                     return (

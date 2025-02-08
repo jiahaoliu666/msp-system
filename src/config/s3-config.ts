@@ -10,6 +10,13 @@ export const S3_CONFIG = {
   maxFileSize: 100 * 1024 * 1024, // 100MB
   maxConcurrentUploads: 3,
   
+  // 資料夾配置
+  folderDelimiter: '/',
+  defaultRootFolder: 'uploads',
+  maxFolderNameLength: 255,
+  maxFolderDepth: 10,
+  forbiddenFolderChars: ['<', '>', ':', '"', '/', '\\', '|', '?', '*'],
+  
   // 共享檔案配置
   sharedFolderPath: 'shared/',
   

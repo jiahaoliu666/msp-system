@@ -377,4 +377,102 @@ export async function testCORSConfiguration(): Promise<boolean> {
     handleS3Error(error);
     return false;
   }
+}
+
+// 建立資料夾
+export async function createFolder(folderPath: string): Promise<boolean> {
+  try {
+    validateS3Config();
+    
+    // 移除開頭和結尾的斜線
+    folderPath = folderPath.replace(/^\/+|\/+$/g, '');
+    
+    // 驗證資料夾名稱
+    const folderName = folderPath.split('/').pop() || '';
+    if (folderName.length > S3_CONFIG.maxFolderNameLength) {
+      throw new Error(`資料夾名稱不能超過 ${S3_CONFIG.maxFolderNameLength} 個字元`);
+    }
+    
+    if (S3_CONFIG.forbiddenFolderChars.some(char => folderName.includes(char))) {
+      throw new Error(`資料夾名稱不能包含以下字元: ${S3_CONFIG.forbiddenFolderChars.join(' ')}`);
+    }
+    
+    // 檢查資料夾深度
+    const depth = folderPath.split('/').length;
+    if (depth > S3_CONFIG.maxFolderDepth) {
+      throw new Error(`資料夾層級不能超過 ${S3_CONFIG.maxFolderDepth} 層`);
+    }
+
+    // 在 S3 中建立空的資料夾標記檔案
+    const command = new PutObjectCommand({
+      Bucket: S3_CONFIG.bucketName,
+      Key: `${folderPath}/`,
+      Body: '',
+    });
+
+    await s3Client.send(command);
+    return true;
+  } catch (error) {
+    handleS3Error(error);
+    return false;
+  }
+}
+
+// 列出指定路徑下的檔案和資料夾
+export async function listFilesInFolder(folderPath: string = ''): Promise<{
+  files: S3File[];
+  folders: string[];
+  currentPath: string;
+  parentPath: string | null;
+}> {
+  try {
+    validateS3Config();
+    
+    // 標準化路徑
+    folderPath = folderPath.replace(/^\/+|\/+$/g, '');
+    const prefix = folderPath ? `${folderPath}/` : '';
+    
+    const command = new ListObjectsV2Command({
+      Bucket: S3_CONFIG.bucketName,
+      Prefix: prefix,
+      Delimiter: S3_CONFIG.folderDelimiter,
+    });
+
+    const response = await s3Client.send(command);
+    
+    // 處理資料夾
+    const folders = (response.CommonPrefixes || [])
+      .map(prefix => prefix.Prefix || '')
+      .map(prefix => prefix.slice(0, -1)) // 移除結尾的斜線
+      .map(prefix => prefix.split('/').pop() || '');
+    
+    // 處理檔案（排除資料夾標記檔案）
+    const files = (response.Contents || [])
+      .filter(item => !item.Key?.endsWith('/'))
+      .map(item => ({
+        ...item,
+        Key: item.Key?.replace(prefix, '') || ''
+      })) as S3File[];
+
+    // 計算父資料夾路徑
+    const pathParts = folderPath.split('/');
+    const parentPath = pathParts.length > 1 
+      ? pathParts.slice(0, -1).join('/')
+      : pathParts.length === 1 ? '' : null;
+
+    return {
+      files,
+      folders,
+      currentPath: folderPath,
+      parentPath
+    };
+  } catch (error) {
+    handleS3Error(error);
+    return {
+      files: [],
+      folders: [],
+      currentPath: folderPath,
+      parentPath: null
+    };
+  }
 } 
