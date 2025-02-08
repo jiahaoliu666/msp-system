@@ -1,6 +1,287 @@
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useDropzone } from 'react-dropzone';
+import { toast } from 'react-toastify';
+import { 
+  listFiles, 
+  uploadFile, 
+  deleteFile, 
+  getFileDownloadUrl, 
+  getStorageStats, 
+  testCORSConfiguration,
+  S3File 
+} from '@/services/storage/s3';
+import { formatFileSize, getFileTypeIcon } from '@/config/s3-config';
+import { S3_CONFIG } from '@/config/s3-config';
+
+// 檔案類型介面
+interface FileItem extends S3File {
+  type: string;
+}
+
+// 儲存統計介面
+interface StorageStats {
+  usedSpace: string;
+  totalSpace: string;
+  fileCount: number;
+  sharedCount: number;
+}
 
 export default function Storage() {
+  // 狀態管理
+  const [files, setFiles] = useState<FileItem[]>([]);
+  const [stats, setStats] = useState<StorageStats>({
+    usedSpace: '0 B',
+    totalSpace: '0 B',
+    fileCount: 0,
+    sharedCount: 0
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const [isRetrying, setIsRetrying] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [fileType, setFileType] = useState('');
+  const [sortBy, setSortBy] = useState('name');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const maxRetries = 3;
+  const retryDelay = 2000;
+
+  // 載入檔案列表
+  const loadFiles = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // 檢查網路連接
+      if (!navigator.onLine) {
+        throw new Error('網路連線已斷開，請檢查您的網路狀態');
+      }
+
+      const fileList = await listFiles();
+      const stats = await getStorageStats();
+      
+      setFiles(fileList.map(file => ({
+        ...file,
+        type: file.Key.split('.').pop() || 'unknown'
+      })));
+      setStats(stats);
+      setRetryCount(0);
+      setIsRetrying(false);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '載入檔案列表失敗';
+      console.error('載入檔案列表失敗:', error);
+      
+      // 處理網路相關錯誤
+      if (!navigator.onLine || 
+          errorMessage.includes('網路') || 
+          errorMessage.includes('連線') || 
+          errorMessage.includes('逾時')) {
+        if (retryCount < maxRetries) {
+          setIsRetrying(true);
+          setRetryCount(prev => prev + 1);
+          const nextRetryDelay = retryDelay * Math.pow(2, retryCount);
+          toast.info(`正在重新連線... (${retryCount + 1}/${maxRetries})`);
+          setTimeout(() => loadFiles(), nextRetryDelay);
+        } else {
+          setIsRetrying(false);
+          setError(`${errorMessage} (已重試 ${maxRetries} 次)`);
+          toast.error(errorMessage);
+        }
+      } else {
+        setIsRetrying(false);
+        setError(errorMessage);
+        toast.error(errorMessage);
+      }
+    } finally {
+      if (!isRetrying) {
+        setIsLoading(false);
+      }
+    }
+  }, [retryCount, isRetrying, retryDelay, maxRetries]);
+
+  // 重試處理
+  const handleRetry = useCallback(() => {
+    setRetryCount(0);
+    setIsRetrying(false);
+    loadFiles();
+  }, [loadFiles]);
+
+  // 添加網路狀態監聽
+  useEffect(() => {
+    const handleOnline = () => {
+      if (error && error.includes('網路')) {
+        toast.info('網路已恢復連線');
+        handleRetry();
+      }
+    };
+
+    const handleOffline = () => {
+      toast.error('網路連線已斷開');
+      setError('網路連線已斷開，請檢查您的網路狀態');
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [error, handleRetry]);
+
+  // 檢查 CORS 配置
+  useEffect(() => {
+    const checkCORSConfig = async () => {
+      try {
+        const isValid = await testCORSConfiguration();
+        if (!isValid) {
+          toast.error('CORS 配置檢查失敗，部分功能可能無法正常使用');
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'CORS 配置檢查失敗';
+        console.error('CORS 配置檢查失敗:', error);
+        
+        if (errorMessage.includes('網路') || errorMessage.includes('連線')) {
+          toast.error(`${errorMessage}，請檢查網路連接`);
+        } else if (errorMessage.includes('CORS')) {
+          toast.error(`${errorMessage}，請聯絡系統管理員`);
+        } else {
+          toast.error(errorMessage);
+        }
+      }
+    };
+
+    if (navigator.onLine) {
+      checkCORSConfig();
+    }
+  }, []);
+
+  // 初始載入
+  useEffect(() => {
+    loadFiles();
+  }, [loadFiles]);
+
+  // 檔案上傳處理
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    if (acceptedFiles.length === 0) {
+      toast.error('請選擇要上傳的檔案');
+      return;
+    }
+
+    // 檢查檔案大小
+    const oversizedFiles = acceptedFiles.filter(file => file.size > S3_CONFIG.maxFileSize);
+    if (oversizedFiles.length > 0) {
+      toast.error(`以下檔案超過大小限制 (${formatFileSize(S3_CONFIG.maxFileSize)}):\n${oversizedFiles.map(f => f.name).join('\n')}`);
+      return;
+    }
+
+    // 檢查檔案類型
+    const allowedTypes = Object.values(S3_CONFIG.allowedFileTypes).flat();
+    const invalidFiles = acceptedFiles.filter(file => !allowedTypes.includes(file.type));
+    if (invalidFiles.length > 0) {
+      toast.error(`不支援的檔案類型:\n${invalidFiles.map(f => f.name).join('\n')}`);
+      return;
+    }
+
+    // 顯示上傳進度
+    toast.info(`開始上傳 ${acceptedFiles.length} 個檔案...`);
+    
+    const uploadPromises = acceptedFiles.map(async (file) => {
+      try {
+        const key = `${Date.now()}-${file.name}`;
+        await uploadFile(file, key);
+        toast.success(`檔案 ${file.name} 上傳成功`);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : `檔案 ${file.name} 上傳失敗`;
+        if (errorMessage.includes('網路') || errorMessage.includes('連線') || errorMessage.includes('逾時')) {
+          toast.error(`${file.name} 上傳失敗: ${errorMessage}，請重試`);
+        } else {
+          toast.error(errorMessage);
+        }
+        throw error;
+      }
+    });
+
+    try {
+      await Promise.all(uploadPromises);
+      loadFiles(); // 重新載入檔案列表
+    } catch (error) {
+      console.error('部分檔案上傳失敗:', error);
+    }
+  }, [loadFiles]);
+
+  // 設置檔案拖放區域
+  const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
+    onDrop,
+    accept: Object.values(S3_CONFIG.allowedFileTypes).flat().reduce((acc, type) => ({
+      ...acc,
+      [type]: []
+    }), {}),
+    maxSize: S3_CONFIG.maxFileSize,
+    noClick: true, // 禁用點擊打開檔案選擇器
+    noKeyboard: true // 禁用鍵盤打開檔案選擇器
+  });
+
+  // 檔案下載處理
+  const handleDownload = async (key: string, fileName: string) => {
+    try {
+      const url = await getFileDownloadUrl(key);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '檔案下載失敗');
+      console.error('檔案下載失敗:', error);
+    }
+  };
+
+  // 檔案刪除處理
+  const handleDelete = async (key: string) => {
+    if (window.confirm('確定要刪除此檔案嗎？')) {
+      try {
+        await deleteFile(key);
+        toast.success('檔案刪除成功');
+        loadFiles(); // 重新載入檔案列表
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : '檔案刪除失敗');
+        console.error('檔案刪除失敗:', error);
+      }
+    }
+  };
+
+  // 檔案篩選與排序
+  const filteredFiles = files
+    .filter(file => {
+      const fileName = file.Key?.toLowerCase() || '';
+      const searchMatch = fileName.includes(searchTerm.toLowerCase());
+      const typeMatch = !fileType || file.type === fileType;
+      return searchMatch && typeMatch;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'name':
+          return (a.Key || '').localeCompare(b.Key || '');
+        case 'date':
+          return (b.LastModified?.getTime() || 0) - (a.LastModified?.getTime() || 0);
+        case 'size':
+          return (b.Size || 0) - (a.Size || 0);
+        default:
+          return 0;
+      }
+    });
+
+  // 分頁處理
+  const totalPages = Math.ceil(filteredFiles.length / itemsPerPage);
+  const paginatedFiles = filteredFiles.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
     <div className="flex-1 bg-background-secondary p-8">
       {/* 頁面標題與麵包屑導航 */}
@@ -17,13 +298,32 @@ export default function Storage() {
             <h1 className="text-2xl font-bold text-text-primary">檔案儲存</h1>
             <p className="text-text-secondary mt-1">管理與儲存重要文件檔案</p>
           </div>
-          <div className="flex space-x-3">
-            <button className="px-4 py-2 bg-accent-color text-white rounded-lg hover:bg-accent-hover transition-colors duration-150 flex items-center">
-              <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              上傳檔案
-            </button>
+          <div className="flex items-center space-x-4">
+            <div {...getRootProps()} className="relative flex-1">
+              <input {...getInputProps()} />
+              <div className={`border-2 border-dashed rounded-lg p-6 text-center ${
+                isDragActive ? 'border-accent-color bg-accent-color/10' : 'border-border-color'
+              }`}>
+                {isDragActive ? (
+                  <p className="text-accent-color">拖放檔案至此上傳</p>
+                ) : (
+                  <p className="text-text-secondary">
+                    拖放檔案至此，或
+                    <button
+                      onClick={open}
+                      className="text-accent-color hover:text-accent-hover mx-1"
+                    >
+                      點擊選擇檔案
+                    </button>
+                    上傳
+                  </p>
+                )}
+                <p className="text-sm text-text-secondary mt-2">
+                  支援的檔案類型：PDF、Word、Excel、圖片、影片<br />
+                  單檔最大限制：{formatFileSize(S3_CONFIG.maxFileSize)}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -31,10 +331,10 @@ export default function Storage() {
       {/* 儲存空間統計 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         {[
-          { title: '已使用空間', value: '2.5 GB', color: 'accent', icon: '💾' },
-          { title: '剩餘空間', value: '7.5 GB', color: 'success', icon: '📊' },
-          { title: '檔案總數', value: '128', color: 'warning', icon: '📁' },
-          { title: '共享檔案', value: '45', color: 'info', icon: '🔗' },
+          { title: '已使用空間', value: stats.usedSpace, color: 'accent', icon: '💾' },
+          { title: '剩餘空間', value: stats.totalSpace, color: 'success', icon: '📊' },
+          { title: '檔案總數', value: stats.fileCount.toString(), color: 'warning', icon: '📁' },
+          { title: '共享檔案', value: stats.sharedCount.toString(), color: 'info', icon: '🔗' },
         ].map((stat) => (
           <div key={stat.title} className={`bg-background-primary rounded-xl shadow-sm p-6 border-l-4 ${
             stat.color === 'accent' ? 'border-accent-color' :
@@ -61,6 +361,8 @@ export default function Storage() {
               <input
                 type="text"
                 placeholder="搜尋檔案..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 bg-background-primary border border-border-color rounded-lg
                        text-text-primary placeholder-text-secondary
                        focus:outline-none focus:ring-2 focus:ring-accent-color focus:border-transparent"
@@ -72,19 +374,27 @@ export default function Storage() {
               </div>
             </div>
             <div>
-              <select className="w-full px-3 py-2 bg-background-primary border border-border-color rounded-lg
-                             text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-color">
-                <option value="">檔案類型</option>
-                <option value="document">文件</option>
-                <option value="image">圖片</option>
-                <option value="video">影片</option>
-                <option value="other">其他</option>
+              <select
+                value={fileType}
+                onChange={(e) => setFileType(e.target.value)}
+                className="w-full px-3 py-2 bg-background-primary border border-border-color rounded-lg
+                             text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-color"
+              >
+                <option value="">所有類型</option>
+                <option value="pdf">PDF</option>
+                <option value="doc">Word</option>
+                <option value="xls">Excel</option>
+                <option value="jpg">圖片</option>
+                <option value="mp4">影片</option>
               </select>
             </div>
             <div>
-              <select className="w-full px-3 py-2 bg-background-primary border border-border-color rounded-lg
-                             text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-color">
-                <option value="">排序方式</option>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="w-full px-3 py-2 bg-background-primary border border-border-color rounded-lg
+                             text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-color"
+              >
                 <option value="name">名稱</option>
                 <option value="date">日期</option>
                 <option value="size">大小</option>
@@ -97,99 +407,126 @@ export default function Storage() {
       {/* 檔案列表 */}
       <div className="bg-background-primary rounded-xl shadow-sm">
         <div className="p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-text-primary">檔案列表</h2>
-            <div className="flex items-center space-x-2">
-              <button className="p-2 hover:bg-hover-color rounded-lg text-text-secondary hover:text-accent-color transition-colors">
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                </svg>
-              </button>
-              <button className="p-2 hover:bg-hover-color rounded-lg text-text-secondary hover:text-accent-color transition-colors">
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                </svg>
-              </button>
-            </div>
-          </div>
-
           <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead>
-                <tr className="border-b border-border-color">
-                  <th className="px-6 py-3 text-left text-text-primary">檔案名稱</th>
-                  <th className="px-6 py-3 text-left text-text-primary">類型</th>
-                  <th className="px-6 py-3 text-left text-text-primary">大小</th>
-                  <th className="px-6 py-3 text-left text-text-primary">上傳者</th>
-                  <th className="px-6 py-3 text-left text-text-primary">上傳時間</th>
-                  <th className="px-6 py-3 text-left text-text-primary">操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  { name: '專案報告.docx', type: '文件', size: '2.5 MB', uploader: '王小明', date: '2024/03/15' },
-                  { name: '系統架構圖.png', type: '圖片', size: '1.8 MB', uploader: '李小華', date: '2024/03/14' },
-                  { name: '會議記錄.pdf', type: '文件', size: '3.2 MB', uploader: '張小美', date: '2024/03/13' },
-                  { name: '教學影片.mp4', type: '影片', size: '158 MB', uploader: '陳大文', date: '2024/03/12' },
-                ].map((file, index) => (
-                  <tr key={index} className="border-b border-border-color hover:bg-hover-color transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center">
-                        <span className="text-2xl mr-3">
-                          {file.type === '文件' ? '📄' : file.type === '圖片' ? '🖼️' : '🎥'}
-                        </span>
-                        <span className="text-text-primary">{file.name}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-text-primary">{file.type}</td>
-                    <td className="px-6 py-4 text-text-primary">{file.size}</td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center">
-                        <div className="w-8 h-8 rounded-full bg-accent-color/10 text-accent-color flex items-center justify-center">
-                          {file.uploader.charAt(0)}
-                        </div>
-                        <span className="ml-2 text-text-primary">{file.uploader}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-text-primary">{file.date}</td>
-                    <td className="px-6 py-4">
-                      <div className="flex space-x-2">
-                        <button className="p-2 hover:bg-hover-color rounded-lg text-text-secondary hover:text-accent-color transition-colors">
-                          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                          </svg>
-                        </button>
-                        <button className="p-2 hover:bg-hover-color rounded-lg text-text-secondary hover:text-accent-color transition-colors">
-                          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                          </svg>
-                        </button>
-                        <button className="p-2 hover:bg-hover-color rounded-lg text-text-secondary hover:text-error-color transition-colors">
-                          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-                      </div>
-                    </td>
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-color mb-4"></div>
+                {isRetrying && (
+                  <p className="text-text-secondary">
+                    正在重新連線... ({retryCount}/{maxRetries})
+                  </p>
+                )}
+              </div>
+            ) : error ? (
+              <div className="flex flex-col items-center justify-center py-8">
+                <div className="text-error-color mb-4">{error}</div>
+                <button
+                  onClick={handleRetry}
+                  className="px-4 py-2 bg-accent-color text-white rounded-lg hover:bg-accent-hover transition-colors"
+                >
+                  重試
+                </button>
+              </div>
+            ) : (
+              <table className="min-w-full">
+                <thead>
+                  <tr className="border-b border-border-color">
+                    <th className="px-6 py-3 text-left text-text-primary">檔案名稱</th>
+                    <th className="px-6 py-3 text-left text-text-primary">類型</th>
+                    <th className="px-6 py-3 text-left text-text-primary">大小</th>
+                    <th className="px-6 py-3 text-left text-text-primary">上傳時間</th>
+                    <th className="px-6 py-3 text-left text-text-primary">操作</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {paginatedFiles.map((file, index) => {
+                    const fileName = file.Key?.split('/').pop() || '';
+                    return (
+                      <tr key={index} className="border-b border-border-color hover:bg-hover-color transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center">
+                            <span className="text-2xl mr-3">{getFileTypeIcon(fileName)}</span>
+                            <span className="text-text-primary">{fileName}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-text-primary">{file.type.toUpperCase()}</td>
+                        <td className="px-6 py-4 text-text-primary">{formatFileSize(file.Size)}</td>
+                        <td className="px-6 py-4 text-text-primary">
+                          {file.LastModified?.toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => handleDownload(file.Key || '', fileName)}
+                              className="p-2 hover:bg-hover-color rounded-lg text-text-secondary hover:text-accent-color transition-colors"
+                            >
+                              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                              </svg>
+                            </button>
+                            <button
+                              onClick={() => handleDelete(file.Key || '')}
+                              className="p-2 hover:bg-hover-color rounded-lg text-text-secondary hover:text-error-color transition-colors"
+                            >
+                              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
           </div>
 
           {/* 分頁控制 */}
           <div className="flex items-center justify-between mt-6">
             <div className="text-sm text-text-secondary">
-              顯示 1 至 4 筆，共 128 筆
+              顯示 {(currentPage - 1) * itemsPerPage + 1} 至 {Math.min(currentPage * itemsPerPage, filteredFiles.length)} 筆，共 {filteredFiles.length} 筆
             </div>
             <div className="flex space-x-2">
-              <button className="px-3 py-1 border border-border-color rounded-lg text-text-secondary hover:bg-hover-color transition-colors">上一頁</button>
-              <button className="px-3 py-1 bg-accent-color text-white rounded-lg">1</button>
-              <button className="px-3 py-1 border border-border-color rounded-lg text-text-secondary hover:bg-hover-color transition-colors">2</button>
-              <button className="px-3 py-1 border border-border-color rounded-lg text-text-secondary hover:bg-hover-color transition-colors">3</button>
-              <button className="px-3 py-1 border border-border-color rounded-lg text-text-secondary hover:bg-hover-color transition-colors">...</button>
-              <button className="px-3 py-1 border border-border-color rounded-lg text-text-secondary hover:bg-hover-color transition-colors">13</button>
-              <button className="px-3 py-1 border border-border-color rounded-lg text-text-secondary hover:bg-hover-color transition-colors">下一頁</button>
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 border border-border-color rounded-lg text-text-secondary hover:bg-hover-color transition-colors disabled:opacity-50"
+              >
+                上一頁
+              </button>
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                const pageNumber = i + 1;
+                return (
+                  <button
+                    key={i}
+                    onClick={() => setCurrentPage(pageNumber)}
+                    className={`px-3 py-1 rounded-lg ${
+                      currentPage === pageNumber
+                        ? 'bg-accent-color text-white'
+                        : 'border border-border-color text-text-secondary hover:bg-hover-color'
+                    } transition-colors`}
+                  >
+                    {pageNumber}
+                  </button>
+                );
+              })}
+              {totalPages > 5 && <span className="px-3 py-1">...</span>}
+              {totalPages > 5 && (
+                <button
+                  onClick={() => setCurrentPage(totalPages)}
+                  className={`px-3 py-1 rounded-lg border border-border-color text-text-secondary hover:bg-hover-color transition-colors`}
+                >
+                  {totalPages}
+                </button>
+              )}
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 border border-border-color rounded-lg text-text-secondary hover:bg-hover-color transition-colors disabled:opacity-50"
+              >
+                下一頁
+              </button>
             </div>
           </div>
         </div>

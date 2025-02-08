@@ -4,7 +4,12 @@ export const AWS_CONFIG = {
   credentials: {
     accessKeyId: process.env.NEXT_PUBLIC_AWS_ACCESS_KEY_ID || '',
     secretAccessKey: process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY || ''
-  }
+  },
+  endpoint: process.env.NEXT_PUBLIC_S3_ENDPOINT || undefined,
+  retryMode: 'standard' as const,
+  maxAttempts: 3,
+  requestTimeout: 30000,
+  customUserAgent: 'MetaAge-MSP/1.0'
 };
 
 // 檢查必要的配置
@@ -13,7 +18,8 @@ function validateConfig() {
   const configs = {
     'AWS_REGION': process.env.NEXT_PUBLIC_AWS_REGION,
     'AWS_ACCESS_KEY_ID': process.env.NEXT_PUBLIC_AWS_ACCESS_KEY_ID,
-    'AWS_SECRET_ACCESS_KEY': process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY
+    'AWS_SECRET_ACCESS_KEY': process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY,
+    'S3_ENDPOINT': process.env.NEXT_PUBLIC_S3_ENDPOINT
   };
 
   // 檢查每個配置項
@@ -28,6 +34,7 @@ function validateConfig() {
     region: AWS_CONFIG.region,
     hasAccessKey: !!AWS_CONFIG.credentials.accessKeyId,
     hasSecretKey: !!AWS_CONFIG.credentials.secretAccessKey,
+    hasEndpoint: !!AWS_CONFIG.endpoint,
     missingConfigs
   });
 
@@ -44,5 +51,6 @@ validateConfig();
 // 輸出配置資訊
 console.log('AWS 配置初始化完成:', {
   region: AWS_CONFIG.region,
-  hasCredentials: !!AWS_CONFIG.credentials.accessKeyId && !!AWS_CONFIG.credentials.secretAccessKey
+  hasCredentials: !!AWS_CONFIG.credentials.accessKeyId && !!AWS_CONFIG.credentials.secretAccessKey,
+  endpoint: AWS_CONFIG.endpoint
 }); 
