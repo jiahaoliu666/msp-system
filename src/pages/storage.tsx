@@ -6,10 +6,13 @@ import {
   listFilesInFolder,
   uploadFile, 
   deleteFile, 
+  deleteFolder,
+  deleteMultipleFiles,
   getFileDownloadUrl, 
   getStorageStats, 
   testCORSConfiguration,
   createFolder,
+  formatDateTime,
   S3File 
 } from '@/services/storage/s3';
 import { formatFileSize, getFileTypeIcon } from '@/config/s3-config';
@@ -18,6 +21,13 @@ import { S3_CONFIG } from '@/config/s3-config';
 // 檔案類型介面
 interface FileItem extends S3File {
   type: string;
+}
+
+// 資料夾介面
+interface FolderItem {
+  name: string;
+  size: number;
+  lastModified: Date;
 }
 
 // 儲存統計介面
@@ -49,10 +59,13 @@ export default function Storage() {
   const maxRetries = 3;
   const retryDelay = 2000;
   const [currentPath, setCurrentPath] = useState('');
-  const [folders, setFolders] = useState<string[]>([]);
+  const [folders, setFolders] = useState<FolderItem[]>([]);
   const [parentPath, setParentPath] = useState<string | null>(null);
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<{type: 'file' | 'folder', path: string} | null>(null);
 
   // 載入檔案列表
   const loadFiles = useCallback(async () => {
@@ -262,6 +275,95 @@ export default function Storage() {
     }
   };
 
+  // 選擇項目處理
+  const handleSelectItem = (key: string) => {
+    const newSelected = new Set(selectedItems);
+    if (newSelected.has(key)) {
+      newSelected.delete(key);
+    } else {
+      newSelected.add(key);
+    }
+    setSelectedItems(newSelected);
+  };
+
+  // 全選/取消全選
+  const handleSelectAll = () => {
+    if (selectedItems.size > 0) {
+      setSelectedItems(new Set());
+    } else {
+      const allItems = new Set([
+        ...folders.map(f => `${currentPath}/${f.name}/`),
+        ...files.map(f => `${currentPath}/${f.Key}`)
+      ]);
+      setSelectedItems(allItems);
+    }
+  };
+
+  // 批次刪除處理
+  const handleBatchDelete = async () => {
+    if (selectedItems.size === 0) return;
+
+    if (window.confirm(`確定要刪除選中的 ${selectedItems.size} 個項目嗎？`)) {
+      try {
+        const itemsArray = Array.from(selectedItems);
+        const folderItems = itemsArray.filter(item => item.endsWith('/'));
+        const fileItems = itemsArray.filter(item => !item.endsWith('/'));
+
+        // 刪除資料夾
+        const folderPromises = folderItems.map(folder => 
+          deleteFolder(folder.slice(0, -1))
+        );
+
+        // 刪除檔案
+        const filePromises = fileItems.length > 0 ? 
+          [deleteMultipleFiles(fileItems)] : [];
+
+        await Promise.all([...folderPromises, ...filePromises]);
+        
+        toast.success('批次刪除成功');
+        setSelectedItems(new Set());
+        loadFiles();
+      } catch (error) {
+        toast.error('批次刪除失敗');
+        console.error('批次刪除失敗:', error);
+      }
+    }
+  };
+
+  // 刪除資料夾處理
+  const handleDeleteFolder = async (folderName: string) => {
+    setItemToDelete({
+      type: 'folder',
+      path: currentPath ? `${currentPath}/${folderName}` : folderName
+    });
+    setIsDeleteConfirmOpen(true);
+  };
+
+  // 確認刪除處理
+  const handleConfirmDelete = async () => {
+    if (!itemToDelete) return;
+
+    try {
+      let success = false;
+      if (itemToDelete.type === 'folder') {
+        success = await deleteFolder(itemToDelete.path);
+      } else {
+        success = await deleteFile(itemToDelete.path);
+      }
+
+      if (success) {
+        toast.success(`${itemToDelete.type === 'folder' ? '資料夾' : '檔案'}刪除成功`);
+        loadFiles();
+      }
+    } catch (error) {
+      toast.error(`${itemToDelete.type === 'folder' ? '資料夾' : '檔案'}刪除失敗`);
+      console.error('刪除失敗:', error);
+    } finally {
+      setIsDeleteConfirmOpen(false);
+      setItemToDelete(null);
+    }
+  };
+
   // 檔案篩選與排序
   const filteredFiles = files
     .filter(file => {
@@ -458,6 +560,29 @@ export default function Storage() {
         </div>
       )}
 
+      {/* 批次操作按鈕 */}
+      {selectedItems.size > 0 && (
+        <div className="mb-4 flex justify-between items-center bg-background-primary rounded-xl p-4">
+          <div className="flex items-center">
+            <span className="text-text-primary">已選擇 {selectedItems.size} 個項目</span>
+          </div>
+          <div className="flex space-x-4">
+            <button
+              onClick={() => setSelectedItems(new Set())}
+              className="px-4 py-2 text-text-primary hover:bg-hover-color rounded-lg transition-colors"
+            >
+              取消選擇
+            </button>
+            <button
+              onClick={handleBatchDelete}
+              className="px-4 py-2 bg-error-color text-white rounded-lg hover:bg-error-hover transition-colors"
+            >
+              批次刪除
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 儲存空間統計 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         {[
@@ -561,6 +686,14 @@ export default function Storage() {
               <table className="min-w-full">
                 <thead>
                   <tr className="border-b border-border-color">
+                    <th className="px-6 py-3 text-left">
+                      <input
+                        type="checkbox"
+                        checked={selectedItems.size > 0}
+                        onChange={handleSelectAll}
+                        className="rounded border-border-color text-accent-color focus:ring-accent-color"
+                      />
+                    </th>
                     <th className="px-6 py-3 text-left text-text-primary">名稱</th>
                     <th className="px-6 py-3 text-left text-text-primary">類型</th>
                     <th className="px-6 py-3 text-left text-text-primary">大小</th>
@@ -570,50 +703,76 @@ export default function Storage() {
                 </thead>
                 <tbody>
                   {/* 資料夾列表 */}
-                  {folders.map((folder, index) => (
-                    <tr key={`folder-${index}`} className="border-b border-border-color hover:bg-hover-color transition-colors">
-                      <td className="px-6 py-4">
-                        <button
-                          onClick={() => handleEnterFolder(folder)}
-                          className="flex items-center text-accent-color hover:underline"
-                        >
-                          <span className="text-2xl mr-3">📁</span>
-                          <span>{folder}</span>
-                        </button>
-                      </td>
-                      <td className="px-6 py-4 text-text-primary">資料夾</td>
-                      <td className="px-6 py-4 text-text-primary">-</td>
-                      <td className="px-6 py-4 text-text-primary">-</td>
-                      <td className="px-6 py-4">
-                        <div className="flex space-x-2">
+                  {folders.map((folder, index) => {
+                    const folderPath = `${currentPath}/${folder.name}/`;
+                    return (
+                      <tr key={`folder-${index}`} className="border-b border-border-color hover:bg-hover-color transition-colors">
+                        <td className="px-6 py-4">
+                          <input
+                            type="checkbox"
+                            checked={selectedItems.has(folderPath)}
+                            onChange={() => handleSelectItem(folderPath)}
+                            className="rounded border-border-color text-accent-color focus:ring-accent-color"
+                          />
+                        </td>
+                        <td className="px-6 py-4">
                           <button
-                            onClick={() => handleEnterFolder(folder)}
-                            className="p-2 hover:bg-hover-color rounded-lg text-text-secondary hover:text-accent-color transition-colors"
+                            onClick={() => handleEnterFolder(folder.name)}
+                            className="flex items-center text-accent-color hover:underline"
                           >
-                            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                            </svg>
+                            <span>{folder.name}</span>
                           </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                        <td className="px-6 py-4 text-text-primary">資料夾</td>
+                        <td className="px-6 py-4 text-text-primary">{formatFileSize(folder.size)}</td>
+                        <td className="px-6 py-4 text-text-primary">
+                          {formatDateTime(folder.lastModified)}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => handleEnterFolder(folder.name)}
+                              className="p-2 hover:bg-hover-color rounded-lg text-text-secondary hover:text-accent-color transition-colors"
+                            >
+                              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                              </svg>
+                            </button>
+                            <button
+                              onClick={() => handleDeleteFolder(folder.name)}
+                              className="p-2 hover:bg-hover-color rounded-lg text-text-secondary hover:text-error-color transition-colors"
+                            >
+                              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
 
                   {/* 檔案列表 */}
                   {paginatedFiles.map((file, index) => {
                     const fileName = file.Key?.split('/').pop() || '';
+                    const filePath = `${currentPath}/${file.Key}`;
                     return (
                       <tr key={index} className="border-b border-border-color hover:bg-hover-color transition-colors">
                         <td className="px-6 py-4">
-                          <div className="flex items-center">
-                            <span className="text-2xl mr-3">{getFileTypeIcon(fileName)}</span>
-                            <span className="text-text-primary">{fileName}</span>
-                          </div>
+                          <input
+                            type="checkbox"
+                            checked={selectedItems.has(filePath)}
+                            onChange={() => handleSelectItem(filePath)}
+                            className="rounded border-border-color text-accent-color focus:ring-accent-color"
+                          />
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-text-primary">{fileName}</span>
                         </td>
                         <td className="px-6 py-4 text-text-primary">{file.type.toUpperCase()}</td>
                         <td className="px-6 py-4 text-text-primary">{formatFileSize(file.Size)}</td>
                         <td className="px-6 py-4 text-text-primary">
-                          {file.LastModified?.toLocaleDateString()}
+                          {file.LastModified ? formatDateTime(file.LastModified) : '-'}
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex space-x-2">
@@ -626,7 +785,10 @@ export default function Storage() {
                               </svg>
                             </button>
                             <button
-                              onClick={() => handleDelete(file.Key || '')}
+                              onClick={() => {
+                                setItemToDelete({type: 'file', path: file.Key || ''});
+                                setIsDeleteConfirmOpen(true);
+                              }}
                               className="p-2 hover:bg-hover-color rounded-lg text-text-secondary hover:text-error-color transition-colors"
                             >
                               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -692,6 +854,36 @@ export default function Storage() {
           </div>
         </div>
       </div>
+
+      {/* 刪除確認對話框 */}
+      {isDeleteConfirmOpen && itemToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-background-primary rounded-xl p-6 w-96">
+            <h3 className="text-xl font-bold mb-4">確認刪除</h3>
+            <p className="text-text-primary mb-6">
+              確定要刪除此{itemToDelete.type === 'folder' ? '資料夾' : '檔案'}嗎？
+              {itemToDelete.type === 'folder' && '（包含資料夾內的所有檔案）'}
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => {
+                  setIsDeleteConfirmOpen(false);
+                  setItemToDelete(null);
+                }}
+                className="px-4 py-2 text-text-primary hover:bg-hover-color rounded-lg transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                className="px-4 py-2 bg-error-color text-white rounded-lg hover:bg-error-hover transition-colors"
+              >
+                確定刪除
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

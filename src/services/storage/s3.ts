@@ -418,10 +418,44 @@ export async function createFolder(folderPath: string): Promise<boolean> {
   }
 }
 
+// 格式化時間為台北時區
+export function formatDateTime(date: Date): string {
+  return date.toLocaleString('zh-TW', {
+    timeZone: 'Asia/Taipei',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  }).replace(/\//g, '-');
+}
+
+// 計算資料夾大小
+async function getFolderSize(folderPrefix: string): Promise<number> {
+  try {
+    const command = new ListObjectsV2Command({
+      Bucket: S3_CONFIG.bucketName,
+      Prefix: folderPrefix
+    });
+
+    const response = await s3Client.send(command);
+    return (response.Contents || [])
+      .reduce((total, item) => total + (item.Size || 0), 0);
+  } catch (error) {
+    console.error('計算資料夾大小失敗:', error);
+    return 0;
+  }
+}
+
 // 列出指定路徑下的檔案和資料夾
 export async function listFilesInFolder(folderPath: string = ''): Promise<{
   files: S3File[];
-  folders: string[];
+  folders: Array<{
+    name: string;
+    size: number;
+    lastModified: Date;
+  }>;
   currentPath: string;
   parentPath: string | null;
 }> {
@@ -441,10 +475,33 @@ export async function listFilesInFolder(folderPath: string = ''): Promise<{
     const response = await s3Client.send(command);
     
     // 處理資料夾
-    const folders = (response.CommonPrefixes || [])
-      .map(prefix => prefix.Prefix || '')
-      .map(prefix => prefix.slice(0, -1)) // 移除結尾的斜線
-      .map(prefix => prefix.split('/').pop() || '');
+    const folderPromises = (response.CommonPrefixes || [])
+      .map(async (prefix) => {
+        const folderPath = prefix.Prefix || '';
+        const folderName = folderPath.split('/').slice(-2, -1)[0];
+        const size = await getFolderSize(folderPath);
+        
+        // 獲取資料夾最後修改時間（使用資料夾內最新的檔案時間）
+        const folderContents = await s3Client.send(new ListObjectsV2Command({
+          Bucket: S3_CONFIG.bucketName,
+          Prefix: folderPath,
+          MaxKeys: 1000
+        }));
+        
+        const lastModified = (folderContents.Contents || [])
+          .reduce((latest, item) => {
+            const itemDate = item.LastModified || new Date(0);
+            return itemDate > latest ? itemDate : latest;
+          }, new Date(0));
+
+        return {
+          name: folderName,
+          size,
+          lastModified: lastModified
+        };
+      });
+
+    const folders = await Promise.all(folderPromises);
     
     // 處理檔案（排除資料夾標記檔案）
     const files = (response.Contents || [])
@@ -474,5 +531,65 @@ export async function listFilesInFolder(folderPath: string = ''): Promise<{
       currentPath: folderPath,
       parentPath: null
     };
+  }
+}
+
+// 刪除資料夾及其內容
+export async function deleteFolder(folderPath: string): Promise<boolean> {
+  try {
+    validateS3Config();
+    
+    // 標準化路徑
+    folderPath = folderPath.replace(/^\/+|\/+$/g, '');
+    const prefix = `${folderPath}/`;
+    
+    // 列出資料夾內所有檔案
+    const command = new ListObjectsV2Command({
+      Bucket: S3_CONFIG.bucketName,
+      Prefix: prefix
+    });
+
+    const response = await s3Client.send(command);
+    const objects = response.Contents || [];
+    
+    if (objects.length === 0) {
+      return true;
+    }
+
+    // 批次刪除所有檔案
+    const deletePromises = objects.map(obj => {
+      const deleteCommand = new DeleteObjectCommand({
+        Bucket: S3_CONFIG.bucketName,
+        Key: obj.Key || ''
+      });
+      return s3Client.send(deleteCommand);
+    });
+
+    await Promise.all(deletePromises);
+    return true;
+  } catch (error) {
+    handleS3Error(error);
+    return false;
+  }
+}
+
+// 批次刪除檔案
+export async function deleteMultipleFiles(keys: string[]): Promise<boolean> {
+  try {
+    validateS3Config();
+    
+    const deletePromises = keys.map(key => {
+      const command = new DeleteObjectCommand({
+        Bucket: S3_CONFIG.bucketName,
+        Key: key
+      });
+      return s3Client.send(command);
+    });
+
+    await Promise.all(deletePromises);
+    return true;
+  } catch (error) {
+    handleS3Error(error);
+    return false;
   }
 } 
