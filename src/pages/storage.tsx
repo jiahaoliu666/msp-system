@@ -785,7 +785,6 @@ export default function Storage() {
                   onClick={() => handleEnterFolder(folder.name)}
                   className="flex items-center text-accent-color hover:underline"
                 >
-                  <span className="text-2xl mr-3">📁</span>
                   <span className="font-medium">{folder.name}</span>
                 </button>
               </td>
@@ -827,7 +826,6 @@ export default function Storage() {
               </td>
               <td className="px-6 py-4 align-middle">
                 <div className="flex items-center">
-                  <span className="text-2xl mr-3">{getFileTypeIcon(file.Key?.split('/').pop() || '')}</span>
                   <span className="font-medium text-text-primary">{file.Key?.split('/').pop() || ''}</span>
                 </div>
               </td>
