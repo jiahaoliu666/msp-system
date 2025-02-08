@@ -591,32 +591,89 @@ export default function Storage() {
   const renderFileList = () => {
     if (viewMode === 'grid') {
       return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
           {folders.map((folder: FolderItem, index: number) => (
             <div
               key={`folder-${index}`}
-              className="relative group p-4 rounded-lg border border-border-color hover:bg-hover-color transition-colors"
+              className="relative group bg-background-primary rounded-xl border border-border-color hover:border-accent-color hover:shadow-md transition-all duration-200"
               onContextMenu={(e) => handleContextMenu(e, folder as FileItem)}
             >
-              <div className="flex flex-col items-center">
-                <span className="text-4xl mb-2">📁</span>
-                <span className="text-sm text-text-primary text-center truncate w-full">
-                  {folder.name}
-                </span>
+              <div className="p-4">
+                <div className="flex flex-col items-center">
+                  <div className="w-16 h-16 flex items-center justify-center text-4xl mb-3">
+                    📁
+                  </div>
+                  <div className="w-full">
+                    <div className="text-sm font-medium text-text-primary text-center truncate">
+                      {folder.name}
+                    </div>
+                    <div className="text-xs text-text-secondary text-center mt-1">
+                      {getFormattedSize(folder.size)}
+                    </div>
+                  </div>
+                </div>
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={() => handleDeleteFolder(folder.name)}
+                    className="p-1.5 hover:bg-hover-color rounded-lg text-text-secondary hover:text-error-color transition-colors"
+                  >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
               </div>
+              <button
+                onClick={() => handleEnterFolder(folder.name)}
+                className="absolute inset-0 w-full h-full cursor-pointer z-10"
+              />
             </div>
           ))}
           {paginatedFiles.map((file: FileItem, index: number) => (
             <div
               key={`file-${index}`}
-              className="relative group p-4 rounded-lg border border-border-color hover:bg-hover-color transition-colors"
+              className="relative group bg-background-primary rounded-xl border border-border-color hover:border-accent-color hover:shadow-md transition-all duration-200"
               onContextMenu={(e) => handleContextMenu(e, file)}
+              onDoubleClick={() => handleFilePreview(file)}
             >
-              <div className="flex flex-col items-center">
-                <span className="text-4xl mb-2">{getFileTypeIcon(file.Key?.split('/').pop() || '')}</span>
-                <span className="text-sm text-text-primary text-center truncate w-full">
-                  {file.Key?.split('/').pop() || ''}
-                </span>
+              <div className="p-4">
+                <div className="flex flex-col items-center">
+                  <div className="w-16 h-16 flex items-center justify-center text-4xl mb-3">
+                    {getFileTypeIcon(file.Key?.split('/').pop() || '')}
+                  </div>
+                  <div className="w-full">
+                    <div className="text-sm font-medium text-text-primary text-center truncate">
+                      {file.Key?.split('/').pop() || ''}
+                    </div>
+                    <div className="text-xs text-text-secondary text-center mt-1">
+                      {getFormattedSize(file.Size)}
+                    </div>
+                  </div>
+                </div>
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex space-x-1">
+                  <button
+                    onClick={() => handleDownload(file.Key || '', file.Key?.split('/').pop() || '')}
+                    className="p-1.5 hover:bg-hover-color rounded-lg text-text-secondary hover:text-accent-color transition-colors"
+                  >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L7 8m4-4v12" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setItemToDelete({
+                        type: 'file',
+                        path: file.Key || ''
+                      });
+                      setIsDeleteConfirmOpen(true);
+                    }}
+                    className="p-1.5 hover:bg-hover-color rounded-lg text-text-secondary hover:text-error-color transition-colors"
+                  >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -628,7 +685,7 @@ export default function Storage() {
       <table className="min-w-full">
         <thead className="bg-background-secondary">
           <tr>
-            <th className="w-[40px] px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
+            <th className="w-[40px] px-6 py-3 text-left">
               <input
                 type="checkbox"
                 checked={selectedItems.size > 0}
@@ -640,21 +697,33 @@ export default function Storage() {
               onClick={() => handleSort('name')}
               className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider cursor-pointer hover:bg-hover-color"
             >
-              <div className="flex items-center">
-                名稱
+              <div className="flex items-center space-x-1">
+                <span>名稱</span>
                 {sortConfig.key === 'name' && (
-                  <span className="ml-1">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                      d={sortConfig.direction === 'asc' 
+                        ? "M8 7l4-4m0 0l4 4m-4-4v18" 
+                        : "M16 17l-4 4m0 0l-4-4m4 4V3"} 
+                    />
+                  </svg>
                 )}
               </div>
             </th>
             <th 
               onClick={() => handleSort('type')}
-              className="w-[100px] px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider cursor-pointer hover:bg-hover-color"
+              className="w-[120px] px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider cursor-pointer hover:bg-hover-color"
             >
-              <div className="flex items-center">
-                類型
+              <div className="flex items-center space-x-1">
+                <span>類型</span>
                 {sortConfig.key === 'type' && (
-                  <span className="ml-1">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                      d={sortConfig.direction === 'asc' 
+                        ? "M8 7l4-4m0 0l4 4m-4-4v18" 
+                        : "M16 17l-4 4m0 0l-4-4m4 4V3"} 
+                    />
+                  </svg>
                 )}
               </div>
             </th>
@@ -662,10 +731,16 @@ export default function Storage() {
               onClick={() => handleSort('size')}
               className="w-[120px] px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider cursor-pointer hover:bg-hover-color"
             >
-              <div className="flex items-center">
-                大小
+              <div className="flex items-center space-x-1">
+                <span>大小</span>
                 {sortConfig.key === 'size' && (
-                  <span className="ml-1">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                      d={sortConfig.direction === 'asc' 
+                        ? "M8 7l4-4m0 0l4 4m-4-4v18" 
+                        : "M16 17l-4 4m0 0l-4-4m4 4V3"} 
+                    />
+                  </svg>
                 )}
               </div>
             </th>
@@ -673,22 +748,28 @@ export default function Storage() {
               onClick={() => handleSort('date')}
               className="w-[180px] px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider cursor-pointer hover:bg-hover-color"
             >
-              <div className="flex items-center">
-                修改時間
+              <div className="flex items-center space-x-1">
+                <span>修改時間</span>
                 {sortConfig.key === 'date' && (
-                  <span className="ml-1">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                      d={sortConfig.direction === 'asc' 
+                        ? "M8 7l4-4m0 0l4 4m-4-4v18" 
+                        : "M16 17l-4 4m0 0l-4-4m4 4V3"} 
+                    />
+                  </svg>
                 )}
               </div>
             </th>
             <th className="w-[120px] px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">操作</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="divide-y divide-border-color">
           {/* 資料夾列表 */}
           {folders.map((folder, index) => (
             <tr 
               key={`folder-${index}`} 
-              className="border-b border-border-color hover:bg-hover-color transition-colors"
+              className="group hover:bg-hover-color transition-colors"
               onContextMenu={(e) => handleContextMenu(e, { ...folder, type: 'folder' } as FileItem)}
             >
               <td className="px-6 py-4 align-middle">
@@ -704,20 +785,20 @@ export default function Storage() {
                   onClick={() => handleEnterFolder(folder.name)}
                   className="flex items-center text-accent-color hover:underline"
                 >
-                  <span className="mr-2">📁</span>
-                  <span>{folder.name}</span>
+                  <span className="text-2xl mr-3">📁</span>
+                  <span className="font-medium">{folder.name}</span>
                 </button>
               </td>
-              <td className="px-6 py-4 align-middle text-text-primary">資料夾</td>
-              <td className="px-6 py-4 align-middle text-text-primary">{getFormattedSize(folder.size)}</td>
-              <td className="px-6 py-4 align-middle text-text-primary">
+              <td className="px-6 py-4 align-middle text-text-secondary">資料夾</td>
+              <td className="px-6 py-4 align-middle text-text-secondary">{getFormattedSize(folder.size)}</td>
+              <td className="px-6 py-4 align-middle text-text-secondary">
                 {formatDateTime(folder.lastModified)}
               </td>
               <td className="px-6 py-4 align-middle">
-                <div className="flex space-x-2">
+                <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={() => handleDeleteFolder(folder.name)}
-                    className="p-2 hover:bg-hover-color rounded-lg text-text-secondary hover:text-error-color transition-colors"
+                    className="p-2 hover:bg-background-secondary rounded-lg text-text-secondary hover:text-error-color transition-colors"
                   >
                     <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -732,7 +813,7 @@ export default function Storage() {
           {paginatedFiles.map((file, index) => (
             <tr 
               key={index} 
-              className="border-b border-border-color hover:bg-hover-color transition-colors"
+              className="group hover:bg-hover-color transition-colors"
               onContextMenu={(e) => handleContextMenu(e, file)}
               onDoubleClick={() => handleFilePreview(file)}
             >
@@ -746,19 +827,20 @@ export default function Storage() {
               </td>
               <td className="px-6 py-4 align-middle">
                 <div className="flex items-center">
-                  <span className="text-text-primary">{file.Key?.split('/').pop() || ''}</span>
+                  <span className="text-2xl mr-3">{getFileTypeIcon(file.Key?.split('/').pop() || '')}</span>
+                  <span className="font-medium text-text-primary">{file.Key?.split('/').pop() || ''}</span>
                 </div>
               </td>
-              <td className="px-6 py-4 align-middle text-text-primary">{file.type.toUpperCase()}</td>
-              <td className="px-6 py-4 align-middle text-text-primary">{getFormattedSize(file.Size)}</td>
-              <td className="px-6 py-4 align-middle text-text-primary">
+              <td className="px-6 py-4 align-middle text-text-secondary">{file.type.toUpperCase()}</td>
+              <td className="px-6 py-4 align-middle text-text-secondary">{getFormattedSize(file.Size)}</td>
+              <td className="px-6 py-4 align-middle text-text-secondary">
                 {file.LastModified ? formatDateTime(file.LastModified) : '-'}
               </td>
               <td className="px-6 py-4 align-middle">
-                <div className="flex space-x-2">
+                <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={() => handleDownload(file.Key || '', file.Key?.split('/').pop() || '')}
-                    className="p-2 hover:bg-hover-color rounded-lg text-text-secondary hover:text-accent-color transition-colors"
+                    className="p-2 hover:bg-background-secondary rounded-lg text-text-secondary hover:text-accent-color transition-colors"
                   >
                     <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L7 8m4-4v12" />
@@ -767,12 +849,12 @@ export default function Storage() {
                   <button
                     onClick={() => {
                       setItemToDelete({
-                        type: file.type === 'folder' ? 'folder' : 'file',
+                        type: 'file',
                         path: file.Key || ''
                       });
                       setIsDeleteConfirmOpen(true);
                     }}
-                    className="p-2 hover:bg-hover-color rounded-lg text-text-secondary hover:text-error-color transition-colors"
+                    className="p-2 hover:bg-background-secondary rounded-lg text-text-secondary hover:text-error-color transition-colors"
                   >
                     <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -830,8 +912,8 @@ export default function Storage() {
       </div>
 
       {/* 工具列 */}
-      <div className="mb-6 flex justify-between items-center">
-        <div className="flex space-x-4">
+      <div className="mb-6 flex flex-wrap gap-4 items-center justify-between">
+        <div className="flex flex-wrap gap-4">
           {parentPath !== null && (
             <button
               onClick={handleGoBack}
@@ -866,6 +948,35 @@ export default function Storage() {
           </div>
         </div>
         <div className="flex items-center space-x-4">
+          <div className="relative">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="搜尋檔案..."
+              className="pl-10 pr-4 py-2 w-64 bg-background-primary border border-border-color rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-color"
+            />
+            <svg
+              className="absolute left-3 top-2.5 h-5 w-5 text-text-secondary"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <select
+            value={fileType}
+            onChange={(e) => setFileType(e.target.value)}
+            className="px-4 py-2 bg-background-primary border border-border-color rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-color"
+          >
+            <option value="">所有類型</option>
+            <option value="pdf">PDF</option>
+            <option value="doc">Word</option>
+            <option value="xls">Excel</option>
+            <option value="image">圖片</option>
+            <option value="video">影片</option>
+          </select>
           <div className="flex border border-border-color rounded-lg overflow-hidden">
             <button
               onClick={() => setViewMode('list')}
@@ -888,7 +999,10 @@ export default function Storage() {
       </div>
 
       {/* 檔案列表區域 */}
-      <div className="bg-background-primary rounded-xl shadow-sm" {...getRootProps()}>
+      <div 
+        className={`bg-background-primary rounded-xl shadow-sm ${isDragActive ? 'border-2 border-accent-color border-dashed' : ''}`} 
+        {...getRootProps()}
+      >
         <div className="p-6">
           <div className="overflow-x-auto">
             {isLoading ? (
@@ -920,6 +1034,77 @@ export default function Storage() {
           </div>
         </div>
       </div>
+
+      {/* 分頁控制 */}
+      {totalPages > 1 && (
+        <div className="mt-6 flex justify-center">
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setCurrentPage(1)}
+              disabled={currentPage === 1}
+              className={`px-3 py-1 rounded-lg ${
+                currentPage === 1
+                  ? 'bg-background-secondary text-text-secondary cursor-not-allowed'
+                  : 'bg-background-primary text-text-primary hover:bg-hover-color'
+              }`}
+            >
+              首頁
+            </button>
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              className={`px-3 py-1 rounded-lg ${
+                currentPage === 1
+                  ? 'bg-background-secondary text-text-secondary cursor-not-allowed'
+                  : 'bg-background-primary text-text-primary hover:bg-hover-color'
+              }`}
+            >
+              上一頁
+            </button>
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              const pageNum = currentPage - 2 + i;
+              if (pageNum > 0 && pageNum <= totalPages) {
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={`px-3 py-1 rounded-lg ${
+                      currentPage === pageNum
+                        ? 'bg-accent-color text-white'
+                        : 'bg-background-primary text-text-primary hover:bg-hover-color'
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              }
+              return null;
+            })}
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+              className={`px-3 py-1 rounded-lg ${
+                currentPage === totalPages
+                  ? 'bg-background-secondary text-text-secondary cursor-not-allowed'
+                  : 'bg-background-primary text-text-primary hover:bg-hover-color'
+              }`}
+            >
+              下一頁
+            </button>
+            <button
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={currentPage === totalPages}
+              className={`px-3 py-1 rounded-lg ${
+                currentPage === totalPages
+                  ? 'bg-background-secondary text-text-secondary cursor-not-allowed'
+                  : 'bg-background-primary text-text-primary hover:bg-hover-color'
+              }`}
+            >
+              末頁
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 檔案選單 */}
       {showFileMenu && selectedFile && (
