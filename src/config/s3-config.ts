@@ -64,13 +64,6 @@ export const S3_CONFIG = {
     private: 'private, max-age=3600' // 1小時
   },
   
-  // 儲存空間配置
-  storageQuota: {
-    maxBucketSize: 1024 * 1024 * 1024 * 1024, // 1TB
-    warningThreshold: 0.8, // 80%
-    userQuota: 10 * 1024 * 1024 * 1024 // 10GB per user
-  },
-  
   // 檔案類型圖示配置
   fileTypeIcons: {
     pdf: '📄',

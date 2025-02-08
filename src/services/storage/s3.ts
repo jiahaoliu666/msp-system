@@ -154,7 +154,7 @@ export async function uploadFile(file: File, key: string): Promise<boolean> {
 
     const command = new PutObjectCommand({
       Bucket: S3_CONFIG.bucketName,
-      Key: `${S3_CONFIG.uploadPath}${key}`,
+      Key: key,
       Body: buffer,
       ContentType: file.type,
       ContentLength: buffer.length,
@@ -305,27 +305,6 @@ export function getFileTypeIcon(fileName: string): string {
       return '🎥';
     default:
       return '📁';
-  }
-}
-
-// 獲取儲存空間使用統計
-export async function getStorageStats() {
-  try {
-    validateS3Config();
-    
-    const files = await listFiles();
-    const totalSize = files.reduce((acc, file) => acc + (file.Size || 0), 0);
-    const totalCount = files.length;
-    const sharedCount = files.filter(file => file.Key?.includes('shared/')).length;
-    
-    return {
-      usedSpace: formatFileSize(totalSize),
-      totalSpace: formatFileSize(S3_CONFIG.maxFileSize),
-      fileCount: totalCount,
-      sharedCount: sharedCount,
-    };
-  } catch (error) {
-    handleS3Error(error);
   }
 }
 

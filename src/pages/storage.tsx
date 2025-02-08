@@ -9,7 +9,6 @@ import {
   deleteFolder,
   deleteMultipleFiles,
   getFileDownloadUrl, 
-  getStorageStats, 
   testCORSConfiguration,
   createFolder,
   formatDateTime,
@@ -19,34 +18,78 @@ import { formatFileSize, getFileTypeIcon } from '@/config/s3-config';
 import { S3_CONFIG } from '@/config/s3-config';
 
 // 檔案類型介面
-interface FileItem extends S3File {
+interface FileItem {
+  Key?: string;
+  LastModified?: Date;
+  Size?: number;
+  ETag?: string;
   type: string;
 }
 
 // 資料夾介面
 interface FolderItem {
   name: string;
+  type: 'folder';
   size: number;
   lastModified: Date;
+  Key?: string;
 }
 
-// 儲存統計介面
-interface StorageStats {
-  usedSpace: string;
-  totalSpace: string;
-  fileCount: number;
-  sharedCount: number;
-}
+// 空狀態組件
+const EmptyState = ({ type, searchTerm }: { type: 'search' | 'folder', searchTerm?: string }) => (
+  <div className="flex flex-col items-center justify-center py-16">
+    <div className="text-6xl mb-4">
+      {type === 'search' ? '🔍' : '📂'}
+    </div>
+    <h3 className="text-xl font-bold text-text-primary mb-2">
+      {type === 'search' 
+        ? `找不到與 "${searchTerm}" 相關的內容`
+        : '此資料夾是空的'}
+    </h3>
+    <p className="text-text-secondary mb-6">
+      {type === 'search'
+        ? '請嘗試使用其他關鍵字搜尋'
+        : '拖放檔案至此或點擊上傳按鈕來添加檔案'}
+    </p>
+    {type === 'folder' && (
+      <button
+        onClick={() => document.querySelector<HTMLInputElement>('input[type="file"]')?.click()}
+        className="px-6 py-3 bg-accent-color text-white rounded-lg hover:bg-accent-hover transition-colors flex items-center"
+      >
+        <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+        </svg>
+        上傳檔案
+      </button>
+    )}
+  </div>
+);
+
+// 檔案上傳進度組件
+const UploadProgress = ({ progress }: { progress: number }) => (
+  <div className="fixed bottom-4 right-4 bg-background-primary rounded-lg shadow-lg p-4 w-80">
+    <div className="flex justify-between items-center mb-2">
+      <span className="font-medium text-text-primary">正在上傳...</span>
+      <span className="text-text-secondary">{progress}%</span>
+    </div>
+    <div className="w-full bg-border-color rounded-full h-2">
+      <div
+        className="bg-accent-color h-2 rounded-full transition-all duration-300"
+        style={{ width: `${progress}%` }}
+      />
+    </div>
+  </div>
+);
+
+// 在需要處理 undefined 的地方直接進行檢查
+const getFormattedSize = (size: number | undefined): string => {
+  if (size === undefined || size === 0) return '0 B';
+  return formatFileSize(size);
+};
 
 export default function Storage() {
   // 狀態管理
   const [files, setFiles] = useState<FileItem[]>([]);
-  const [stats, setStats] = useState<StorageStats>({
-    usedSpace: '0 B',
-    totalSpace: '0 B',
-    fileCount: 0,
-    sharedCount: 0
-  });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
@@ -66,6 +109,22 @@ export default function Storage() {
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{type: 'file' | 'folder', path: string} | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [isUploading, setIsUploading] = useState(false);
+  const [draggedOver, setDraggedOver] = useState(false);
+  const [duplicateFile, setDuplicateFile] = useState<{
+    file: File;
+    existingKey: string;
+    newKey: string;
+  } | null>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [selectedFile, setSelectedFile] = useState<FileItem | null>(null);
+  const [showFileMenu, setShowFileMenu] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
+  const [sortConfig, setSortConfig] = useState({
+    key: 'name',
+    direction: 'asc'
+  });
 
   // 載入檔案列表
   const loadFiles = useCallback(async () => {
@@ -73,21 +132,21 @@ export default function Storage() {
       setIsLoading(true);
       setError(null);
 
-      // 檢查網路連接
       if (!navigator.onLine) {
         throw new Error('網路連線已斷開，請檢查您的網路狀態');
       }
 
       const { files: fileList, folders: folderList, parentPath: parent } = await listFilesInFolder(currentPath);
-      const stats = await getStorageStats();
       
       setFiles(fileList.map(file => ({
         ...file,
-        type: file.Key.split('.').pop() || 'unknown'
+        type: file.Key?.split('.').pop() || 'unknown'
       })));
-      setFolders(folderList);
+      setFolders(folderList.map(folder => ({
+        ...folder,
+        type: 'folder' as const
+      })));
       setParentPath(parent);
-      setStats(stats);
       setRetryCount(0);
       setIsRetrying(false);
     } catch (error) {
@@ -194,7 +253,7 @@ export default function Storage() {
     // 檢查檔案大小
     const oversizedFiles = acceptedFiles.filter(file => file.size > S3_CONFIG.maxFileSize);
     if (oversizedFiles.length > 0) {
-      toast.error(`以下檔案超過大小限制 (${formatFileSize(S3_CONFIG.maxFileSize)}):\n${oversizedFiles.map(f => f.name).join('\n')}`);
+      toast.error(`以下檔案超過大小限制 (${getFormattedSize(S3_CONFIG.maxFileSize)}):\n${oversizedFiles.map(f => f.name).join('\n')}`);
       return;
     }
 
@@ -206,44 +265,117 @@ export default function Storage() {
       return;
     }
 
-    // 顯示上傳進度
-    toast.info(`開始上傳 ${acceptedFiles.length} 個檔案...`);
-    
-    const uploadPromises = acceptedFiles.map(async (file) => {
-      try {
-        const key = `${Date.now()}-${file.name}`;
-        await uploadFile(file, key);
-        toast.success(`檔案 ${file.name} 上傳成功`);
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : `檔案 ${file.name} 上傳失敗`;
-        if (errorMessage.includes('網路') || errorMessage.includes('連線') || errorMessage.includes('逾時')) {
-          toast.error(`${file.name} 上傳失敗: ${errorMessage}，請重試`);
-        } else {
-          toast.error(errorMessage);
-        }
-        throw error;
-      }
-    });
+    setIsUploading(true);
+    setUploadProgress(0);
 
     try {
-      await Promise.all(uploadPromises);
-      loadFiles(); // 重新載入檔案列表
+      for (let i = 0; i < acceptedFiles.length; i++) {
+        const file = acceptedFiles[i];
+        const progress = Math.round((i / acceptedFiles.length) * 100);
+        setUploadProgress(progress);
+
+        // 檢查是否有同名檔案
+        const fileName = file.name;
+        const existingFile = files.find(f => f.Key === fileName);
+        
+        if (existingFile) {
+          // 如果有同名檔案，設置重複檔案狀態並等待用戶選擇
+          setDuplicateFile({
+            file,
+            existingKey: existingFile.Key || '',
+            newKey: fileName
+          });
+          // 等待用戶選擇
+          await new Promise(resolve => {
+            const unsubscribe = setInterval(() => {
+              if (!duplicateFile) {
+                clearInterval(unsubscribe);
+                resolve(true);
+              }
+            }, 100);
+          });
+          continue;
+        }
+
+        const key = `${currentPath ? currentPath + '/' : ''}${fileName}`;
+        await uploadFile(file, key);
+      }
+
+      setUploadProgress(100);
+      toast.success(`成功上傳 ${acceptedFiles.length} 個檔案`);
+      loadFiles();
     } catch (error) {
-      console.error('部分檔案上傳失敗:', error);
+      toast.error('檔案上傳失敗');
+      console.error('檔案上傳失敗:', error);
+    } finally {
+      setIsUploading(false);
+      setTimeout(() => setUploadProgress(0), 1000);
     }
-  }, [loadFiles]);
+  }, [currentPath, loadFiles, files, duplicateFile]);
+
+  // 處理檔案重複的選擇
+  const handleDuplicateFile = async (action: 'replace' | 'keep-both' | 'skip') => {
+    if (!duplicateFile) return;
+
+    try {
+      const { file, existingKey, newKey } = duplicateFile;
+      
+      switch (action) {
+        case 'replace':
+          // 刪除舊檔案並上傳新檔案
+          await deleteFile(existingKey);
+          await uploadFile(file, `${currentPath ? currentPath + '/' : ''}${newKey}`);
+          break;
+        case 'keep-both':
+          // 使用新的檔名上傳
+          const ext = newKey.split('.').pop();
+          const baseName = newKey.slice(0, -(ext?.length || 0) - 1);
+          const newFileName = `${baseName} (${new Date().getTime()}).${ext}`;
+          await uploadFile(file, `${currentPath ? currentPath + '/' : ''}${newFileName}`);
+          break;
+        case 'skip':
+          // 不做任何事
+          break;
+      }
+
+      setDuplicateFile(null);
+      loadFiles();
+    } catch (error) {
+      toast.error('處理重複檔案失敗');
+      console.error('處理重複檔案失敗:', error);
+    }
+  };
 
   // 設置檔案拖放區域
-  const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: Object.values(S3_CONFIG.allowedFileTypes).flat().reduce((acc, type) => ({
       ...acc,
       [type]: []
     }), {}),
     maxSize: S3_CONFIG.maxFileSize,
-    noClick: true, // 禁用點擊打開檔案選擇器
-    noKeyboard: true // 禁用鍵盤打開檔案選擇器
+    onDragEnter: () => setDraggedOver(true),
+    onDragLeave: () => setDraggedOver(false),
+    onDropAccepted: () => setDraggedOver(false),
+    onDropRejected: () => {
+      setDraggedOver(false);
+      toast.error('不支援的檔案類型或檔案過大');
+    },
+    noClick: true
   });
+
+  // 檔案上傳按鈕點擊處理
+  const handleUploadClick = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.multiple = true;
+    input.accept = Object.values(S3_CONFIG.allowedFileTypes).flat().join(',');
+    input.onchange = async (e) => {
+      const files = Array.from((e.target as HTMLInputElement).files || []);
+      await onDrop(files);
+    };
+    input.click();
+  };
 
   // 檔案下載處理
   const handleDownload = async (key: string, fileName: string) => {
@@ -299,7 +431,7 @@ export default function Storage() {
     }
   };
 
-  // 批次刪除處理
+  // 全部刪除處理
   const handleBatchDelete = async () => {
     if (selectedItems.size === 0) return;
 
@@ -320,12 +452,12 @@ export default function Storage() {
 
         await Promise.all([...folderPromises, ...filePromises]);
         
-        toast.success('批次刪除成功');
+        toast.success('全部刪除成功');
         setSelectedItems(new Set());
         loadFiles();
       } catch (error) {
-        toast.error('批次刪除失敗');
-        console.error('批次刪除失敗:', error);
+        toast.error('全部刪除失敗');
+        console.error('全部刪除失敗:', error);
       }
     }
   };
@@ -373,13 +505,16 @@ export default function Storage() {
       return searchMatch && typeMatch;
     })
     .sort((a, b) => {
-      switch (sortBy) {
+      const direction = sortConfig.direction === 'asc' ? 1 : -1;
+      switch (sortConfig.key) {
         case 'name':
-          return (a.Key || '').localeCompare(b.Key || '');
+          return direction * (a.Key || '').localeCompare(b.Key || '');
         case 'date':
-          return (b.LastModified?.getTime() || 0) - (a.LastModified?.getTime() || 0);
+          return direction * ((b.LastModified?.getTime() || 0) - (a.LastModified?.getTime() || 0));
         case 'size':
-          return (b.Size || 0) - (a.Size || 0);
+          return direction * ((b.Size || 0) - (a.Size || 0));
+        case 'type':
+          return direction * (a.type || '').localeCompare(b.type || '');
         default:
           return 0;
       }
@@ -431,6 +566,227 @@ export default function Storage() {
     }
   };
 
+  // 檔案預覽處理
+  const handleFilePreview = (file: FileItem) => {
+    setSelectedFile(file);
+  };
+
+  // 檔案選單處理
+  const handleContextMenu = (e: React.MouseEvent, file: FileItem) => {
+    e.preventDefault();
+    setSelectedFile(file);
+    setShowFileMenu(true);
+    setMenuPosition({ x: e.clientX, y: e.clientY });
+  };
+
+  // 排序處理
+  const handleSort = (key: string) => {
+    setSortConfig(prev => ({
+      key,
+      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  // 檔案列表渲染
+  const renderFileList = () => {
+    if (viewMode === 'grid') {
+      return (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {folders.map((folder: FolderItem, index: number) => (
+            <div
+              key={`folder-${index}`}
+              className="relative group p-4 rounded-lg border border-border-color hover:bg-hover-color transition-colors"
+              onContextMenu={(e) => handleContextMenu(e, folder as FileItem)}
+            >
+              <div className="flex flex-col items-center">
+                <span className="text-4xl mb-2">📁</span>
+                <span className="text-sm text-text-primary text-center truncate w-full">
+                  {folder.name}
+                </span>
+              </div>
+            </div>
+          ))}
+          {paginatedFiles.map((file: FileItem, index: number) => (
+            <div
+              key={`file-${index}`}
+              className="relative group p-4 rounded-lg border border-border-color hover:bg-hover-color transition-colors"
+              onContextMenu={(e) => handleContextMenu(e, file)}
+            >
+              <div className="flex flex-col items-center">
+                <span className="text-4xl mb-2">{getFileTypeIcon(file.Key?.split('/').pop() || '')}</span>
+                <span className="text-sm text-text-primary text-center truncate w-full">
+                  {file.Key?.split('/').pop() || ''}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    return (
+      <table className="min-w-full">
+        <thead className="bg-background-secondary">
+          <tr>
+            <th className="w-[40px] px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
+              <input
+                type="checkbox"
+                checked={selectedItems.size > 0}
+                onChange={handleSelectAll}
+                className="rounded border-border-color text-accent-color focus:ring-accent-color"
+              />
+            </th>
+            <th 
+              onClick={() => handleSort('name')}
+              className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider cursor-pointer hover:bg-hover-color"
+            >
+              <div className="flex items-center">
+                名稱
+                {sortConfig.key === 'name' && (
+                  <span className="ml-1">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                )}
+              </div>
+            </th>
+            <th 
+              onClick={() => handleSort('type')}
+              className="w-[100px] px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider cursor-pointer hover:bg-hover-color"
+            >
+              <div className="flex items-center">
+                類型
+                {sortConfig.key === 'type' && (
+                  <span className="ml-1">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                )}
+              </div>
+            </th>
+            <th 
+              onClick={() => handleSort('size')}
+              className="w-[120px] px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider cursor-pointer hover:bg-hover-color"
+            >
+              <div className="flex items-center">
+                大小
+                {sortConfig.key === 'size' && (
+                  <span className="ml-1">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                )}
+              </div>
+            </th>
+            <th 
+              onClick={() => handleSort('date')}
+              className="w-[180px] px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider cursor-pointer hover:bg-hover-color"
+            >
+              <div className="flex items-center">
+                修改時間
+                {sortConfig.key === 'date' && (
+                  <span className="ml-1">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                )}
+              </div>
+            </th>
+            <th className="w-[120px] px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          {/* 資料夾列表 */}
+          {folders.map((folder, index) => (
+            <tr 
+              key={`folder-${index}`} 
+              className="border-b border-border-color hover:bg-hover-color transition-colors"
+              onContextMenu={(e) => handleContextMenu(e, { ...folder, type: 'folder' } as FileItem)}
+            >
+              <td className="px-6 py-4 align-middle">
+                <input
+                  type="checkbox"
+                  checked={selectedItems.has(`${currentPath}/${folder.name}/`)}
+                  onChange={() => handleSelectItem(`${currentPath}/${folder.name}/`)}
+                  className="rounded border-border-color text-accent-color focus:ring-accent-color"
+                />
+              </td>
+              <td className="px-6 py-4 align-middle">
+                <button
+                  onClick={() => handleEnterFolder(folder.name)}
+                  className="flex items-center text-accent-color hover:underline"
+                >
+                  <span className="mr-2">📁</span>
+                  <span>{folder.name}</span>
+                </button>
+              </td>
+              <td className="px-6 py-4 align-middle text-text-primary">資料夾</td>
+              <td className="px-6 py-4 align-middle text-text-primary">{getFormattedSize(folder.size)}</td>
+              <td className="px-6 py-4 align-middle text-text-primary">
+                {formatDateTime(folder.lastModified)}
+              </td>
+              <td className="px-6 py-4 align-middle">
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => handleDeleteFolder(folder.name)}
+                    className="p-2 hover:bg-hover-color rounded-lg text-text-secondary hover:text-error-color transition-colors"
+                  >
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
+
+          {/* 檔案列表 */}
+          {paginatedFiles.map((file, index) => (
+            <tr 
+              key={index} 
+              className="border-b border-border-color hover:bg-hover-color transition-colors"
+              onContextMenu={(e) => handleContextMenu(e, file)}
+              onDoubleClick={() => handleFilePreview(file)}
+            >
+              <td className="px-6 py-4 align-middle">
+                <input
+                  type="checkbox"
+                  checked={selectedItems.has(`${currentPath}/${file.Key}`)}
+                  onChange={() => handleSelectItem(`${currentPath}/${file.Key}`)}
+                  className="rounded border-border-color text-accent-color focus:ring-accent-color"
+                />
+              </td>
+              <td className="px-6 py-4 align-middle">
+                <div className="flex items-center">
+                  <span className="text-text-primary">{file.Key?.split('/').pop() || ''}</span>
+                </div>
+              </td>
+              <td className="px-6 py-4 align-middle text-text-primary">{file.type.toUpperCase()}</td>
+              <td className="px-6 py-4 align-middle text-text-primary">{getFormattedSize(file.Size)}</td>
+              <td className="px-6 py-4 align-middle text-text-primary">
+                {file.LastModified ? formatDateTime(file.LastModified) : '-'}
+              </td>
+              <td className="px-6 py-4 align-middle">
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => handleDownload(file.Key || '', file.Key?.split('/').pop() || '')}
+                    className="p-2 hover:bg-hover-color rounded-lg text-text-secondary hover:text-accent-color transition-colors"
+                  >
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L7 8m4-4v12" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setItemToDelete({
+                        type: file.type === 'folder' ? 'folder' : 'file',
+                        path: file.Key || ''
+                      });
+                      setIsDeleteConfirmOpen(true);
+                    }}
+                    className="p-2 hover:bg-hover-color rounded-lg text-text-secondary hover:text-error-color transition-colors"
+                  >
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    );
+  };
+
   return (
     <div className="flex-1 bg-background-secondary p-8">
       {/* 頁面標題與麵包屑導航 */}
@@ -446,33 +802,6 @@ export default function Storage() {
           <div>
             <h1 className="text-2xl font-bold text-text-primary">檔案儲存</h1>
             <p className="text-text-secondary mt-1">管理與儲存重要文件檔案</p>
-          </div>
-          <div className="flex items-center space-x-4">
-            <div {...getRootProps()} className="relative flex-1">
-              <input {...getInputProps()} />
-              <div className={`border-2 border-dashed rounded-lg p-6 text-center ${
-                isDragActive ? 'border-accent-color bg-accent-color/10' : 'border-border-color'
-              }`}>
-                {isDragActive ? (
-                  <p className="text-accent-color">拖放檔案至此上傳</p>
-                ) : (
-                  <p className="text-text-secondary">
-                    拖放檔案至此，或
-                    <button
-                      onClick={open}
-                      className="text-accent-color hover:text-accent-hover mx-1"
-                    >
-                      點擊選擇檔案
-                    </button>
-                    上傳
-                  </p>
-                )}
-                <p className="text-sm text-text-secondary mt-2">
-                  支援的檔案類型：PDF、Word、Excel、圖片、影片<br />
-                  單檔最大限制：{formatFileSize(S3_CONFIG.maxFileSize)}
-                </p>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -500,7 +829,7 @@ export default function Storage() {
         </div>
       </div>
 
-      {/* 操作按鈕 */}
+      {/* 工具列 */}
       <div className="mb-6 flex justify-between items-center">
         <div className="flex space-x-4">
           {parentPath !== null && (
@@ -523,8 +852,105 @@ export default function Storage() {
             </svg>
             新增資料夾
           </button>
+          <div {...getRootProps()} className="relative cursor-pointer">
+            <input {...getInputProps()} />
+            <button
+              onClick={handleUploadClick}
+              className="px-4 py-2 bg-accent-color text-white rounded-lg hover:bg-accent-hover transition-colors flex items-center"
+            >
+              <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L7 8m4-4v12" />
+              </svg>
+              上傳檔案
+            </button>
+          </div>
+        </div>
+        <div className="flex items-center space-x-4">
+          <div className="flex border border-border-color rounded-lg overflow-hidden">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`px-3 py-2 ${viewMode === 'list' ? 'bg-accent-color text-white' : 'hover:bg-hover-color'}`}
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+              </svg>
+            </button>
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`px-3 py-2 ${viewMode === 'grid' ? 'bg-accent-color text-white' : 'hover:bg-hover-color'}`}
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* 檔案列表區域 */}
+      <div className="bg-background-primary rounded-xl shadow-sm" {...getRootProps()}>
+        <div className="p-6">
+          <div className="overflow-x-auto">
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-color mb-4"></div>
+                {isRetrying && (
+                  <p className="text-text-secondary">
+                    正在重新連線... ({retryCount}/{maxRetries})
+                  </p>
+                )}
+              </div>
+            ) : error ? (
+              <div className="flex flex-col items-center justify-center py-8">
+                <div className="text-error-color mb-4">{error}</div>
+                <button
+                  onClick={handleRetry}
+                  className="px-4 py-2 bg-accent-color text-white rounded-lg hover:bg-accent-hover transition-colors"
+                >
+                  重試
+                </button>
+              </div>
+            ) : searchTerm && filteredFiles.length === 0 && folders.length === 0 ? (
+              <EmptyState type="search" searchTerm={searchTerm} />
+            ) : files.length === 0 && folders.length === 0 ? (
+              <EmptyState type="folder" />
+            ) : (
+              renderFileList()
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* 檔案選單 */}
+      {showFileMenu && selectedFile && (
+        <div
+          className="fixed bg-background-primary rounded-lg shadow-lg py-2 z-50"
+          style={{ top: menuPosition.y, left: menuPosition.x }}
+        >
+          <button
+            onClick={() => {
+              handleDownload(selectedFile.Key || '', selectedFile.Key?.split('/').pop() || '');
+              setShowFileMenu(false);
+            }}
+            className="w-full px-4 py-2 text-left hover:bg-hover-color"
+          >
+            下載
+          </button>
+          <button
+            onClick={() => {
+              setItemToDelete({
+                type: selectedFile.type === 'folder' ? 'folder' : 'file',
+                path: selectedFile.Key || ''
+              });
+              setIsDeleteConfirmOpen(true);
+              setShowFileMenu(false);
+            }}
+            className="w-full px-4 py-2 text-left hover:bg-hover-color text-error-color"
+          >
+            刪除
+          </button>
+        </div>
+      )}
 
       {/* 建立資料夾對話框 */}
       {isCreatingFolder && (
@@ -577,283 +1003,30 @@ export default function Storage() {
               onClick={handleBatchDelete}
               className="px-4 py-2 bg-error-color text-white rounded-lg hover:bg-error-hover transition-colors"
             >
-              批次刪除
+              全部刪除
             </button>
           </div>
         </div>
       )}
 
-      {/* 儲存空間統計 */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        {[
-          { title: '已使用空間', value: stats.usedSpace, color: 'accent', icon: '💾' },
-          { title: '剩餘空間', value: stats.totalSpace, color: 'success', icon: '📊' },
-          { title: '檔案總數', value: stats.fileCount.toString(), color: 'warning', icon: '📁' },
-          { title: '共享檔案', value: stats.sharedCount.toString(), color: 'info', icon: '🔗' },
-        ].map((stat) => (
-          <div key={stat.title} className={`bg-background-primary rounded-xl shadow-sm p-6 border-l-4 ${
-            stat.color === 'accent' ? 'border-accent-color' :
-            stat.color === 'success' ? 'border-success-color' :
-            stat.color === 'warning' ? 'border-warning-color' :
-            'border-info-color'
-          }`}>
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-text-secondary text-sm">{stat.title}</p>
-                <h3 className="text-2xl font-bold text-text-primary mt-1">{stat.value}</h3>
-              </div>
-              <span className="text-2xl">{stat.icon}</span>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* 搜尋和篩選區 */}
-      <div className="bg-background-primary rounded-xl shadow-sm mb-6">
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="md:col-span-2 relative">
-              <input
-                type="text"
-                placeholder="搜尋檔案..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-background-primary border border-border-color rounded-lg
-                       text-text-primary placeholder-text-secondary
-                       focus:outline-none focus:ring-2 focus:ring-accent-color focus:border-transparent"
-              />
-              <div className="absolute left-3 top-2.5 text-text-secondary">
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-            </div>
-            <div>
-              <select
-                value={fileType}
-                onChange={(e) => setFileType(e.target.value)}
-                className="w-full px-3 py-2 bg-background-primary border border-border-color rounded-lg
-                             text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-color"
-              >
-                <option value="">所有類型</option>
-                <option value="pdf">PDF</option>
-                <option value="doc">Word</option>
-                <option value="xls">Excel</option>
-                <option value="jpg">圖片</option>
-                <option value="mp4">影片</option>
-              </select>
-            </div>
-            <div>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="w-full px-3 py-2 bg-background-primary border border-border-color rounded-lg
-                             text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-color"
-              >
-                <option value="name">名稱</option>
-                <option value="date">日期</option>
-                <option value="size">大小</option>
-              </select>
-            </div>
+      {/* 全域拖放提示 */}
+      {draggedOver && (
+        <div className="fixed inset-0 bg-accent-color bg-opacity-5 backdrop-blur-sm border-2 border-accent-color border-dashed z-50 flex items-center justify-center">
+          <div className="bg-background-primary rounded-xl p-8 text-center shadow-lg transform scale-105 transition-transform">
+            <div className="text-6xl mb-4 animate-bounce">📥</div>
+            <h3 className="text-xl font-bold text-text-primary mb-2">
+              放開以上傳檔案到 {currentPath || '根目錄'}
+            </h3>
+            <p className="text-text-secondary">
+              支援的檔案類型：PDF、Word、Excel、圖片、影片<br />
+              單檔最大限制：{getFormattedSize(S3_CONFIG.maxFileSize)}
+            </p>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* 檔案列表 */}
-      <div className="bg-background-primary rounded-xl shadow-sm">
-        <div className="p-6">
-          <div className="overflow-x-auto">
-            {isLoading ? (
-              <div className="flex flex-col items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-color mb-4"></div>
-                {isRetrying && (
-                  <p className="text-text-secondary">
-                    正在重新連線... ({retryCount}/{maxRetries})
-                  </p>
-                )}
-              </div>
-            ) : error ? (
-              <div className="flex flex-col items-center justify-center py-8">
-                <div className="text-error-color mb-4">{error}</div>
-                <button
-                  onClick={handleRetry}
-                  className="px-4 py-2 bg-accent-color text-white rounded-lg hover:bg-accent-hover transition-colors"
-                >
-                  重試
-                </button>
-              </div>
-            ) : (
-              <table className="min-w-full">
-                <thead>
-                  <tr className="border-b border-border-color">
-                    <th className="px-6 py-3 text-left">
-                      <input
-                        type="checkbox"
-                        checked={selectedItems.size > 0}
-                        onChange={handleSelectAll}
-                        className="rounded border-border-color text-accent-color focus:ring-accent-color"
-                      />
-                    </th>
-                    <th className="px-6 py-3 text-left text-text-primary">名稱</th>
-                    <th className="px-6 py-3 text-left text-text-primary">類型</th>
-                    <th className="px-6 py-3 text-left text-text-primary">大小</th>
-                    <th className="px-6 py-3 text-left text-text-primary">修改時間</th>
-                    <th className="px-6 py-3 text-left text-text-primary">操作</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {/* 資料夾列表 */}
-                  {folders.map((folder, index) => {
-                    const folderPath = `${currentPath}/${folder.name}/`;
-                    return (
-                      <tr key={`folder-${index}`} className="border-b border-border-color hover:bg-hover-color transition-colors">
-                        <td className="px-6 py-4">
-                          <input
-                            type="checkbox"
-                            checked={selectedItems.has(folderPath)}
-                            onChange={() => handleSelectItem(folderPath)}
-                            className="rounded border-border-color text-accent-color focus:ring-accent-color"
-                          />
-                        </td>
-                        <td className="px-6 py-4">
-                          <button
-                            onClick={() => handleEnterFolder(folder.name)}
-                            className="flex items-center text-accent-color hover:underline"
-                          >
-                            <span>{folder.name}</span>
-                          </button>
-                        </td>
-                        <td className="px-6 py-4 text-text-primary">資料夾</td>
-                        <td className="px-6 py-4 text-text-primary">{formatFileSize(folder.size)}</td>
-                        <td className="px-6 py-4 text-text-primary">
-                          {formatDateTime(folder.lastModified)}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() => handleEnterFolder(folder.name)}
-                              className="p-2 hover:bg-hover-color rounded-lg text-text-secondary hover:text-accent-color transition-colors"
-                            >
-                              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                              </svg>
-                            </button>
-                            <button
-                              onClick={() => handleDeleteFolder(folder.name)}
-                              className="p-2 hover:bg-hover-color rounded-lg text-text-secondary hover:text-error-color transition-colors"
-                            >
-                              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-
-                  {/* 檔案列表 */}
-                  {paginatedFiles.map((file, index) => {
-                    const fileName = file.Key?.split('/').pop() || '';
-                    const filePath = `${currentPath}/${file.Key}`;
-                    return (
-                      <tr key={index} className="border-b border-border-color hover:bg-hover-color transition-colors">
-                        <td className="px-6 py-4">
-                          <input
-                            type="checkbox"
-                            checked={selectedItems.has(filePath)}
-                            onChange={() => handleSelectItem(filePath)}
-                            className="rounded border-border-color text-accent-color focus:ring-accent-color"
-                          />
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="text-text-primary">{fileName}</span>
-                        </td>
-                        <td className="px-6 py-4 text-text-primary">{file.type.toUpperCase()}</td>
-                        <td className="px-6 py-4 text-text-primary">{formatFileSize(file.Size)}</td>
-                        <td className="px-6 py-4 text-text-primary">
-                          {file.LastModified ? formatDateTime(file.LastModified) : '-'}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() => handleDownload(file.Key || '', fileName)}
-                              className="p-2 hover:bg-hover-color rounded-lg text-text-secondary hover:text-accent-color transition-colors"
-                            >
-                              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                              </svg>
-                            </button>
-                            <button
-                              onClick={() => {
-                                setItemToDelete({type: 'file', path: file.Key || ''});
-                                setIsDeleteConfirmOpen(true);
-                              }}
-                              className="p-2 hover:bg-hover-color rounded-lg text-text-secondary hover:text-error-color transition-colors"
-                            >
-                              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            )}
-          </div>
-
-          {/* 分頁控制 */}
-          <div className="flex items-center justify-between mt-6">
-            <div className="text-sm text-text-secondary">
-              顯示 {(currentPage - 1) * itemsPerPage + 1} 至 {Math.min(currentPage * itemsPerPage, filteredFiles.length)} 筆，共 {filteredFiles.length} 筆
-            </div>
-            <div className="flex space-x-2">
-              <button
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="px-3 py-1 border border-border-color rounded-lg text-text-secondary hover:bg-hover-color transition-colors disabled:opacity-50"
-              >
-                上一頁
-              </button>
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                const pageNumber = i + 1;
-                return (
-                  <button
-                    key={i}
-                    onClick={() => setCurrentPage(pageNumber)}
-                    className={`px-3 py-1 rounded-lg ${
-                      currentPage === pageNumber
-                        ? 'bg-accent-color text-white'
-                        : 'border border-border-color text-text-secondary hover:bg-hover-color'
-                    } transition-colors`}
-                  >
-                    {pageNumber}
-                  </button>
-                );
-              })}
-              {totalPages > 5 && <span className="px-3 py-1">...</span>}
-              {totalPages > 5 && (
-                <button
-                  onClick={() => setCurrentPage(totalPages)}
-                  className={`px-3 py-1 rounded-lg border border-border-color text-text-secondary hover:bg-hover-color transition-colors`}
-                >
-                  {totalPages}
-                </button>
-              )}
-              <button
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                className="px-3 py-1 border border-border-color rounded-lg text-text-secondary hover:bg-hover-color transition-colors disabled:opacity-50"
-              >
-                下一頁
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* 上傳進度顯示 */}
+      {isUploading && <UploadProgress progress={uploadProgress} />}
 
       {/* 刪除確認對話框 */}
       {isDeleteConfirmOpen && itemToDelete && (
@@ -879,6 +1052,41 @@ export default function Storage() {
                 className="px-4 py-2 bg-error-color text-white rounded-lg hover:bg-error-hover transition-colors"
               >
                 確定刪除
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 檔案重複處理對話框 */}
+      {duplicateFile && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-background-primary rounded-xl p-6 w-[480px]">
+            <h3 className="text-xl font-bold mb-4">檔案已存在</h3>
+            <p className="text-text-primary mb-6">
+              資料夾中已存在相同名稱的檔案「{duplicateFile.newKey}」，請選擇處理方式：
+            </p>
+            <div className="space-y-4">
+              <button
+                onClick={() => handleDuplicateFile('replace')}
+                className="w-full px-4 py-3 bg-accent-color text-white rounded-lg hover:bg-accent-hover transition-colors flex items-center justify-between"
+              >
+                <span>取代現有檔案</span>
+                <span className="text-sm opacity-75">現有檔案將被刪除</span>
+              </button>
+              <button
+                onClick={() => handleDuplicateFile('keep-both')}
+                className="w-full px-4 py-3 bg-background-secondary text-text-primary rounded-lg hover:bg-hover-color transition-colors flex items-center justify-between"
+              >
+                <span>保留兩個檔案</span>
+                <span className="text-sm opacity-75">新檔案將使用不同名稱</span>
+              </button>
+              <button
+                onClick={() => handleDuplicateFile('skip')}
+                className="w-full px-4 py-3 bg-background-secondary text-text-primary rounded-lg hover:bg-hover-color transition-colors flex items-center justify-between"
+              >
+                <span>跳過</span>
+                <span className="text-sm opacity-75">保留現有檔案</span>
               </button>
             </div>
           </div>
