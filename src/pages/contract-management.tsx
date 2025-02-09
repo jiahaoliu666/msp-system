@@ -385,7 +385,7 @@ export default function ContractManagement() {
         {[
           { title: '有效合約', value: stats.activeContracts, color: 'green', icon: '📄' },
           { title: '即將到期', value: stats.expiringContracts, color: 'yellow', icon: '⚠️' },
-          { title: '待續約確認', value: stats.pendingRenewal, color: 'red', icon: '🔔' },
+          { title: '待續約', value: stats.pendingRenewal, color: 'red', icon: '🔔' },
           { title: '合約總數', value: stats.totalAmount, color: 'blue', icon: '📊' },
         ].map((stat) => (
           <div key={stat.title} className={`bg-white rounded-lg shadow-md p-6 border-l-4 ${
