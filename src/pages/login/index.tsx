@@ -132,8 +132,8 @@ export default function Login() {
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Left side - Branding and Features */}
-      <div className="hidden lg:flex lg:w-1/2 xl:w-2/3 bg-gradient-to-br from-blue-600 to-indigo-800 items-center justify-center p-12">
-        <div className="max-w-2xl">
+      <div className="hidden lg:flex lg:w-1/2 xl:w-2/3 bg-gradient-to-br from-blue-500 to-indigo-700 items-center justify-center p-12">
+        <div className="max-w-2xl mb-16">
           <div className="text-center mb-12">
             <img src="/metaage-logo1.png" alt="MetaAge Logo" className="h-24 mx-auto mb-8 filter drop-shadow-lg" />
             <h1 className="text-4xl font-bold text-white mb-4 tracking-tight">專業可靠的 IT 解決方案</h1>
@@ -149,7 +149,7 @@ export default function Login() {
       </div>
 
       {/* Right side - Login Form */}
-      <div className="w-full lg:w-1/2 xl:w-1/3 flex items-center justify-center p-8 sm:p-12">
+      <div className="w-full lg:w-1/2 xl:w-1/3 flex items-center justify-center p-8 sm:p-12 bg-gradient-to-br from-blue-50 to-indigo-50">
         <div className="w-full max-w-md">
           <div className="bg-white rounded-2xl shadow-xl p-8 sm:p-10 transition-all duration-300 hover:shadow-2xl">
             <h2 className="text-3xl font-bold text-gray-800 mb-2 text-center">歡迎回來</h2>
@@ -253,8 +253,10 @@ export default function Login() {
 function FeatureItem({ icon, text }: { icon: React.ReactElement<IconProps>; text: string }) {
   return (
     <div className="flex items-center space-x-4 bg-white bg-opacity-10 rounded-lg p-4 transition-all duration-300 hover:bg-opacity-20 hover:transform hover:scale-105">
-      <div className="flex-shrink-0 text-blue-100">{React.cloneElement(icon, { className: "w-6 h-6" })}</div>
-      <p className="text-lg font-medium text-white">{text}</p>
+      <div className="flex-shrink-0 text-blue-100 flex items-center">{React.cloneElement(icon, { className: "w-8 h-12" })}</div>
+      <div className="flex items-center translate-y-[1px] ">
+        <p className="text-lg font-medium text-white ">{text}</p>
+      </div>
     </div>
   )
 }

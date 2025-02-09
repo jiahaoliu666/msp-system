@@ -63,7 +63,7 @@
   }
 
   p {
-    @apply text-text-secondary mb-4;
+    @apply text-text-secondary;
   }
 
   a {
