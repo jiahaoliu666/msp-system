@@ -30,7 +30,7 @@ export default function Sidebar({ isSidebarOpen }: SidebarProps) {
             { name: '工單系統', icon: '🎫', badge: '8', link: '/ticket-system' },
             { name: '服務記錄', icon: '📝', badge: '3', link: '/service-record' },
             { name: '待辦事項', icon: '📝', badge: '2', link: '/todo-list' },
-            { name: '交接項目', icon: '🔄', badge: '5', link: '/handover-item' },
+            { name: '每日交接', icon: '🔄', badge: '5', link: '/handover-item' },
             { name: '檔案儲存', icon: '📁', badge: '', link: '/storage' },
             { name: '會議排程', icon: '📅', badge: '', link: '/meeting' },
             

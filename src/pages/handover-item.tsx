@@ -84,12 +84,12 @@ export default function HandoverItem() {
           <svg className="h-4 w-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
-          <span className="text-gray-700">交接項目</span>
+          <span className="text-gray-700">每日交接</span>
         </div>
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-gray-800 flex items-center">
-              交接項目
+              每日交接
             </h1>
             <p className="text-gray-600 mt-1">管理和追蹤所有交接任務的進度</p>
           </div>
@@ -98,7 +98,7 @@ export default function HandoverItem() {
               <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              新增交接項目
+              新增每日交接
             </button>
           </div>
         </div>
@@ -138,7 +138,7 @@ export default function HandoverItem() {
           <div className="md:col-span-2 relative">
             <input
               type="text"
-              placeholder="搜尋交接項目..."
+              placeholder="搜尋每日交接..."
               className="w-full pl-10 pr-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <div className="absolute left-3 top-2.5">
@@ -199,7 +199,7 @@ export default function HandoverItem() {
         </div>
       </div>
 
-      {/* 交接項目列表 */}
+      {/* 每日交接列表 */}
       <div className="bg-white rounded-xl shadow-sm">
         <div className="p-6">
           <div className="space-y-4">

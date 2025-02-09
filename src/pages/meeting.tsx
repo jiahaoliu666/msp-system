@@ -155,45 +155,6 @@ export default function Meeting() {
           </div>
         </div>
   
-        {/* 會議室使用狀態 */}
-        <div className="bg-background-primary rounded-xl shadow-sm">
-          <div className="p-6 border-b border-border-color">
-            <h2 className="text-lg font-semibold text-text-primary">會議室使用狀態</h2>
-          </div>
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {[
-                { name: '會議室 A', status: 'available', nextMeeting: '14:00', capacity: 10 },
-                { name: '會議室 B', status: 'in-use', nextAvailable: '15:30', capacity: 8 },
-                { name: '會議室 C', status: 'maintenance', nextAvailable: '明天', capacity: 6 },
-              ].map((room, index) => (
-                <div key={index} className="border border-border-color rounded-lg p-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-medium text-text-primary">{room.name}</h3>
-                      <p className="text-sm text-text-secondary mt-1">容納人數：{room.capacity}人</p>
-                    </div>
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      room.status === 'available' ? 'bg-success-color/10 text-success-color' :
-                      room.status === 'in-use' ? 'bg-warning-color/10 text-warning-color' :
-                      'bg-error-color/10 text-error-color'
-                    }`}>
-                      {room.status === 'available' ? '可使用' :
-                       room.status === 'in-use' ? '使用中' :
-                       '維護中'}
-                    </span>
-                  </div>
-                  <div className="mt-4 text-sm text-text-secondary">
-                    {room.status === 'available' ? 
-                      `下次會議：${room.nextMeeting}` :
-                      `下次可用：${room.nextAvailable}`
-                    }
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
       </div>
     );
   }
