@@ -8,8 +8,8 @@ import { useRouter } from "next/router"
 
 // 頁面標題組件
 const PageTitle = ({ title, description }: { title: string; description?: string }) => (
-  <div className="mb-12">
-    <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-slate-800 to-blue-700 bg-clip-text text-transparent tracking-tight leading-tight">
+  <div className="mb-16">
+    <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-slate-800 to-blue-700 bg-clip-text text-transparent tracking-tight leading-normal">
       {title}
     </h1>
     {description && <p className="text-lg text-slate-600 leading-relaxed max-w-3xl">{description}</p>}
