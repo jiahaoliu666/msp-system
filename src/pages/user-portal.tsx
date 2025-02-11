@@ -447,7 +447,175 @@ const Profile = () => (
   </div>
 )
 
-// 聊天機器人組件
+// // 聊天機器人組件
+// const Chatbot = () => {
+//   const [messages, setMessages] = useState([
+//     {
+//       type: "bot",
+//       content: "您好！我是 MetaAge MSP 智能助理，很高興為您服務。請問有什麼我可以幫您的嗎？",
+//       time: "09:00",
+//     },
+//     {
+//       type: "bot",
+//       content: "您可以詢問我關於：\n1. 系統使用問題\n2. 帳號相關問題\n3. 技術支援需求\n4. 一般諮詢",
+//       time: "09:00",
+//     },
+//   ])
+//   const chatWindowRef = useRef<HTMLDivElement>(null)
+//   const [inputValue, setInputValue] = useState("")
+//   const [isOpen, setIsOpen] = useState(false)
+
+//   useEffect(() => {
+//     if (chatWindowRef.current) {
+//       chatWindowRef.current.scrollTop = chatWindowRef.current.scrollHeight
+//     }
+//   }, [messages])
+
+//   return (
+//     <div className="fixed bottom-20 right-8 z-50 flex items-end">
+//       {/* 聊天機器人按鈕 */}
+//       <div
+//         onClick={() => setIsOpen(!isOpen)}
+//         className={`
+//           w-[160px] h-16 rounded-l-full bg-white
+//           shadow-lg hover:shadow-xl flex items-center
+//           transition-all duration-300 cursor-pointer border border-slate-200/50
+//           fixed bottom-20 right-0 z-40 hover:translate-x-0
+//           translate-x-[94px] group
+//           ${isOpen ? "scale-95 opacity-0" : "scale-100 opacity-100"}
+//         `}
+//       >
+//         <div className="relative flex items-center gap-3 px-4 w-full">
+//           <div className="relative flex-shrink-0">
+//             <Image src="/msp-logo.png" alt="MSP Logo" width={40} height={40} className="object-contain" />
+//             <span className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border-2 border-white animate-pulse"></span>
+//           </div>
+//           <span className="text-slate-700 font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">線上客服</span>
+//         </div>
+//       </div>
+
+//       {/* 聊天視窗 */}
+//       <div
+//         className={`
+//         absolute bottom-42 right-0
+//         transform transition-all duration-300 ease-in-out
+//         ${isOpen ? "translate-y-0 opacity-100 visible z-50" : "translate-y-4 opacity-0 invisible"}
+//         w-[400px] bg-white rounded-[24px] shadow-2xl border border-slate-200/50 flex flex-col overflow-hidden
+//         hover:shadow-blue-500/10
+//       `}
+//       >
+//         {/* 聊天視窗標題 */}
+//         <div className="p-6 bg-gradient-to-r from-blue-600 to-blue-500 rounded-b-[24px]">
+//           <div className="flex items-center justify-between">
+//             <div className="flex items-center space-x-4">
+//               <div className="w-12 h-12 rounded-2xl bg-white/10 p-1.5 flex items-center justify-center backdrop-blur-sm">
+//                 <Image src="/msp-logo.png" alt="MSP Logo" width={36} height={36} className="object-contain" />
+//               </div>
+//               <div>
+//                 <h3 className="font-medium text-lg text-white">MetaAge 智能助理</h3>
+//                 <div className="flex items-center space-x-2 text-xs text-white/90">
+//                   <span className="flex items-center">
+//                     <span className="w-2 h-2 bg-emerald-400 rounded-full mr-1.5 animate-pulse shadow-lg shadow-emerald-500/50"></span>
+//                     線上為您服務
+//                   </span>
+//                   <span className="text-white/60">|</span>
+//                   <span className="text-white/90">回應時間：約 1 分鐘</span>
+//                 </div>
+//               </div>
+//             </div>
+//             <button
+//               onClick={() => setIsOpen(false)}
+//               className="p-2 hover:bg-white/10 rounded-xl transition-all duration-300 text-white/80 hover:text-white hover:scale-110"
+//             >
+//               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+//                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+//               </svg>
+//             </button>
+//           </div>
+//         </div>
+
+//         <div className="flex-1 h-[400px] p-6 overflow-y-auto bg-gradient-to-b from-slate-50 to-white" ref={chatWindowRef}>
+//           <div className="space-y-6">
+//             {messages.map((message, index) => (
+//               <div key={index} className={`flex ${message.type === "user" ? "justify-end" : "justify-start"} group`}>
+//                 {message.type === "bot" && (
+//                   <div className="w-8 h-8 rounded-2xl bg-blue-500/10 p-1 mr-3 flex-shrink-0 shadow-sm">
+//                     <Image src="/msp-logo.png" alt="Bot Avatar" width={24} height={24} className="object-contain" />
+//                   </div>
+//                 )}
+//                 <div
+//                   className={`max-w-[80%] p-4 ${
+//                     message.type === "user"
+//                       ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-[20px] rounded-br-lg shadow-lg hover:shadow-blue-500/20"
+//                       : "bg-white text-slate-800 rounded-[20px] rounded-bl-lg shadow-lg hover:shadow-slate-200/50 border border-slate-200/50"
+//                   } transition-all duration-300 hover:-translate-y-0.5`}
+//                 >
+//                   <div className="whitespace-pre-line text-sm">{message.content}</div>
+//                   <div className={`text-xs mt-1.5 ${message.type === "user" ? "text-white/80" : "text-slate-500"}`}>
+//                     {message.time}
+//                   </div>
+//                 </div>
+//                 {message.type === "user" && (
+//                   <div className="w-8 h-8 rounded-2xl bg-blue-500/10 ml-3 flex items-center justify-center flex-shrink-0 shadow-sm">
+//                     👤
+//                   </div>
+//                 )}
+//               </div>
+//             ))}
+//           </div>
+//         </div>
+
+//         <div className="p-4 border-t border-slate-200/50 bg-gradient-to-b from-white to-slate-50/80 backdrop-blur-sm">
+//           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
+//             {["系統使用問題", "帳號相關", "技術支援", "一般諮詢"].map((option) => (
+//               <button
+//                 key={option}
+//                 className="px-4 py-2 bg-slate-100 text-slate-600 rounded-2xl hover:bg-blue-50 hover:text-blue-500 transition-all duration-300 whitespace-nowrap text-sm font-medium hover:shadow-md hover:-translate-y-0.5 active:translate-y-0"
+//               >
+//                 {option}
+//               </button>
+//             ))}
+//           </div>
+//         </div>
+
+//         <div className="p-4 border-t border-slate-200/50 bg-gradient-to-b from-slate-50/80 to-white backdrop-blur-sm">
+//           <div className="flex space-x-3">
+//             <div className="flex-1 relative">
+//               <input
+//                 type="text"
+//                 value={inputValue}
+//                 onChange={(e) => setInputValue(e.target.value)}
+//                 placeholder="輸入訊息..."
+//                 className="w-full px-5 py-3 bg-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-slate-800 pr-12 text-sm transition-all duration-300 hover:bg-slate-100/80 placeholder-slate-400"
+//               />
+//               <button className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-blue-500 transition-all duration-300 hover:scale-110">
+//                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+//                   <path
+//                     strokeLinecap="round"
+//                     strokeLinejoin="round"
+//                     strokeWidth={2}
+//                     d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
+//                   />
+//                 </svg>
+//               </button>
+//             </div>
+//             <button className="p-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl hover:shadow-lg hover:shadow-blue-500/20 transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0">
+//               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+//                 <path
+//                   strokeLinecap="round"
+//                   strokeLinejoin="round"
+//                   strokeWidth={2}
+//                   d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+//                 />
+//               </svg>
+//             </button>
+//           </div>
+//         </div>
+//       </div>
+//     </div>
+//   )
+// }
+
 const Chatbot = () => {
   const [messages, setMessages] = useState([
     {
@@ -472,50 +640,50 @@ const Chatbot = () => {
   }, [messages])
 
   return (
-    <div className="fixed bottom-20 right-8 z-50 flex items-end">
+    <div className="fixed bottom-24 right-8 z-50 flex items-end">
       {/* 聊天機器人按鈕 */}
       <div
         onClick={() => setIsOpen(!isOpen)}
         className={`
-          w-[160px] h-16 rounded-l-full bg-white
+          w-[180px] h-14 rounded-l-full bg-white
           shadow-lg hover:shadow-xl flex items-center
-          transition-all duration-300 cursor-pointer border border-slate-200/50
-          fixed bottom-20 right-0 z-40 hover:translate-x-0
-          translate-x-[94px] group
+          transition-all duration-300 cursor-pointer border border-blue-100
+          fixed bottom-24 right-0 z-40 hover:translate-x-0
+          translate-x-[100px] group
           ${isOpen ? "scale-95 opacity-0" : "scale-100 opacity-100"}
         `}
       >
         <div className="relative flex items-center gap-3 px-4 w-full">
           <div className="relative flex-shrink-0">
-            <Image src="/msp-logo.png" alt="MSP Logo" width={40} height={40} className="object-contain" />
-            <span className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border-2 border-white animate-pulse"></span>
+            <Image src="/msp-logo.png" alt="MSP Logo" width={36} height={36} className="object-contain rounded-full shadow-sm" />
+            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 rounded-full border-2 border-white animate-pulse"></span>
           </div>
-          <span className="text-slate-700 font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">線上客服</span>
+          <span className="text-blue-600 font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">線上客服</span>
         </div>
       </div>
 
       {/* 聊天視窗 */}
       <div
         className={`
-        absolute bottom-42 right-0
+        absolute bottom-0 right-0
         transform transition-all duration-300 ease-in-out
         ${isOpen ? "translate-y-0 opacity-100 visible z-50" : "translate-y-4 opacity-0 invisible"}
-        w-[400px] bg-white rounded-[24px] shadow-2xl border border-slate-200/50 flex flex-col overflow-hidden
-        hover:shadow-blue-500/10
+        w-[420px] bg-white rounded-2xl shadow-2xl border border-blue-100 flex flex-col overflow-hidden
+        hover:shadow-blue-200
       `}
       >
         {/* 聊天視窗標題 */}
-        <div className="p-6 bg-gradient-to-r from-blue-600 to-blue-500 rounded-b-[24px]">
+        <div className="p-6 bg-gradient-to-r from-blue-600 to-blue-500">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 rounded-2xl bg-white/10 p-1.5 flex items-center justify-center backdrop-blur-sm">
-                <Image src="/msp-logo.png" alt="MSP Logo" width={36} height={36} className="object-contain" />
+              <div className="w-12 h-12 rounded-full bg-white/20 p-1.5 flex items-center justify-center backdrop-blur-sm">
+                <Image src="/msp-logo.png" alt="MSP Logo" width={36} height={36} className="object-contain rounded-full" />
               </div>
               <div>
-                <h3 className="font-medium text-lg text-white">MetaAge 智能助理</h3>
+                <h3 className="font-bold text-lg text-white">MetaAge 智能助理</h3>
                 <div className="flex items-center space-x-2 text-xs text-white/90">
                   <span className="flex items-center">
-                    <span className="w-2 h-2 bg-emerald-400 rounded-full mr-1.5 animate-pulse shadow-lg shadow-emerald-500/50"></span>
+                    <span className="w-2 h-2 bg-green-400 rounded-full mr-1.5 animate-pulse shadow-lg shadow-green-500/50"></span>
                     線上為您服務
                   </span>
                   <span className="text-white/60">|</span>
@@ -525,7 +693,7 @@ const Chatbot = () => {
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="p-2 hover:bg-white/10 rounded-xl transition-all duration-300 text-white/80 hover:text-white hover:scale-110"
+              className="p-2 hover:bg-white/10 rounded-full transition-all duration-300 text-white/80 hover:text-white hover:scale-110"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -534,29 +702,29 @@ const Chatbot = () => {
           </div>
         </div>
 
-        <div className="flex-1 h-[400px] p-6 overflow-y-auto bg-gradient-to-b from-slate-50 to-white" ref={chatWindowRef}>
+        <div className="flex-1 h-[400px] p-6 overflow-y-auto bg-gradient-to-b from-blue-50 to-white" ref={chatWindowRef}>
           <div className="space-y-6">
             {messages.map((message, index) => (
               <div key={index} className={`flex ${message.type === "user" ? "justify-end" : "justify-start"} group`}>
                 {message.type === "bot" && (
-                  <div className="w-8 h-8 rounded-2xl bg-blue-500/10 p-1 mr-3 flex-shrink-0 shadow-sm">
-                    <Image src="/msp-logo.png" alt="Bot Avatar" width={24} height={24} className="object-contain" />
+                  <div className="w-8 h-8 rounded-full bg-blue-100 p-1 mr-3 flex-shrink-0 shadow-sm">
+                    <Image src="/msp-logo.png" alt="Bot Avatar" width={24} height={24} className="object-contain rounded-full" />
                   </div>
                 )}
                 <div
                   className={`max-w-[80%] p-4 ${
                     message.type === "user"
-                      ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-[20px] rounded-br-lg shadow-lg hover:shadow-blue-500/20"
-                      : "bg-white text-slate-800 rounded-[20px] rounded-bl-lg shadow-lg hover:shadow-slate-200/50 border border-slate-200/50"
+                      ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl rounded-br-sm shadow-lg hover:shadow-blue-500/20"
+                      : "bg-white text-slate-800 rounded-2xl rounded-bl-sm shadow-md hover:shadow-lg border border-blue-100"
                   } transition-all duration-300 hover:-translate-y-0.5`}
                 >
-                  <div className="whitespace-pre-line text-sm">{message.content}</div>
-                  <div className={`text-xs mt-1.5 ${message.type === "user" ? "text-white/80" : "text-slate-500"}`}>
+                  <div className="whitespace-pre-line text-sm font-medium">{message.content}</div>
+                  <div className={`text-xs mt-2 ${message.type === "user" ? "text-white/80" : "text-slate-500"}`}>
                     {message.time}
                   </div>
                 </div>
                 {message.type === "user" && (
-                  <div className="w-8 h-8 rounded-2xl bg-blue-500/10 ml-3 flex items-center justify-center flex-shrink-0 shadow-sm">
+                  <div className="w-8 h-8 rounded-full bg-blue-100 ml-3 flex items-center justify-center flex-shrink-0 shadow-sm">
                     👤
                   </div>
                 )}
@@ -565,20 +733,75 @@ const Chatbot = () => {
           </div>
         </div>
 
-        <div className="p-4 border-t border-slate-200/50 bg-gradient-to-b from-white to-slate-50/80 backdrop-blur-sm">
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
-            {["系統使用問題", "帳號相關", "技術支援", "一般諮詢"].map((option) => (
-              <button
-                key={option}
-                className="px-4 py-2 bg-slate-100 text-slate-600 rounded-2xl hover:bg-blue-50 hover:text-blue-500 transition-all duration-300 whitespace-nowrap text-sm font-medium hover:shadow-md hover:-translate-y-0.5 active:translate-y-0"
-              >
-                {option}
-              </button>
-            ))}
+        <div className="relative border-t border-blue-100 bg-gradient-to-b from-white to-blue-50/80 backdrop-blur-sm">
+          {/* Quick Actions Container */}
+          <div className="px-4 py-4">
+            {/* Scrollable Button Group with Custom Scrollbar */}
+            <div 
+              className={`
+                flex gap-3 overflow-x-auto
+                
+                /* Custom Scrollbar Styling */
+                [&::-webkit-scrollbar]:h-1.5
+                [&::-webkit-scrollbar-track]:bg-slate-100/80
+                [&::-webkit-scrollbar-track]:rounded-full
+                [&::-webkit-scrollbar-thumb]:bg-slate-200
+                [&::-webkit-scrollbar-thumb]:rounded-full
+                [&::-webkit-scrollbar-thumb:hover]:bg-slate-300
+                
+                /* Space for Scrollbar */
+                pb-2
+              `}
+            >
+              {/* Quick Action Buttons */}
+              {[
+                "系統使用問題",
+                "帳號相關",
+                "技術支援",
+                "一般諮詢"
+              ].map((option) => (
+                <button
+                  key={option}
+                  className={`
+                    /* Base Button Styling */
+                    px-6 py-3
+                    bg-white
+                    text-blue-600
+                    text-sm
+                    font-medium
+                    whitespace-nowrap
+                    rounded-full
+                    border
+                    border-blue-100/80
+                    min-w-[120px]
+                    
+                    /* Interactive States */
+                    transition-all
+                    duration-300
+                    hover:bg-blue-50
+                    hover:shadow-md
+                    hover:-translate-y-0.5
+                    active:translate-y-0
+                    
+                    /* Focus States for Accessibility */
+                    focus:outline-none
+                    focus:ring-2
+                    focus:ring-blue-400/30
+                    focus:ring-offset-1
+                    
+                    /* Spacing Adjustments */
+                    first:ml-0
+                    last:mr-4
+                  `}
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
-        <div className="p-4 border-t border-slate-200/50 bg-gradient-to-b from-slate-50/80 to-white backdrop-blur-sm">
+        <div className="p-4 border-t border-blue-100 bg-gradient-to-b from-blue-50/80 to-white backdrop-blur-sm">
           <div className="flex space-x-3">
             <div className="flex-1 relative">
               <input
@@ -586,9 +809,9 @@ const Chatbot = () => {
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 placeholder="輸入訊息..."
-                className="w-full px-5 py-3 bg-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-slate-800 pr-12 text-sm transition-all duration-300 hover:bg-slate-100/80 placeholder-slate-400"
+                className="w-full px-5 py-3 bg-white rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400 text-slate-800 pr-12 text-sm transition-all duration-300 hover:shadow-md placeholder-slate-400 border border-blue-100"
               />
-              <button className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-blue-500 transition-all duration-300 hover:scale-110">
+              <button className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-blue-400 hover:text-blue-600 transition-all duration-300 hover:scale-110">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
@@ -599,7 +822,7 @@ const Chatbot = () => {
                 </svg>
               </button>
             </div>
-            <button className="p-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl hover:shadow-lg hover:shadow-blue-500/20 transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0">
+            <button className="p-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-full hover:shadow-lg hover:shadow-blue-500/20 transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
