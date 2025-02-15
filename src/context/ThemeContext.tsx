@@ -5,24 +5,37 @@ interface ThemeContextType {
   theme: string;
   setTheme: (theme: string) => void;
   toggleTheme: () => void;
+  isDark: boolean;
+  systemTheme: string | undefined;
+  isSystemTheme: boolean;
 }
 
 const ThemeContext = createContext<ThemeContextType>({
   theme: 'light',
   setTheme: () => {},
   toggleTheme: () => {},
+  isDark: false,
+  systemTheme: undefined,
+  isSystemTheme: false,
 });
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, systemTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  const isDark = theme === 'dark';
+  const isSystemTheme = theme === 'system';
+
   const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
+    if (isSystemTheme) {
+      setTheme(systemTheme === 'dark' ? 'light' : 'dark');
+    } else {
+      setTheme(isDark ? 'light' : 'dark');
+    }
   };
 
   if (!mounted) {
@@ -30,7 +43,16 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   return (
-    <ThemeContext.Provider value={{ theme: theme || 'light', setTheme, toggleTheme }}>
+    <ThemeContext.Provider 
+      value={{ 
+        theme: theme || 'light',
+        setTheme,
+        toggleTheme,
+        isDark,
+        systemTheme,
+        isSystemTheme
+      }}
+    >
       {children}
     </ThemeContext.Provider>
   );
@@ -39,7 +61,7 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
 export const useThemeContext = () => {
   const context = useContext(ThemeContext);
   if (context === undefined) {
-    throw new Error('useThemeContext must be used within a ThemeProvider');
+    throw new Error('useThemeContext 必須在 ThemeProvider 內使用');
   }
   return context;
 }; 

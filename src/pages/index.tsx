@@ -1,8 +1,10 @@
 import React from 'react';
 import CreateTicketModal from '../components/common/CreateTicketForm';
+import { useThemeContext } from '@/context/ThemeContext';
 
 export default function Home() {
   const [isTicketModalOpen, setIsTicketModalOpen] = React.useState(false);
+  const { theme } = useThemeContext();
 
   const handleCreateTicket = (ticketData: {
     title: string;
@@ -15,43 +17,52 @@ export default function Home() {
   };
 
   return (
-    <div className="p-6 md:p-8 bg-gray-50/30">
+    <div className="p-6 md:p-8 bg-background-secondary transition-colors duration-300">
       {/* 頁面標題與操作按鈕 */}
       <div className="mb-6">
-        <div className="flex items-center text-sm text-gray-500 mb-4">
-          <a href="#" className="hover:text-blue-600 transition-colors duration-200 flex items-center gap-1">
+        <div className="flex items-center text-sm text-text-secondary mb-4">
+          <a href="#" className="hover:text-accent-color transition-colors duration-200 
+                                flex items-center gap-1 focus-effect rounded">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
             </svg>
             首頁
           </a>
-          <svg className="h-4 w-4 mx-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="h-4 w-4 mx-2 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
-          <span className="text-gray-700 font-medium">總覽</span>
+          <span className="text-text-primary font-medium">總覽</span>
         </div>
         <div className="mb-4 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800 tracking-tight">總覽儀表板</h1>
-            <p className="text-gray-600 mt-1 text-sm">歡迎回來！這是您的即時系統概況。</p>
+            <h1 className="text-2xl font-bold text-text-primary tracking-tight">總覽儀表板</h1>
+            <p className="text-text-secondary mt-1 text-sm">歡迎回來！這是您的即時系統概況。</p>
           </div>
           <div className="flex space-x-3">
             <div className="relative">
-              <button className="px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-700 flex items-center transition-all duration-200 shadow-sm hover:shadow">
+              <button className="px-4 py-2 bg-background-primary border border-border-color rounded-lg 
+                               hover:bg-hover-color text-text-primary flex items-center transition-all 
+                               duration-200 shadow-sm hover:shadow focus-effect active-effect">
                 <span className="mr-2">
-                  <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  <svg className="w-4 h-4 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                 </span>
                 本週
-                <svg className="h-4 w-4 ml-2 transform transition-transform duration-200 group-hover:rotate-180 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="h-4 w-4 ml-2 transform transition-transform duration-200 text-text-secondary" 
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
             </div>
-            <button className="p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600 transition-all duration-200 shadow-sm hover:shadow">
+            <button className="p-2 bg-background-primary border border-border-color rounded-lg 
+                             hover:bg-hover-color text-text-secondary transition-all duration-200 
+                             shadow-sm hover:shadow focus-effect active-effect">
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                      d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
               </svg>
             </button>
           </div>
@@ -65,42 +76,78 @@ export default function Home() {
             title: '待處理工單', 
             value: '23', 
             icon: '🔧',
-            color: 'blue'
+            color: 'blue',
+            trend: 'up',
+            trendValue: '15%'
           },
           { 
             title: '待辦事項', 
             value: '2', 
             icon: '📝',
-            color: 'green'
+            color: 'green',
+            trend: 'down',
+            trendValue: '8%'
           },
           { 
             title: '在線客戶', 
             value: '12', 
             icon: '👥',
-            color: 'yellow'
+            color: 'yellow',
+            trend: 'up',
+            trendValue: '12%'
           },
           { 
             title: '在線人員', 
             value: '8', 
             icon: '👨‍💼',
-            color: 'purple'
+            color: 'purple',
+            trend: 'stable',
+            trendValue: '0%'
           },
         ].map((stat) => (
           <div 
             key={stat.title} 
-            className={`bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 p-6 border-l-4 ${
-              stat.color === 'blue' ? 'border-blue-500 hover:border-blue-600' :
-              stat.color === 'yellow' ? 'border-yellow-500 hover:border-yellow-600' :
-              stat.color === 'green' ? 'border-green-500 hover:border-green-600' :
+            className={`bg-background-primary rounded-lg shadow-sm hover:shadow-md transition-all 
+                       duration-200 p-6 border-l-4 group animate-fade-in ${
+              stat.color === 'blue' ? 'border-accent-color hover:border-accent-hover' :
+              stat.color === 'yellow' ? 'border-warning-color hover:border-warning-color' :
+              stat.color === 'green' ? 'border-success-color hover:border-success-color' :
               'border-purple-500 hover:border-purple-600'
-            } group`}
+            }`}
           >
             <div className="flex justify-between items-start">
               <div className="space-y-2">
-                <p className="text-gray-500 text-sm font-medium">{stat.title}</p>
-                <h3 className="text-2xl font-bold text-gray-800">{stat.value}</h3>
+                <p className="text-text-secondary text-sm font-medium">{stat.title}</p>
+                <h3 className="text-2xl font-bold text-text-primary group-hover:scale-105 
+                             transform transition-transform duration-200">
+                  {stat.value}
+                </h3>
+                <div className={`flex items-center text-sm ${
+                  stat.trend === 'up' ? 'text-success-color' :
+                  stat.trend === 'down' ? 'text-error-color' :
+                  'text-text-secondary'
+                }`}>
+                  {stat.trend === 'up' ? (
+                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                            d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    </svg>
+                  ) : stat.trend === 'down' ? (
+                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                            d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6" />
+                    </svg>
+                  ) : (
+                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                            d="M5 12h14" />
+                    </svg>
+                  )}
+                  <span>{stat.trendValue} 相較上週</span>
+                </div>
               </div>
-              <span className="text-2xl">{stat.icon}</span>
+              <span className="text-2xl transform transition-transform duration-200 
+                             group-hover:scale-110 group-hover:rotate-12">{stat.icon}</span>
             </div>
           </div>
         ))}
@@ -108,21 +155,38 @@ export default function Home() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* 主要內容卡片 - 最近活動 */}
-        <div className="lg:col-span-2 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200">
+        <div className="lg:col-span-2 bg-background-primary rounded-lg shadow-sm hover:shadow-md 
+                       transition-all duration-200">
           <div className="p-6">
             <div className="flex justify-between items-center mb-6">
               <div className="flex items-center space-x-4">
-                <h2 className="text-xl font-bold text-gray-800">最近活動</h2>
+                <h2 className="text-xl font-bold text-text-primary">最近活動</h2>
                 <div className="flex space-x-2">
-                  <span className="px-3 py-1 text-xs font-medium rounded-full bg-blue-50 text-blue-600 cursor-pointer hover:bg-blue-100 transition-colors duration-200">全部</span>
-                  <span className="px-3 py-1 text-xs font-medium rounded-full bg-gray-50 text-gray-600 cursor-pointer hover:bg-gray-100 transition-colors duration-200">工單</span>
-                  <span className="px-3 py-1 text-xs font-medium rounded-full bg-gray-50 text-gray-600 cursor-pointer hover:bg-gray-100 transition-colors duration-200">合約</span>
+                  <button className="px-3 py-1 text-xs font-medium rounded-full bg-accent-light 
+                                   text-accent-color cursor-pointer hover:bg-accent-light/80 
+                                   transition-colors duration-200">
+                    全部
+                  </button>
+                  <button className="px-3 py-1 text-xs font-medium rounded-full bg-background-secondary 
+                                   text-text-secondary cursor-pointer hover:bg-hover-color 
+                                   transition-colors duration-200">
+                    工單
+                  </button>
+                  <button className="px-3 py-1 text-xs font-medium rounded-full bg-background-secondary 
+                                   text-text-secondary cursor-pointer hover:bg-hover-color 
+                                   transition-colors duration-200">
+                    合約
+                  </button>
                 </div>
               </div>
               <div className="flex space-x-2">
-                <button className="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200 flex items-center text-gray-700 text-sm font-medium shadow-sm hover:shadow group">
-                  <svg className="h-4 w-4 mr-2 text-gray-500 group-hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                <button className="px-4 py-2 border border-border-color rounded-lg hover:bg-hover-color 
+                                 transition-colors duration-200 flex items-center text-text-primary 
+                                 text-sm font-medium shadow-sm hover:shadow focus-effect active-effect">
+                  <svg className="h-4 w-4 mr-2 text-text-secondary" fill="none" stroke="currentColor" 
+                       viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                          d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                   </svg>
                   篩選
                 </button>
@@ -138,50 +202,61 @@ export default function Home() {
                 { title: '設備更新需求', client: '未來網路公司', type: '需求', time: '2天前', status: '待確認', priority: '中', assignee: '陳小明' },
                 { title: '資安稽核報告', client: '數位金融公司', type: '報告', time: '3天前', status: '已完成', priority: '高', assignee: '林小美' },
               ].map((activity, index) => (
-                <div key={index} className="group flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition-all duration-200 border border-transparent hover:border-gray-200">
+                <div key={index} className="group flex items-center justify-between p-4 hover:bg-hover-color 
+                                          rounded-lg transition-all duration-200 border border-transparent 
+                                          hover:border-border-color animate-fade-in">
                   <div className="flex items-center space-x-4">
                     <div className={`w-2 h-2 rounded-full ring-4 ${
-                      activity.status === '待處理' ? 'bg-yellow-400 ring-yellow-100' :
-                      activity.status === '進行中' ? 'bg-blue-400 ring-blue-100' :
-                      activity.status === '已完成' ? 'bg-green-400 ring-green-100' : 'bg-gray-400 ring-gray-100'
+                      activity.status === '待處理' ? 'bg-warning-color ring-warning-light' :
+                      activity.status === '進行中' ? 'bg-accent-color ring-accent-light' :
+                      activity.status === '已完成' ? 'bg-success-color ring-success-light' : 
+                      'bg-text-secondary ring-background-secondary'
                     }`} />
                     <div>
                       <div className="flex items-center space-x-2">
-                        <h3 className="font-medium text-gray-800 group-hover:text-blue-600 transition-colors duration-200">{activity.title}</h3>
+                        <h3 className="font-medium text-text-primary group-hover:text-accent-color 
+                                     transition-colors duration-200">
+                          {activity.title}
+                        </h3>
                         <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                          activity.priority === '高' ? 'bg-red-50 text-red-600' :
-                          activity.priority === '中' ? 'bg-yellow-50 text-yellow-600' :
-                          'bg-green-50 text-green-600'
+                          activity.priority === '高' ? 'bg-error-light text-error-color' :
+                          activity.priority === '中' ? 'bg-warning-light text-warning-color' :
+                          'bg-success-light text-success-color'
                         }`}>
                           {activity.priority}優先級
                         </span>
                       </div>
                       <div className="flex items-center space-x-2 mt-1">
-                        <p className="text-sm text-gray-500">{activity.client}</p>
-                        <span className="text-gray-300">•</span>
+                        <p className="text-sm text-text-secondary">{activity.client}</p>
+                        <span className="text-border-color">•</span>
                         <div className="flex items-center space-x-1">
-                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          <svg className="w-4 h-4 text-text-secondary" fill="none" stroke="currentColor" 
+                               viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                           </svg>
-                          <p className="text-sm text-gray-500">{activity.assignee}</p>
+                          <p className="text-sm text-text-secondary">{activity.assignee}</p>
                         </div>
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center space-x-4">
                     <span className={`px-3 py-1 text-xs font-medium rounded-full ${
-                      activity.type === '合約' ? 'bg-purple-50 text-purple-600' :
-                      activity.type === '工單' ? 'bg-blue-50 text-blue-600' :
-                      activity.type === '會議' ? 'bg-green-50 text-green-600' :
-                      activity.type === '需求' ? 'bg-yellow-50 text-yellow-600' :
-                      'bg-gray-50 text-gray-600'
+                      activity.type === '合約' ? 'bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-300' :
+                      activity.type === '工單' ? 'bg-accent-light text-accent-color' :
+                      activity.type === '會議' ? 'bg-success-light text-success-color' :
+                      activity.type === '需求' ? 'bg-warning-light text-warning-color' :
+                      'bg-background-secondary text-text-secondary'
                     }`}>
                       {activity.type}
                     </span>
-                    <span className="text-sm text-gray-500">{activity.time}</span>
-                    <button className="p-1 hover:bg-gray-100 rounded-lg transition-colors duration-200 group">
-                      <svg className="h-5 w-5 text-gray-400 group-hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                    <span className="text-sm text-text-secondary">{activity.time}</span>
+                    <button className="p-1 hover:bg-background-secondary rounded-lg 
+                                     transition-colors duration-200 group focus-effect">
+                      <svg className="h-5 w-5 text-text-secondary group-hover:text-text-primary" 
+                           fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                              d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                       </svg>
                     </button>
                   </div>
@@ -191,15 +266,35 @@ export default function Home() {
             
             {/* 分頁控制 */}
             <div className="mt-6 flex items-center justify-between">
-              <div className="text-sm text-gray-500">
+              <div className="text-sm text-text-secondary">
                 顯示 1 至 5 筆，共 24 筆
               </div>
               <div className="flex space-x-2">
-                <button className="px-3 py-1 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-all duration-200 text-sm font-medium">上一頁</button>
-                <button className="px-3 py-1 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors duration-200">1</button>
-                <button className="px-3 py-1 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-all duration-200 text-sm font-medium">2</button>
-                <button className="px-3 py-1 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-all duration-200 text-sm font-medium">3</button>
-                <button className="px-3 py-1 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-all duration-200 text-sm font-medium">下一頁</button>
+                <button className="px-3 py-1 border border-border-color rounded-lg text-text-primary 
+                                 hover:bg-hover-color transition-all duration-200 text-sm font-medium 
+                                 focus-effect active-effect">
+                  上一頁
+                </button>
+                <button className="px-3 py-1 bg-accent-color text-white rounded-lg text-sm font-medium 
+                                 hover:bg-accent-hover transition-colors duration-200 focus-effect 
+                                 active-effect">
+                  1
+                </button>
+                <button className="px-3 py-1 border border-border-color rounded-lg text-text-primary 
+                                 hover:bg-hover-color transition-all duration-200 text-sm font-medium 
+                                 focus-effect active-effect">
+                  2
+                </button>
+                <button className="px-3 py-1 border border-border-color rounded-lg text-text-primary 
+                                 hover:bg-hover-color transition-all duration-200 text-sm font-medium 
+                                 focus-effect active-effect">
+                  3
+                </button>
+                <button className="px-3 py-1 border border-border-color rounded-lg text-text-primary 
+                                 hover:bg-hover-color transition-all duration-200 text-sm font-medium 
+                                 focus-effect active-effect">
+                  下一頁
+                </button>
               </div>
             </div>
           </div>
@@ -208,10 +303,11 @@ export default function Home() {
         {/* 側邊資訊區 */}
         <div className="space-y-6">
           {/* 待辦事項 */}
-          <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 p-6">
+          <div className="bg-background-primary rounded-lg shadow-sm hover:shadow-md transition-all 
+                         duration-200 p-6">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-gray-800">待辦事項</h2>
-              <button className="text-blue-500 hover:text-blue-600 text-sm">
+              <h2 className="text-lg font-bold text-text-primary">待辦事項</h2>
+              <button className="text-accent-color hover:text-accent-hover text-sm focus-effect">
                 查看全部
               </button>
             </div>
@@ -221,25 +317,34 @@ export default function Home() {
                 { text: '客戶滿意度調查', deadline: '明天', priority: '中' },
                 { text: '系統更新通知', deadline: '後天', priority: '低' },
               ].map((todo, index) => (
-                <div key={index} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-lg">
-                  <input type="checkbox" className="rounded text-blue-500 focus:ring-blue-500" />
+                <div key={index} className="flex items-center space-x-3 p-2 hover:bg-hover-color rounded-lg 
+                                          transition-colors duration-200 group">
+                  <input 
+                    type="checkbox" 
+                    className="rounded text-accent-color focus:ring-accent-color transition-colors 
+                              duration-200"
+                  />
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
-                      <p className="text-sm text-gray-800">{todo.text}</p>
+                      <p className="text-sm text-text-primary group-hover:text-accent-color 
+                                  transition-colors duration-200">
+                        {todo.text}
+                      </p>
                       <span className={`text-xs px-2 py-1 rounded-full ${
-                        todo.priority === '高' ? 'bg-red-100 text-red-600' :
-                        todo.priority === '中' ? 'bg-yellow-100 text-yellow-600' :
-                        'bg-green-100 text-green-600'
+                        todo.priority === '高' ? 'bg-error-light text-error-color' :
+                        todo.priority === '中' ? 'bg-warning-light text-warning-color' :
+                        'bg-success-light text-success-color'
                       }`}>
                         {todo.priority}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">截止：{todo.deadline}</p>
+                    <p className="text-xs text-text-secondary mt-1">截止：{todo.deadline}</p>
                   </div>
                 </div>
               ))}
             </div>
-            <button className="mt-4 text-sm text-blue-500 hover:text-blue-600 flex items-center">
+            <button className="mt-4 text-sm text-accent-color hover:text-accent-hover flex items-center 
+                             focus-effect">
               <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
@@ -248,10 +353,11 @@ export default function Home() {
           </div>
 
           {/* 人員在線狀態 */}
-          <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 p-6">
+          <div className="bg-background-primary rounded-lg shadow-sm hover:shadow-md transition-all 
+                         duration-200 p-6">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-gray-800">人員在線狀態</h2>
-              <span className="text-sm text-gray-500">5/8 在線</span>
+              <h2 className="text-lg font-bold text-text-primary">人員在線狀態</h2>
+              <span className="text-sm text-text-secondary">5/8 在線</span>
             </div>
             <div className="space-y-4">
               {[
@@ -261,32 +367,39 @@ export default function Home() {
                 { name: '張小芳', role: '專案經理', status: '線上', time: '15分鐘' },
                 { name: '李小美', role: '系統工程師', status: '線上', time: '45分鐘' },
               ].map((member, index) => (
-                <div key={index} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg">
+                <div key={index} className="flex items-center justify-between p-2 hover:bg-hover-color 
+                                          rounded-lg transition-colors duration-200 group">
                   <div className="flex items-center space-x-3">
                     <div className="relative">
-                      <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
+                      <div className="h-8 w-8 rounded-lg bg-accent-light text-accent-color flex 
+                                    items-center justify-center font-medium group-hover:scale-110 
+                                    transition-transform duration-200">
                         {member.name.charAt(0)}
                       </div>
-                      <div className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white ${
-                        member.status === '線上' ? 'bg-green-400' :
-                        member.status === '忙碌' ? 'bg-yellow-400' :
-                        'bg-gray-400'
-                      }`}></div>
+                      <div className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 
+                                     border-background-primary transition-colors duration-200 ${
+                        member.status === '線上' ? 'bg-success-color' :
+                        member.status === '忙碌' ? 'bg-warning-color' :
+                        'bg-text-secondary'
+                      }`} />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-800">{member.name}</p>
-                      <p className="text-xs text-gray-500">{member.role}</p>
+                      <p className="text-sm font-medium text-text-primary group-hover:text-accent-color 
+                                  transition-colors duration-200">
+                        {member.name}
+                      </p>
+                      <p className="text-xs text-text-secondary">{member.role}</p>
                     </div>
                   </div>
                   <div className="text-right">
                     <span className={`px-2 py-1 text-xs rounded-full ${
-                      member.status === '線上' ? 'bg-green-100 text-green-600' :
-                      member.status === '忙碌' ? 'bg-yellow-100 text-yellow-600' :
-                      'bg-gray-100 text-gray-600'
+                      member.status === '線上' ? 'bg-success-light text-success-color' :
+                      member.status === '忙碌' ? 'bg-warning-light text-warning-color' :
+                      'bg-background-secondary text-text-secondary'
                     }`}>
                       {member.status}
                     </span>
-                    <p className="text-xs text-gray-500 mt-1">最後更新：{member.time}</p>
+                    <p className="text-xs text-text-secondary mt-1">最後更新：{member.time}</p>
                   </div>
                 </div>
               ))}
@@ -294,18 +407,25 @@ export default function Home() {
           </div>
         
           {/* 近期活動日曆 */}
-          <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 p-6">
+          <div className="bg-background-primary rounded-lg shadow-sm hover:shadow-md transition-all 
+                         duration-200 p-6">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-gray-800">近期活動</h2>
+              <h2 className="text-lg font-bold text-text-primary">近期活動</h2>
               <div className="flex space-x-2">
-                <button className="p-1 rounded hover:bg-gray-100">
-                  <svg className="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                <button className="p-1 rounded hover:bg-hover-color transition-colors duration-200 
+                                 focus-effect">
+                  <svg className="h-5 w-5 text-text-secondary hover:text-text-primary" fill="none" 
+                       stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                          d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
-                <button className="p-1 rounded hover:bg-gray-100">
-                  <svg className="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                <button className="p-1 rounded hover:bg-hover-color transition-colors duration-200 
+                                 focus-effect">
+                  <svg className="h-5 w-5 text-text-secondary hover:text-text-primary" fill="none" 
+                       stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                          d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
               </div>
@@ -323,16 +443,20 @@ export default function Home() {
               ].map((day, index) => (
                 <div key={index} className="space-y-2">
                   <div className="flex items-center">
-                    <div className="w-16 text-sm font-medium text-gray-600">{day.date}</div>
-                    <div className="flex-1 h-px bg-gray-200"></div>
+                    <div className="w-16 text-sm font-medium text-text-primary">{day.date}</div>
+                    <div className="flex-1 h-px bg-border-color" />
                   </div>
                   <div className="ml-16 space-y-2">
                     {day.events.map((event, eventIndex) => (
                       <div key={eventIndex} className="flex items-center space-x-3">
-                        <span className="text-sm text-gray-500">{event.time}</span>
-                        <div className="flex-1 p-2 rounded-lg bg-gray-50 hover:bg-gray-100">
-                          <p className="text-sm font-medium text-gray-800">{event.title}</p>
-                          <p className="text-xs text-gray-500">{event.type}</p>
+                        <span className="text-sm text-text-secondary">{event.time}</span>
+                        <div className="flex-1 p-2 rounded-lg bg-background-secondary hover:bg-hover-color 
+                                      transition-colors duration-200 group">
+                          <p className="text-sm font-medium text-text-primary group-hover:text-accent-color 
+                                      transition-colors duration-200">
+                            {event.title}
+                          </p>
+                          <p className="text-xs text-text-secondary">{event.type}</p>
                         </div>
                       </div>
                     ))}
@@ -340,7 +464,9 @@ export default function Home() {
                 </div>
               ))}
             </div>
-            <button className="mt-4 w-full py-2 text-sm text-blue-500 hover:text-blue-600 flex items-center justify-center border border-blue-200 rounded-md hover:bg-blue-50">
+            <button className="mt-4 w-full py-2 text-sm text-accent-color hover:text-accent-hover 
+                             flex items-center justify-center border border-border-color rounded-lg 
+                             hover:bg-hover-color transition-all duration-200 focus-effect active-effect">
               查看完整行事曆
             </button>
           </div>
