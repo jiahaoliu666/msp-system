@@ -76,33 +76,25 @@ export default function Home() {
             title: '待處理工單', 
             value: '23', 
             icon: '🔧',
-            color: 'blue',
-            trend: 'up',
-            trendValue: '15%'
+            color: 'blue'
           },
           { 
             title: '待辦事項', 
             value: '2', 
             icon: '📝',
-            color: 'green',
-            trend: 'down',
-            trendValue: '8%'
+            color: 'green'
           },
           { 
             title: '在線客戶', 
             value: '12', 
             icon: '👥',
-            color: 'yellow',
-            trend: 'up',
-            trendValue: '12%'
+            color: 'yellow'
           },
           { 
             title: '在線人員', 
             value: '8', 
             icon: '👨‍💼',
-            color: 'purple',
-            trend: 'stable',
-            trendValue: '0%'
+            color: 'purple'
           },
         ].map((stat) => (
           <div 
@@ -116,38 +108,13 @@ export default function Home() {
             }`}
           >
             <div className="flex justify-between items-start">
-              <div className="space-y-2">
+              <div>
                 <p className="text-text-secondary text-sm font-medium">{stat.title}</p>
-                <h3 className="text-2xl font-bold text-text-primary group-hover:scale-105 
-                             transform transition-transform duration-200">
+                <h3 className="text-2xl font-bold text-text-primary">
                   {stat.value}
                 </h3>
-                <div className={`flex items-center text-sm ${
-                  stat.trend === 'up' ? 'text-success-color' :
-                  stat.trend === 'down' ? 'text-error-color' :
-                  'text-text-secondary'
-                }`}>
-                  {stat.trend === 'up' ? (
-                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                            d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                    </svg>
-                  ) : stat.trend === 'down' ? (
-                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                            d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6" />
-                    </svg>
-                  ) : (
-                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                            d="M5 12h14" />
-                    </svg>
-                  )}
-                  <span>{stat.trendValue} 相較上週</span>
-                </div>
               </div>
-              <span className="text-2xl transform transition-transform duration-200 
-                             group-hover:scale-110 group-hover:rotate-12">{stat.icon}</span>
+              <span className="text-2xl">{stat.icon}</span>
             </div>
           </div>
         ))}

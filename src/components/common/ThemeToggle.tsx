@@ -6,7 +6,7 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="relative p-2 rounded-lg bg-background-secondary hover:bg-hover-color 
+      className="relative p-2 rounded-lg bg-background-tertiary hover:bg-hover-color 
                 transition-all duration-300 focus:outline-none focus:ring-2 
                 focus:ring-accent-color focus:ring-offset-2 
                 dark:focus:ring-offset-background-primary group"
@@ -58,10 +58,12 @@ export default function ThemeToggle() {
       <span className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 px-3 py-1.5 
                      bg-background-primary border border-border-color rounded-lg text-xs
                      opacity-0 group-hover:opacity-100 transition-all duration-200
-                     whitespace-nowrap shadow-sm z-50 font-medium text-text-primary">
+                     whitespace-nowrap shadow-sm z-50 font-medium text-text-primary
+                     dark:bg-background-tertiary">
         {theme === 'dark' ? '切換至淺色模式' : '切換至深色模式'}
         <span className="absolute -top-1 left-1/2 transform -translate-x-1/2 rotate-45 
-                      w-2 h-2 bg-background-primary border-t border-l border-border-color" />
+                      w-2 h-2 bg-background-primary border-t border-l border-border-color
+                      dark:bg-background-tertiary" />
       </span>
     </button>
   );

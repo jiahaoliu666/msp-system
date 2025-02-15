@@ -12,52 +12,66 @@
     /* 淺色模式 - 主要顏色 */
     --background-primary: #ffffff;
     --background-secondary: #f8fafc;
-    --text-primary: #1a1f36;
-    --text-secondary: #4a5578;
-    --border-color: #e5e9f2;
+    --background-tertiary: #f3f4f6;
+    --text-primary: #1e293b;
+    --text-secondary: #475569;
+    --border-color: #e2e8f0;
     --hover-color: #f1f5f9;
+    --divider-color: #e2e8f0;
     
     /* 淺色模式 - 強調色 */
-    --accent-color: #2563eb;
-    --accent-hover: #1d4ed8;
-    --accent-light: #e6eeff;
-    --accent-dark: #1e40af;
+    --accent-color: #3b82f6;
+    --accent-hover: #2563eb;
+    --accent-light: #eff6ff;
+    --accent-dark: #1d4ed8;
+    --accent-contrast: #ffffff;
     
     /* 淺色模式 - 狀態顏色 */
-    --success-color: #059669;
+    --success-color: #10b981;
     --success-light: #ecfdf5;
-    --warning-color: #d97706;
+    --success-dark: #059669;
+    --warning-color: #f59e0b;
     --warning-light: #fffbeb;
-    --error-color: #dc2626;
+    --warning-dark: #d97706;
+    --error-color: #ef4444;
     --error-light: #fef2f2;
-    --info-color: #2563eb;
-    --info-light: #e6eeff;
+    --error-dark: #dc2626;
+    --info-color: #3b82f6;
+    --info-light: #eff6ff;
+    --info-dark: #2563eb;
   }
 
   .dark {
     /* 深色模式 - 主要顏色 */
-    --background-primary: #111827;
-    --background-secondary: #1e293b;
+    --background-primary: #1a1f2d;
+    --background-secondary: #111827;
+    --background-tertiary: #1e2433;
     --text-primary: #f1f5f9;
     --text-secondary: #94a3b8;
-    --border-color: #2d3a4f;
-    --hover-color: #1e293b;
+    --border-color: #2d3748;
+    --hover-color: #1e2433;
+    --divider-color: #2d3748;
     
     /* 深色模式 - 強調色 */
-    --accent-color: #3b82f6;
-    --accent-hover: #60a5fa;
-    --accent-light: #1e3a8a;
+    --accent-color: #60a5fa;
+    --accent-hover: #3b82f6;
+    --accent-light: #1e293b;
     --accent-dark: #93c5fd;
+    --accent-contrast: #ffffff;
     
     /* 深色模式 - 狀態顏色 */
-    --success-color: #10b981;
+    --success-color: #34d399;
     --success-light: #064e3b;
-    --warning-color: #f59e0b;
+    --success-dark: #10b981;
+    --warning-color: #fbbf24;
     --warning-light: #452c05;
-    --error-color: #ef4444;
+    --warning-dark: #f59e0b;
+    --error-color: #f87171;
     --error-light: #450a0a;
-    --info-color: #3b82f6;
-    --info-light: #1e3a8a;
+    --error-dark: #ef4444;
+    --info-color: #60a5fa;
+    --info-light: #1e293b;
+    --info-dark: #3b82f6;
   }
 
   /* 基礎元素樣式 */
@@ -106,18 +120,62 @@
   }
 
   /* 按鈕基礎樣式 */
-  button {
-    @apply transition-all duration-200 rounded-lg font-medium
-           focus:outline-none focus:ring-2 focus:ring-accent-color focus:ring-offset-2
-           dark:focus:ring-offset-background-primary
+  .btn {
+    @apply inline-flex items-center justify-center px-4 py-2 rounded-lg font-medium
+           transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2
            disabled:opacity-60 disabled:cursor-not-allowed;
+  }
+
+  .btn-primary {
+    @apply bg-accent-color hover:bg-accent-hover text-accent-contrast
+           focus:ring-accent-color;
+  }
+
+  .btn-secondary {
+    @apply bg-background-tertiary hover:bg-hover-color text-text-primary
+           border border-border-color focus:ring-accent-color;
   }
 
   /* 卡片樣式 */
   .card {
-    @apply bg-background-primary border border-border-color rounded-lg
-           shadow-sm hover:shadow-md transition-all duration-200
-           dark:shadow-none dark:hover:shadow-none;
+    @apply bg-background-primary border border-border-color rounded-lg shadow-sm
+           hover:shadow-md transition-all duration-200;
+  }
+
+  /* 導航項目樣式 */
+  .nav-item {
+    @apply flex items-center px-4 py-2 text-text-secondary hover:text-text-primary
+           hover:bg-hover-color rounded-lg transition-all duration-200;
+  }
+
+  .nav-item-active {
+    @apply text-accent-color bg-accent-light hover:bg-accent-light;
+  }
+
+  /* 分隔線 */
+  .divider {
+    @apply border-t border-divider-color my-4;
+  }
+
+  /* 標籤樣式 */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-success {
+    @apply bg-success-light text-success-color;
+  }
+
+  .badge-warning {
+    @apply bg-warning-light text-warning-color;
+  }
+
+  .badge-error {
+    @apply bg-error-light text-error-color;
+  }
+
+  .badge-info {
+    @apply bg-info-light text-info-color;
   }
 
   /* 表格樣式 */
@@ -205,45 +263,11 @@
 
 /* 自定義組件樣式 */
 @layer components {
-  .btn-primary {
-    @apply px-4 py-2 bg-accent-color text-white rounded-lg
-           hover:bg-accent-hover transition-all duration-200
-           focus:outline-none focus:ring-2 focus:ring-accent-color focus:ring-offset-2
-           active:scale-95;
-  }
-
-  .btn-secondary {
-    @apply px-4 py-2 bg-background-primary text-text-primary border border-border-color
-           rounded-lg hover:bg-hover-color transition-all duration-200
-           focus:outline-none focus:ring-2 focus:ring-accent-color focus:ring-offset-2
-           active:scale-95;
-  }
-
   .input-group {
     @apply flex flex-col space-y-1;
   }
 
   .input-label {
     @apply text-sm font-medium text-text-secondary;
-  }
-
-  .badge {
-    @apply px-2 py-1 text-xs font-medium rounded-full;
-  }
-
-  .badge-success {
-    @apply bg-success-light text-success-color;
-  }
-
-  .badge-warning {
-    @apply bg-warning-light text-warning-color;
-  }
-
-  .badge-error {
-    @apply bg-error-light text-error-color;
-  }
-
-  .badge-info {
-    @apply bg-info-light text-info-color;
   }
 }
