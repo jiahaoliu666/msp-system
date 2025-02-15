@@ -334,6 +334,7 @@ export default function App(props: AppProps) {
       <Head>
         <title>MetaAge MSP</title>
         <meta name="description" content="MetaAge MSP System" />
+        <link rel="icon" href="/msplogo.png" />
       </Head>
       <NextThemesProvider attribute="class" defaultTheme="light" enableSystem={false}>
         <ThemeProvider>
