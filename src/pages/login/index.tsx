@@ -152,8 +152,15 @@ export default function Login() {
       <div className="w-full lg:w-1/2 xl:w-1/3 flex items-center justify-center p-8 sm:p-12 bg-gradient-to-br from-blue-50 to-indigo-50">
         <div className="w-full max-w-md">
           <div className="bg-white rounded-2xl shadow-xl p-8 sm:p-10 transition-all duration-300 hover:shadow-2xl">
-            <h2 className="text-3xl font-bold text-gray-800 mb-2 text-center">歡迎回來</h2>
-            <p className="text-gray-600 mb-8 text-center">請登入您的帳號以繼續</p>
+            <div className="text-center mb-8">
+              <img
+                src="/metaage-logo1.png"
+                alt="Logo"
+                className="h-12 mx-auto transform transition-transform duration-300 hover:scale-105 mb-4 lg:hidden"
+              />
+              <h2 className="text-3xl font-bold text-gray-800 mb-2">歡迎回來</h2>
+              <p className="text-gray-600 mb-8">請登入您的帳號以繼續</p>
+            </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
