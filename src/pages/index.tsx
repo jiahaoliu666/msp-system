@@ -15,32 +15,41 @@ export default function Home() {
   };
 
   return (
-    <div className="p-8">
+    <div className="p-6 md:p-8 bg-gray-50/30">
       {/* 頁面標題與操作按鈕 */}
-      <div className="mb-4">
+      <div className="mb-6">
         <div className="flex items-center text-sm text-gray-500 mb-4">
-          <a href="#" className="hover:text-blue-600 transition-colors duration-200">首頁</a>
-          <svg className="h-4 w-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <a href="#" className="hover:text-blue-600 transition-colors duration-200 flex items-center gap-1">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            首頁
+          </a>
+          <svg className="h-4 w-4 mx-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
-          <span className="text-gray-700">總覽</span>
+          <span className="text-gray-700 font-medium">總覽</span>
         </div>
         <div className="mb-4 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">總覽</h1>
-            <p className="text-gray-600 mt-1">提摩超人，歡迎回來！</p>
+            <h1 className="text-2xl font-bold text-gray-800 tracking-tight">總覽儀表板</h1>
+            <p className="text-gray-600 mt-1 text-sm">歡迎回來！這是您的即時系統概況。</p>
           </div>
           <div className="flex space-x-3">
             <div className="relative">
-              <button className="px-4 py-2 bg-white border rounded-lg hover:bg-gray-50 text-gray-600 flex items-center transition-all duration-200 shadow-sm hover:shadow-md">
-                <span className="mr-2">📅</span>
+              <button className="px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-700 flex items-center transition-all duration-200 shadow-sm hover:shadow group">
+                <span className="mr-2">
+                  <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </span>
                 本週
-                <svg className="h-5 w-5 ml-2 transform transition-transform duration-200 group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="h-4 w-4 ml-2 transform transition-transform duration-200 group-hover:rotate-180 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
             </div>
-            <button className="p-2 bg-white border rounded-lg hover:bg-gray-50 text-gray-600 transition-all duration-200 shadow-sm hover:shadow-md">
+            <button className="p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600 transition-all duration-200 shadow-sm hover:shadow-md">
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
               </svg>
@@ -52,10 +61,54 @@ export default function Home() {
       {/* 快速統計卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {[
-          { title: '待處理工單', value: '23', icon: '🔧', color: 'blue' },
-          { title: '待辦事項', value: '2', icon: '📝', color: 'green' },
-          { title: '在線客戶', value: '12', icon: '👥', color: 'yellow' },
-          { title: '在線人員', value: '8', icon: '👤', color: 'purple' },
+          { 
+            title: '待處理工單', 
+            value: '23', 
+            icon: (
+              <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+            ),
+            color: 'blue',
+            trend: '+5%',
+            trendUp: true
+          },
+          { 
+            title: '待辦事項', 
+            value: '2', 
+            icon: (
+              <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+            ),
+            color: 'green',
+            trend: '-2%',
+            trendUp: false
+          },
+          { 
+            title: '在線客戶', 
+            value: '12', 
+            icon: (
+              <svg className="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            ),
+            color: 'yellow',
+            trend: '+8%',
+            trendUp: true
+          },
+          { 
+            title: '在線人員', 
+            value: '8', 
+            icon: (
+              <svg className="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            ),
+            color: 'purple',
+            trend: '+3%',
+            trendUp: true
+          },
         ].map((stat) => (
           <div 
             key={stat.title} 
@@ -64,16 +117,28 @@ export default function Home() {
               stat.color === 'yellow' ? 'border-yellow-500 hover:border-yellow-600' :
               stat.color === 'green' ? 'border-green-500 hover:border-green-600' :
               'border-purple-500 hover:border-purple-600'
-            }`}
+            } group`}
           >
             <div className="flex justify-between items-start">
-              <div>
+              <div className="space-y-2">
                 <p className="text-gray-500 text-sm font-medium">{stat.title}</p>
-                <div className="flex items-center mt-2">
+                <div className="flex items-baseline space-x-2">
                   <h3 className="text-2xl font-bold text-gray-800">{stat.value}</h3>
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                    stat.trendUp ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'
+                  }`}>
+                    {stat.trend}
+                  </span>
                 </div>
               </div>
-              <span className="text-2xl transform transition-transform duration-200 hover:scale-110 cursor-pointer">{stat.icon}</span>
+              <div className={`p-2 rounded-lg ${
+                stat.color === 'blue' ? 'bg-blue-50 group-hover:bg-blue-100' :
+                stat.color === 'yellow' ? 'bg-yellow-50 group-hover:bg-yellow-100' :
+                stat.color === 'green' ? 'bg-green-50 group-hover:bg-green-100' :
+                'bg-purple-50 group-hover:bg-purple-100'
+              } transition-colors duration-200`}>
+                {stat.icon}
+              </div>
             </div>
           </div>
         ))}
@@ -81,20 +146,20 @@ export default function Home() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* 主要內容卡片 - 最近活動 */}
-        <div className="lg:col-span-2 bg-white rounded-lg shadow-lg">
+        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm">
           <div className="p-6">
             <div className="flex justify-between items-center mb-6">
               <div className="flex items-center space-x-4">
                 <h2 className="text-xl font-bold text-gray-800">最近活動</h2>
                 <div className="flex space-x-2">
-                  <span className="px-3 py-1 text-xs rounded-full bg-blue-100 text-blue-600 cursor-pointer hover:bg-blue-200">全部</span>
-                  <span className="px-3 py-1 text-xs rounded-full bg-gray-100 text-gray-600 cursor-pointer hover:bg-gray-200">工單</span>
-                  <span className="px-3 py-1 text-xs rounded-full bg-gray-100 text-gray-600 cursor-pointer hover:bg-gray-200">合約</span>
+                  <span className="px-3 py-1 text-xs font-medium rounded-full bg-blue-50 text-blue-600 cursor-pointer hover:bg-blue-100 transition-colors duration-200">全部</span>
+                  <span className="px-3 py-1 text-xs font-medium rounded-full bg-gray-50 text-gray-600 cursor-pointer hover:bg-gray-100 transition-colors duration-200">工單</span>
+                  <span className="px-3 py-1 text-xs font-medium rounded-full bg-gray-50 text-gray-600 cursor-pointer hover:bg-gray-100 transition-colors duration-200">合約</span>
                 </div>
               </div>
               <div className="flex space-x-2">
-                <button className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors duration-150 flex items-center">
-                  <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button className="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200 flex items-center text-gray-700 text-sm font-medium shadow-sm hover:shadow group">
+                  <svg className="h-4 w-4 mr-2 text-gray-500 group-hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                   </svg>
                   篩選
@@ -111,38 +176,49 @@ export default function Home() {
                 { title: '設備更新需求', client: '未來網路公司', type: '需求', time: '2天前', status: '待確認', priority: '中', assignee: '陳小明' },
                 { title: '資安稽核報告', client: '數位金融公司', type: '報告', time: '3天前', status: '已完成', priority: '高', assignee: '林小美' },
               ].map((activity, index) => (
-                <div key={index} className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition-colors duration-150">
+                <div key={index} className="group flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition-all duration-200 border border-transparent hover:border-gray-200">
                   <div className="flex items-center space-x-4">
-                    <div className={`w-2 h-2 rounded-full ${
-                      activity.status === '待處理' ? 'bg-yellow-400' :
-                      activity.status === '進行中' ? 'bg-blue-400' :
-                      activity.status === '已完成' ? 'bg-green-400' : 'bg-gray-400'
+                    <div className={`w-2 h-2 rounded-full ring-4 ${
+                      activity.status === '待處理' ? 'bg-yellow-400 ring-yellow-100' :
+                      activity.status === '進行中' ? 'bg-blue-400 ring-blue-100' :
+                      activity.status === '已完成' ? 'bg-green-400 ring-green-100' : 'bg-gray-400 ring-gray-100'
                     }`} />
                     <div>
                       <div className="flex items-center space-x-2">
-                        <h3 className="font-medium text-gray-800">{activity.title}</h3>
-                        <span className={`text-xs px-2 py-1 rounded-full ${
-                          activity.priority === '高' ? 'bg-red-100 text-red-600' :
-                          activity.priority === '中' ? 'bg-yellow-100 text-yellow-600' :
-                          'bg-green-100 text-green-600'
+                        <h3 className="font-medium text-gray-800 group-hover:text-blue-600 transition-colors duration-200">{activity.title}</h3>
+                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                          activity.priority === '高' ? 'bg-red-50 text-red-600' :
+                          activity.priority === '中' ? 'bg-yellow-50 text-yellow-600' :
+                          'bg-green-50 text-green-600'
                         }`}>
                           {activity.priority}優先級
                         </span>
                       </div>
                       <div className="flex items-center space-x-2 mt-1">
                         <p className="text-sm text-gray-500">{activity.client}</p>
-                        <span className="text-gray-300">|</span>
-                        <p className="text-sm text-gray-500">負責人：{activity.assignee}</p>
+                        <span className="text-gray-300">•</span>
+                        <div className="flex items-center space-x-1">
+                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                          <p className="text-sm text-gray-500">{activity.assignee}</p>
+                        </div>
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center space-x-4">
-                    <span className="px-3 py-1 text-xs rounded-full bg-gray-100 text-gray-600">
+                    <span className={`px-3 py-1 text-xs font-medium rounded-full ${
+                      activity.type === '合約' ? 'bg-purple-50 text-purple-600' :
+                      activity.type === '工單' ? 'bg-blue-50 text-blue-600' :
+                      activity.type === '會議' ? 'bg-green-50 text-green-600' :
+                      activity.type === '需求' ? 'bg-yellow-50 text-yellow-600' :
+                      'bg-gray-50 text-gray-600'
+                    }`}>
                       {activity.type}
                     </span>
                     <span className="text-sm text-gray-500">{activity.time}</span>
-                    <button className="p-1 hover:bg-gray-100 rounded-full">
-                      <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button className="p-1 hover:bg-gray-100 rounded-lg transition-colors duration-200 group">
+                      <svg className="h-5 w-5 text-gray-400 group-hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                       </svg>
                     </button>
@@ -157,11 +233,11 @@ export default function Home() {
                 顯示 1 至 5 筆，共 24 筆
               </div>
               <div className="flex space-x-2">
-                <button className="px-3 py-1 border rounded-md text-gray-600 hover:bg-gray-50">上一頁</button>
-                <button className="px-3 py-1 bg-blue-500 text-white rounded-md">1</button>
-                <button className="px-3 py-1 border rounded-md text-gray-600 hover:bg-gray-50">2</button>
-                <button className="px-3 py-1 border rounded-md text-gray-600 hover:bg-gray-50">3</button>
-                <button className="px-3 py-1 border rounded-md text-gray-600 hover:bg-gray-50">下一頁</button>
+                <button className="px-3 py-1 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-all duration-200 text-sm font-medium">上一頁</button>
+                <button className="px-3 py-1 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors duration-200">1</button>
+                <button className="px-3 py-1 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-all duration-200 text-sm font-medium">2</button>
+                <button className="px-3 py-1 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-all duration-200 text-sm font-medium">3</button>
+                <button className="px-3 py-1 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-all duration-200 text-sm font-medium">下一頁</button>
               </div>
             </div>
           </div>
@@ -318,3 +394,4 @@ export default function Home() {
     </div>
   );
 }
+

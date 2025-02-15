@@ -16,6 +16,7 @@
     "@aws-sdk/protocol-http": "^3.370.0",
     "@aws-sdk/s3-request-presigner": "^3.744.0",
     "@headlessui/react": "^2.2.0",
+    "@heroicons/react": "^2.2.0",
     "@smithy/fetch-http-handler": "^5.0.1",
     "@smithy/node-http-handler": "^4.0.2",
     "@types/aws-sdk": "^0.0.42",

@@ -101,10 +101,10 @@ const AppContent: React.FC<AppProps> = ({ Component, pageProps }) => {
   // 如果正在加載認證狀態，顯示加載中
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background-secondary">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50/30">
         <div className="flex flex-col items-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-color"></div>
-          <p className="text-text-secondary">載入中...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+          <p className="text-gray-600 font-medium">載入中...</p>
         </div>
       </div>
     );
@@ -118,10 +118,10 @@ const AppContent: React.FC<AppProps> = ({ Component, pageProps }) => {
   }
 
   return (
-    <div className="min-h-screen bg-background-secondary">
+    <div className="min-h-screen bg-gray-50/30">
       {/* 頂部導航區 */}
       {!isStandalonePage && (
-        <nav className="bg-background-primary border-b border-border-color fixed w-full top-0 z-[50]">
+        <nav className="bg-white border-b border-gray-200 fixed w-full top-0 z-[50] shadow-sm">
           <div className="w-full px-4">
             <div className="flex items-center justify-between h-16">
               {/* 左側區域：漢堡按鈕、Logo 和搜尋框 */}
@@ -129,14 +129,14 @@ const AppContent: React.FC<AppProps> = ({ Component, pageProps }) => {
                 {/* 漢堡按鈕 */}
                 <button
                   onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                  className="p-2 rounded-lg hover:bg-hover-color transition-all duration-200 relative w-10 h-10 flex items-center justify-center group"
+                  className="p-2 rounded-lg hover:bg-gray-50 transition-all duration-200 relative w-10 h-10 flex items-center justify-center group"
                 >
                   <div className="w-6 flex flex-col items-center justify-center gap-[5px]">
-                    <span className={`block h-[2px] bg-text-primary rounded-full transition-all duration-300 ease-in-out transform origin-center
+                    <span className={`block h-[2px] bg-gray-600 rounded-full transition-all duration-300 ease-in-out transform origin-center
                       ${isSidebarOpen ? 'w-4 rotate-45 translate-y-[7px]' : 'w-6'}`}></span>
-                    <span className={`block h-[2px] bg-text-primary rounded-full transition-all duration-300 ease-in-out transform
+                    <span className={`block h-[2px] bg-gray-600 rounded-full transition-all duration-300 ease-in-out transform
                       ${isSidebarOpen ? 'w-0 opacity-0' : 'w-6 opacity-100'}`}></span>
-                    <span className={`block h-[2px] bg-text-primary rounded-full transition-all duration-300 ease-in-out transform origin-center
+                    <span className={`block h-[2px] bg-gray-600 rounded-full transition-all duration-300 ease-in-out transform origin-center
                       ${isSidebarOpen ? 'w-4 -rotate-45 -translate-y-[7px]' : 'w-6'}`}></span>
                   </div>
                 </button>
@@ -146,10 +146,10 @@ const AppContent: React.FC<AppProps> = ({ Component, pageProps }) => {
                   <img 
                     src="/msp-logo.png" 
                     alt="Logo" 
-                    className="h-8 w-8 transition-all duration-300 hover:scale-110 bg-background-primary" 
+                    className="h-8 w-8 transition-all duration-300 hover:scale-110" 
                   />
                   <Link href="/">
-                    <span className="text-lg font-bold text-text-primary whitespace-nowrap hover:text-accent-color transition-colors duration-200">
+                    <span className="text-lg font-bold text-gray-800 whitespace-nowrap hover:text-blue-600 transition-colors duration-200">
                       MetaAge MSP 
                     </span>
                   </Link>
@@ -160,12 +160,12 @@ const AppContent: React.FC<AppProps> = ({ Component, pageProps }) => {
                   <input
                     type="text"
                     placeholder="搜尋客戶、工單或待辦..."
-                    className="w-full pl-10 pr-4 py-2 border border-border-color rounded-lg text-sm 
-                                   bg-background-primary text-text-primary placeholder-text-secondary
-                                   focus:outline-none focus:ring-2 focus:ring-accent-color focus:border-transparent 
-                                   transition-all duration-200"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm 
+                             bg-white text-gray-800 placeholder-gray-400
+                             focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent 
+                             transition-all duration-200"
                   />
-                  <div className="absolute left-3 top-2.5 text-text-secondary">
+                  <div className="absolute left-3 top-2.5 text-gray-400">
                     <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
@@ -177,8 +177,8 @@ const AppContent: React.FC<AppProps> = ({ Component, pageProps }) => {
               <div className="flex items-center gap-4">
                 {/* 快速建立按鈕與下拉選單 */}
                 <div className="relative group">
-                  <button className="flex items-center gap-2 px-4 py-2 bg-accent-color text-white rounded-lg 
-                                        hover:bg-accent-hover transition-all duration-200 whitespace-nowrap">
+                  <button className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg 
+                                   hover:bg-blue-600 transition-all duration-200 whitespace-nowrap shadow-sm">
                     <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
@@ -188,17 +188,18 @@ const AppContent: React.FC<AppProps> = ({ Component, pageProps }) => {
                     </svg>
                   </button>
                   {/* 下拉選單 */}
-                  <div className="absolute right-0 mt-2 w-48 bg-background-primary rounded-lg shadow-lg py-1 z-[60] invisible group-hover:visible 
-                                      transition-all duration-200 opacity-0 group-hover:opacity-100 transform group-hover:translate-y-0 translate-y-1">
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-[60] invisible group-hover:visible 
+                                transition-all duration-200 opacity-0 group-hover:opacity-100 transform group-hover:translate-y-0 translate-y-1
+                                border border-gray-200">
                     <a 
                       onClick={(e) => {
                         e.preventDefault();
                         setIsTicketModalOpen(true);
                       }}
                       href="#" 
-                      className="block px-4 py-2 text-sm text-text-primary hover:bg-hover-color flex items-center"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center group"
                     >
-                      <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="h-4 w-4 mr-2 text-gray-400 group-hover:text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                       </svg>
                       建立工單
@@ -209,9 +210,9 @@ const AppContent: React.FC<AppProps> = ({ Component, pageProps }) => {
                         setIsTodoModalOpen(true);
                       }}
                       href="#" 
-                      className="block px-4 py-2 text-sm text-text-primary hover:bg-hover-color flex items-center"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center group"
                     >
-                      <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="h-4 w-4 mr-2 text-gray-400 group-hover:text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                       </svg>
                       建立待辦
@@ -220,12 +221,12 @@ const AppContent: React.FC<AppProps> = ({ Component, pageProps }) => {
                 </div>
 
                 {/* 通知圖標 */}
-                <button className="p-2 rounded-full hover:bg-hover-color transition-all duration-200 relative">
-                  <svg className="h-6 w-6 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button className="p-2 rounded-lg hover:bg-gray-50 transition-all duration-200 relative">
+                  <svg className="h-6 w-6 text-gray-500 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                           d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                   </svg>
-                  <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-error-color ring-2 ring-background-primary"></span>
+                  <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
                 </button>
 
                 {/* 深淺模式切換 */}
@@ -238,11 +239,11 @@ const AppContent: React.FC<AppProps> = ({ Component, pageProps }) => {
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                   >
                     <div className="text-right hidden sm:block">
-                      <div className="text-sm font-medium text-text-primary">{userRole || '用戶'}</div>
-                      <div className="text-xs text-text-secondary">{user?.email || ''}</div>
+                      <div className="text-sm font-medium text-gray-700">{userRole || '用戶'}</div>
+                      <div className="text-xs text-gray-500">{user?.email || ''}</div>
                     </div>
-                    <div className="h-8 w-8 rounded-full bg-gradient-to-r from-accent-color to-accent-hover 
-                                        flex items-center justify-center text-white">
+                    <div className="h-8 w-8 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 
+                                  flex items-center justify-center text-white shadow-sm">
                       <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                       </svg>
@@ -251,14 +252,14 @@ const AppContent: React.FC<AppProps> = ({ Component, pageProps }) => {
 
                   {/* 用戶選單 */}
                   {isUserMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-background-primary rounded-lg shadow-lg py-1 z-[60]
-                                  border border-border-color">
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-[60]
+                                  border border-gray-200">
                       <Link
                         href="/user-portal?tab=profile"
-                        className="block px-4 py-2 text-sm text-text-primary hover:bg-hover-color flex items-center"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center group"
                         onClick={() => setIsUserMenuOpen(false)}
                       >
-                        <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="h-4 w-4 mr-2 text-gray-400 group-hover:text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                                 d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
@@ -266,10 +267,10 @@ const AppContent: React.FC<AppProps> = ({ Component, pageProps }) => {
                       </Link>
                       <Link
                         href="/user-portal"
-                        className="block px-4 py-2 text-sm text-text-primary hover:bg-hover-color flex items-center"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center group"
                         onClick={() => setIsUserMenuOpen(false)}
                       >
-                        <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="h-4 w-4 mr-2 text-gray-400 group-hover:text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                                 d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                         </svg>
@@ -281,9 +282,9 @@ const AppContent: React.FC<AppProps> = ({ Component, pageProps }) => {
                           handleLogout();
                           setIsUserMenuOpen(false);
                         }}
-                        className="w-full text-left px-4 py-2 text-sm text-error-color hover:bg-hover-color flex items-center"
+                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center group"
                       >
-                        <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="h-4 w-4 mr-2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                                 d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                         </svg>
