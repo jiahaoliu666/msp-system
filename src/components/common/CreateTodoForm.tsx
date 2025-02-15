@@ -109,6 +109,12 @@ export default function CreateTodoForm({ isOpen, onClose }: CreateTodoFormProps)
     });
     setErrors({});
     setShowFeedback(null);
+    setNewTag('');
+  };
+
+  const handleClose = () => {
+    resetForm();
+    onClose();
   };
 
   const handleAddTag = () => {
@@ -132,14 +138,18 @@ export default function CreateTodoForm({ isOpen, onClose }: CreateTodoFormProps)
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
+      <div 
+        className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity"
+      ></div>
 
       <div className="relative min-h-screen flex items-center justify-center p-4">
-        <div className="relative bg-background-primary rounded-xl shadow-xl max-w-lg w-full p-6">
+        <div 
+          className="relative bg-background-primary rounded-xl shadow-xl max-w-lg w-full p-6"
+        >
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold text-text-primary">建立待辦事項</h2>
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="text-text-secondary hover:text-text-primary transition-colors"
             >
               <FiX size={24} />

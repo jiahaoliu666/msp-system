@@ -37,7 +37,7 @@ export default function Home() {
           </div>
           <div className="flex space-x-3">
             <div className="relative">
-              <button className="px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-700 flex items-center transition-all duration-200 shadow-sm hover:shadow group">
+              <button className="px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-700 flex items-center transition-all duration-200 shadow-sm hover:shadow">
                 <span className="mr-2">
                   <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -49,7 +49,7 @@ export default function Home() {
                 </svg>
               </button>
             </div>
-            <button className="p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600 transition-all duration-200 shadow-sm hover:shadow-md">
+            <button className="p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600 transition-all duration-200 shadow-sm hover:shadow">
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
               </svg>
@@ -64,55 +64,31 @@ export default function Home() {
           { 
             title: '待處理工單', 
             value: '23', 
-            icon: (
-              <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            ),
-            color: 'blue',
-            trend: '+5%',
-            trendUp: true
+            icon: '🔧',
+            color: 'blue'
           },
           { 
             title: '待辦事項', 
             value: '2', 
-            icon: (
-              <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-              </svg>
-            ),
-            color: 'green',
-            trend: '-2%',
-            trendUp: false
+            icon: '📝',
+            color: 'green'
           },
           { 
             title: '在線客戶', 
             value: '12', 
-            icon: (
-              <svg className="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-            ),
-            color: 'yellow',
-            trend: '+8%',
-            trendUp: true
+            icon: '👥',
+            color: 'yellow'
           },
           { 
             title: '在線人員', 
             value: '8', 
-            icon: (
-              <svg className="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-            ),
-            color: 'purple',
-            trend: '+3%',
-            trendUp: true
+            icon: '👨‍💼',
+            color: 'purple'
           },
         ].map((stat) => (
           <div 
             key={stat.title} 
-            className={`bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 p-6 border-l-4 ${
+            className={`bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 p-6 border-l-4 ${
               stat.color === 'blue' ? 'border-blue-500 hover:border-blue-600' :
               stat.color === 'yellow' ? 'border-yellow-500 hover:border-yellow-600' :
               stat.color === 'green' ? 'border-green-500 hover:border-green-600' :
@@ -122,23 +98,9 @@ export default function Home() {
             <div className="flex justify-between items-start">
               <div className="space-y-2">
                 <p className="text-gray-500 text-sm font-medium">{stat.title}</p>
-                <div className="flex items-baseline space-x-2">
-                  <h3 className="text-2xl font-bold text-gray-800">{stat.value}</h3>
-                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                    stat.trendUp ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'
-                  }`}>
-                    {stat.trend}
-                  </span>
-                </div>
+                <h3 className="text-2xl font-bold text-gray-800">{stat.value}</h3>
               </div>
-              <div className={`p-2 rounded-lg ${
-                stat.color === 'blue' ? 'bg-blue-50 group-hover:bg-blue-100' :
-                stat.color === 'yellow' ? 'bg-yellow-50 group-hover:bg-yellow-100' :
-                stat.color === 'green' ? 'bg-green-50 group-hover:bg-green-100' :
-                'bg-purple-50 group-hover:bg-purple-100'
-              } transition-colors duration-200`}>
-                {stat.icon}
-              </div>
+              <span className="text-2xl">{stat.icon}</span>
             </div>
           </div>
         ))}
@@ -146,7 +108,7 @@ export default function Home() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* 主要內容卡片 - 最近活動 */}
-        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm">
+        <div className="lg:col-span-2 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200">
           <div className="p-6">
             <div className="flex justify-between items-center mb-6">
               <div className="flex items-center space-x-4">
@@ -244,9 +206,9 @@ export default function Home() {
         </div>
 
         {/* 側邊資訊區 */}
-        <div className="space-y-8">
+        <div className="space-y-6">
           {/* 待辦事項 */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
+          <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 p-6">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold text-gray-800">待辦事項</h2>
               <button className="text-blue-500 hover:text-blue-600 text-sm">
@@ -286,7 +248,7 @@ export default function Home() {
           </div>
 
           {/* 人員在線狀態 */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
+          <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 p-6">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold text-gray-800">人員在線狀態</h2>
               <span className="text-sm text-gray-500">5/8 在線</span>
@@ -331,8 +293,8 @@ export default function Home() {
             </div>
           </div>
         
-          {/* 新增：近期活動日曆 */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
+          {/* 近期活動日曆 */}
+          <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 p-6">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold text-gray-800">近期活動</h2>
               <div className="flex space-x-2">

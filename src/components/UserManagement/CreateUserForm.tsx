@@ -237,13 +237,30 @@ export default function CreateUserForm({ isOpen, onClose, userRole }: CreateUser
     }
   };
 
+  const resetForm = () => {
+    setFormData({
+      email: '',
+      temporaryPassword: '',
+      organization: '',
+      role: '',
+    });
+    setError('');
+    setGeneratePassword(false);
+    setShowPassword(false);
+  };
+
+  const handleClose = () => {
+    resetForm();
+    onClose();
+  };
+
   if (!isOpen) {
     return null;
   }
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
-      <Dialog as="div" className="fixed inset-0 z-50 overflow-y-auto" onClose={onClose}>
+      <Dialog as="div" className="fixed inset-0 z-50 overflow-y-auto" onClose={() => {}}>
         <div className="min-h-screen px-4 text-center">
           <Transition.Child
             as={Fragment}
@@ -275,7 +292,7 @@ export default function CreateUserForm({ isOpen, onClose, userRole }: CreateUser
                   新增使用者
                 </Dialog.Title>
                 <button
-                  onClick={onClose}
+                  onClick={handleClose}
                   className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200 group"
                   aria-label="關閉"
                 >
@@ -476,7 +493,7 @@ export default function CreateUserForm({ isOpen, onClose, userRole }: CreateUser
                   <div className="flex justify-end space-x-4 pt-6 border-t">
                     <button
                       type="button"
-                      onClick={onClose}
+                      onClick={handleClose}
                       className="px-6 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-all duration-200 focus:ring-2 focus:ring-gray-200 flex items-center space-x-2"
                       disabled={loading}
                     >
