@@ -265,6 +265,7 @@ const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
                     >
                       <option value="phone">話機</option>
                       <option value="email">電子郵件</option>
+                      <option value="chat">LINE Official</option>
                       <option value="chat">其他通訊軟體</option>
                     </select>
                     <MdSource className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
