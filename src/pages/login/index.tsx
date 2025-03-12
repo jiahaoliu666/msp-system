@@ -1,3 +1,5 @@
+
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -130,17 +132,20 @@ export default function Login() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="flex min-h-screen bg-gradient-to-br from-blue-50 via-blue-100 to-indigo-100 dark:from-gray-900 dark:via-gray-800 dark:to-indigo-950">
       {/* Left side - Branding and Features */}
-      <div className="hidden lg:flex lg:w-1/2 xl:w-2/3 bg-gradient-to-br from-blue-500 to-indigo-700 items-center justify-center p-12">
-        <div className="max-w-2xl mb-16">
+      <div className="hidden lg:flex lg:w-1/2 xl:w-2/3 bg-gradient-to-br from-blue-600 to-indigo-800 items-center justify-center p-12 relative overflow-hidden">
+        <div className="absolute inset-0 bg-pattern opacity-10"></div>
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-500/20 to-indigo-600/20 backdrop-blur-sm"></div>
+        
+        <div className="max-w-2xl mb-16 relative z-10">
           <div className="text-center mb-12">
-            <img src="/metaage-logo1.png" alt="MetaAge Logo" className="h-24 mx-auto mb-8 filter drop-shadow-lg" />
-            <h1 className="text-4xl font-bold text-white mb-4 tracking-tight">專業可靠的 IT 解決方案</h1>
-            <p className="text-xl text-blue-100">助您企業數位轉型，成就卓越未來</p>
+            <img src="/metaage-logo1.png" alt="MetaAge Logo" className="h-28 mx-auto mb-10 filter drop-shadow-xl animate-float" />
+            <h1 className="text-5xl font-bold text-white mb-6 tracking-tight leading-tight">專業可靠的 IT 解決方案</h1>
+            <p className="text-xl text-blue-100 max-w-xl mx-auto">助您企業數位轉型，成就卓越未來</p>
           </div>
 
-          <div className="grid gap-8 mt-16">
+          <div className="grid gap-6 mt-16">
             <FeatureItem icon={<FaShieldAlt />} text="全方位支持，成就客戶的下一步" />
             <FeatureItem icon={<FaHeadset />} text="24/7 專業技術支援服務" />
             <FeatureItem icon={<FaRocket />} text="助您企業數位轉型起飛" />
@@ -149,56 +154,61 @@ export default function Login() {
       </div>
 
       {/* Right side - Login Form */}
-      <div className="w-full lg:w-1/2 xl:w-1/3 flex items-center justify-center p-8 sm:p-12 bg-gradient-to-br from-blue-50 to-indigo-50">
+      <div className="w-full lg:w-1/2 xl:w-1/3 flex items-center justify-center p-8 sm:p-12 bg-gradient-to-br from-white/80 to-blue-50/80 dark:from-gray-900/90 dark:to-indigo-950/90 backdrop-blur-sm">
         <div className="w-full max-w-md">
-          <div className="bg-white rounded-2xl shadow-xl p-8 sm:p-10 transition-all duration-300 hover:shadow-2xl">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 sm:p-10 transition-all duration-300 hover:shadow-2xl border border-gray-100 dark:border-gray-700">
             <div className="text-center mb-8">
               <img
                 src="/metaage-logo1.png"
                 alt="Logo"
-                className="h-12 mx-auto transform transition-transform duration-300 hover:scale-105 mb-4 lg:hidden"
+                className="h-14 mx-auto transform transition-transform duration-300 hover:scale-105 mb-6 lg:hidden"
               />
-              <h2 className="text-3xl font-bold text-gray-800 mb-2">歡迎回來</h2>
-              <p className="text-gray-600 mb-8">請登入您的帳號以繼續</p>
+              <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-3">歡迎回來</h2>
+              <p className="text-gray-600 dark:text-gray-300 mb-8">請登入您的帳號以繼續</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                  電子郵件
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ease-in-out"
-                  placeholder="請輸入您的電子郵件"
-                  required
-                />
-              </div>
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    電子郵件
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ease-in-out shadow-sm"
+                      placeholder="請輸入您的電子郵件"
+                      required
+                    />
+                  </div>
+                </div>
 
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                  密碼
-                </label>
-                <div className="relative">
-                  <input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ease-in-out pr-12"
-                    placeholder="請輸入您的密碼"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none transition-colors duration-200"
-                  >
-                    {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
-                  </button>
+                <div>
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    密碼
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ease-in-out pr-12 shadow-sm"
+                      placeholder="請輸入您的密碼"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none transition-colors duration-200"
+                      aria-label={showPassword ? "隱藏密碼" : "顯示密碼"}
+                    >
+                      {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -236,11 +246,11 @@ export default function Login() {
                 )}
               </button>
 
-              <div className="text-center">
+              <div className="text-center mt-4">
                 <button
                   type="button"
                   onClick={handleForgotPassword}
-                  className="text-blue-600 hover:text-blue-800 transition-colors duration-200 font-medium focus:outline-none focus:underline"
+                  className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors duration-200 font-medium focus:outline-none focus:underline"
                 >
                   忘記密碼？
                 </button>
@@ -248,7 +258,7 @@ export default function Login() {
             </form>
           </div>
 
-          <div className="mt-8 text-center text-sm text-gray-600">
+          <div className="mt-8 text-center text-sm text-gray-600 dark:text-gray-400">
             <p>© 2025 MetaAge MSP. All rights reserved.</p>
           </div>
         </div>
@@ -259,10 +269,12 @@ export default function Login() {
 
 function FeatureItem({ icon, text }: { icon: React.ReactElement<IconProps>; text: string }) {
   return (
-    <div className="flex items-center space-x-4 bg-white bg-opacity-10 rounded-lg p-4 transition-all duration-300 hover:bg-opacity-20 hover:transform hover:scale-105">
-      <div className="flex-shrink-0 text-blue-100 flex items-center">{React.cloneElement(icon, { className: "w-8 h-12" })}</div>
-      <div className="flex items-center translate-y-[1px] ">
-        <p className="text-lg font-medium text-white ">{text}</p>
+    <div className="flex items-center space-x-4 bg-white/10 rounded-xl p-5 backdrop-blur-sm transition-all duration-300 hover:bg-white/15 hover:transform hover:scale-102 hover:shadow-lg border border-white/10">
+      <div className="flex-shrink-0 text-blue-100 flex items-center justify-center bg-blue-700/30 p-3 rounded-lg">
+        {React.cloneElement(icon, { className: "w-6 h-6" })}
+      </div>
+      <div className="flex-1">
+        <p className="text-lg font-medium text-white">{text}</p>
       </div>
     </div>
   )
