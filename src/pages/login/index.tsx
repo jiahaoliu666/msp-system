@@ -136,36 +136,131 @@ export default function Login() {
         {/* 背景層 - 深邃的深藍色背景 */}
         <div className="absolute inset-0 bg-[#050b2e] opacity-90"></div>
         
-        {/* 低不透明度的幾何形狀 */}
+        {/* 科技網格背景 */}
+        <div className="absolute inset-0 bg-tech-grid opacity-20"></div>
+        
+        {/* 電路板效果 */}
+        <div className="absolute inset-0 circuit-pattern opacity-15"></div>
+        
+        {/* 3D透視網格 */}
+        <div className="absolute inset-0 overflow-hidden perspective-1000">
+          <div className="absolute top-0 left-0 w-full h-full transform-gpu rotate-x-60 scale-150 origin-center">
+            <div className="w-full h-full border border-cyan-500/5 grid grid-cols-6 grid-rows-6">
+              {Array.from({ length: 36 }).map((_, i) => (
+                <div key={`grid-${i}`} className="border border-cyan-500/5"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+        
+        {/* 旋轉的幾何圖形 */}
         <div className="absolute inset-0 overflow-hidden">
+          {/* 大型旋轉圓環 */}
+          <div className="absolute -top-1/4 -left-1/4 w-[800px] h-[800px] border-2 border-cyan-500/10 rounded-full animate-rotate-slow"></div>
+          <div className="absolute -bottom-1/4 -right-1/4 w-[600px] h-[600px] border-2 border-blue-500/10 rounded-full animate-rotate-medium" style={{ animationDirection: 'reverse' }}></div>
+          
+          {/* 低不透明度的幾何形狀 */}
           <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-blue-600/10 blur-2xl animate-pulse"></div>
           <div className="absolute bottom-1/3 right-1/4 w-64 h-64 rounded-full bg-cyan-500/10 blur-xl animate-pulse" style={{ animationDelay: '1s' }}></div>
           <div className="absolute top-1/2 right-1/3 w-80 h-80 rounded-full bg-indigo-600/10 blur-2xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+          
+          {/* 六角形網絡節點 */}
+          <div className="absolute top-1/4 right-1/4 w-4 h-4 bg-cyan-400/30 animate-data-node" style={{ clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)' }}></div>
+          <div className="absolute bottom-1/3 left-1/3 w-3 h-3 bg-blue-400/30 animate-data-node" style={{ animationDelay: '1.5s', clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)' }}></div>
+          <div className="absolute top-2/3 right-1/3 w-5 h-5 bg-indigo-400/30 animate-data-node" style={{ animationDelay: '2.5s', clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)' }}></div>
         </div>
         
-        {/* 數字化連接線條 */}
-        <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
-        <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at 30% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%)' }}></div>
-        <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at 70% 60%, rgba(99, 102, 241, 0.1) 0%, transparent 50%)' }}></div>
+        {/* 放射狀漸變光暈 */}
+        <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at 30% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%)' }}></div>
+        <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at 70% 60%, rgba(99, 102, 241, 0.15) 0%, transparent 50%)' }}></div>
+        <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at 50% 30%, rgba(14, 165, 233, 0.1) 0%, transparent 40%)' }}></div>
         
-        {/* 流動的數據流視覺效果 */}
-        <div className="absolute inset-0">
-          <div className="absolute h-px w-full top-1/4 left-0 bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent animate-data-flow"></div>
-          <div className="absolute h-px w-full top-1/3 left-0 bg-gradient-to-r from-transparent via-blue-500/20 to-transparent animate-data-flow" style={{ animationDelay: '0.5s' }}></div>
-          <div className="absolute h-px w-full top-1/2 left-0 bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent animate-data-flow" style={{ animationDelay: '1s' }}></div>
-          <div className="absolute h-px w-full top-2/3 left-0 bg-gradient-to-r from-transparent via-blue-400/20 to-transparent animate-data-flow" style={{ animationDelay: '1.5s' }}></div>
-          <div className="absolute h-px w-full top-3/4 left-0 bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent animate-data-flow" style={{ animationDelay: '2s' }}></div>
-        </div>
-        
-        {/* 懸浮的全息粒子效果 */}
+        {/* 掃描線效果 */}
         <div className="absolute inset-0 overflow-hidden">
-          {Array.from({ length: 20 }).map((_, i) => (
+          <div className="absolute h-20 w-full left-0 bg-gradient-to-b from-transparent via-cyan-500/5 to-transparent animate-scan-line"></div>
+        </div>
+        
+        {/* 流動的數據流視覺效果 - 增強版 */}
+        <div className="absolute inset-0">
+          <div className="absolute h-px w-full top-1/5 left-0 bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent animate-data-flow"></div>
+          <div className="absolute h-px w-full top-1/4 left-0 bg-gradient-to-r from-transparent via-blue-500/30 to-transparent animate-data-flow" style={{ animationDelay: '0.5s' }}></div>
+          <div className="absolute h-px w-full top-1/3 left-0 bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent animate-data-flow" style={{ animationDelay: '1s' }}></div>
+          <div className="absolute h-px w-full top-1/2 left-0 bg-gradient-to-r from-transparent via-blue-400/30 to-transparent animate-data-flow" style={{ animationDelay: '1.5s' }}></div>
+          <div className="absolute h-px w-full top-2/3 left-0 bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent animate-data-flow" style={{ animationDelay: '2s' }}></div>
+          <div className="absolute h-px w-full top-3/4 left-0 bg-gradient-to-r from-transparent via-blue-500/30 to-transparent animate-data-flow" style={{ animationDelay: '2.5s' }}></div>
+          <div className="absolute h-px w-full top-4/5 left-0 bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent animate-data-flow" style={{ animationDelay: '3s' }}></div>
+          
+          {/* 垂直數據流 */}
+          <div className="absolute w-px h-full top-0 left-1/4 bg-gradient-to-b from-transparent via-blue-500/20 to-transparent animate-data-flow" style={{ animationDuration: '10s' }}></div>
+          <div className="absolute w-px h-full top-0 left-2/3 bg-gradient-to-b from-transparent via-cyan-500/20 to-transparent animate-data-flow" style={{ animationDuration: '12s', animationDelay: '1s' }}></div>
+        </div>
+        
+        {/* 數字矩陣效果 */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-0 left-1/6 text-xs font-mono text-cyan-500/20 animate-matrix-fall whitespace-pre" style={{ animationDuration: '15s' }}>
+            {Array.from({ length: 15 }).map((_, i) => (
+              <div key={i} className="animate-binary-fade" style={{ animationDelay: `${i * 0.2}s` }}>
+                {Array.from({ length: 8 }).map((_, j) => Math.round(Math.random())).join('')}
+              </div>
+            ))}
+          </div>
+          <div className="absolute top-0 left-2/3 text-xs font-mono text-blue-500/20 animate-matrix-fall whitespace-pre" style={{ animationDuration: '20s', animationDelay: '2s' }}>
+            {Array.from({ length: 15 }).map((_, i) => (
+              <div key={i + 100} className="animate-binary-fade" style={{ animationDelay: `${i * 0.2}s` }}>
+                {Array.from({ length: 8 }).map((_, j) => Math.round(Math.random())).join('')}
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        {/* 浮動的科技圖標 */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-1/6 right-1/6 text-cyan-500/20 animate-float-particle" style={{ animationDuration: '15s' }}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25"></path>
+              <line x1="8" y1="16" x2="8.01" y2="16"></line>
+              <line x1="8" y1="20" x2="8.01" y2="20"></line>
+              <line x1="12" y1="18" x2="12.01" y2="18"></line>
+              <line x1="12" y1="22" x2="12.01" y2="22"></line>
+              <line x1="16" y1="16" x2="16.01" y2="16"></line>
+              <line x1="16" y1="20" x2="16.01" y2="20"></line>
+            </svg>
+          </div>
+          <div className="absolute bottom-1/4 left-1/5 text-blue-500/20 animate-float-particle" style={{ animationDuration: '12s', animationDelay: '2s' }}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+              <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+              <line x1="6" y1="6" x2="6.01" y2="6"></line>
+              <line x1="6" y1="18" x2="6.01" y2="18"></line>
+            </svg>
+          </div>
+        </div>
+        
+        {/* 脈衝連接點 */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-1/3 left-1/4 w-2 h-2 rounded-full bg-cyan-400/50 animate-circuit-pulse"></div>
+          <div className="absolute top-2/3 left-2/3 w-2 h-2 rounded-full bg-blue-400/50 animate-circuit-pulse" style={{ animationDelay: '1s' }}></div>
+          <div className="absolute top-1/2 left-1/2 w-3 h-3 rounded-full bg-indigo-400/50 animate-circuit-pulse" style={{ animationDelay: '2s' }}></div>
+          
+          {/* 連接線 */}
+          <div className="absolute top-[calc(33.333%-1px)] left-[25%] w-[calc(25%-2px)] h-px bg-cyan-400/30"></div>
+          <div className="absolute top-1/2 left-1/4 w-px h-[calc(16.667%-1px)] bg-cyan-400/30"></div>
+          <div className="absolute top-1/2 left-[calc(50%-1px)] w-[calc(16.667%-1px)] h-px bg-blue-400/30"></div>
+          <div className="absolute top-[calc(66.667%-1px)] left-[50%] w-[calc(16.667%-1px)] h-px bg-blue-400/30"></div>
+        </div>
+        
+        {/* 懸浮的全息粒子效果 - 增強版 */}
+        <div className="absolute inset-0 overflow-hidden">
+          {Array.from({ length: 40 }).map((_, i) => (
             <div 
               key={i}
-              className="absolute w-1 h-1 rounded-full bg-cyan-400/70 animate-float-particle"
+              className="absolute rounded-full animate-float-particle"
               style={{
                 top: `${Math.random() * 100}%`,
                 left: `${Math.random() * 100}%`,
+                width: `${Math.random() * 2 + 1}px`,
+                height: `${Math.random() * 2 + 1}px`,
+                backgroundColor: i % 3 === 0 ? 'rgba(56, 189, 248, 0.7)' : i % 3 === 1 ? 'rgba(59, 130, 246, 0.7)' : 'rgba(99, 102, 241, 0.7)',
                 animationDuration: `${3 + Math.random() * 7}s`,
                 animationDelay: `${Math.random() * 5}s`,
               }}
@@ -173,10 +268,15 @@ export default function Login() {
           ))}
         </div>
         
+        {/* 光暈效果 */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-gradient-radial from-blue-500/5 via-transparent to-transparent blur-xl"></div>
+        </div>
+        
         {/* MetaAge 主要內容 */}
         <div className="relative z-10 text-center">
           <div className="mb-10">
-            <img src="/metaage-logo1.png" alt="MetaAge Logo" className="h-32 mx-auto mb-8 filter drop-shadow-xl" />
+            <img src="/metaage-logo1.png" alt="MetaAge Logo" className="h-32 mx-auto mb-8 filter drop-shadow-xl animate-glow" />
           </div>
           
           <div className="max-w-xl mx-auto relative">

@@ -31,6 +31,15 @@ export default {
         'data-flow': 'dataFlow 8s linear infinite',
         'float-particle': 'floatParticle 8s ease-in-out infinite',
         'pulse': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'circuit-pulse': 'circuitPulse 3s ease-in-out infinite',
+        'glow': 'glow 2s ease-in-out infinite',
+        'rotate-slow': 'rotate 15s linear infinite',
+        'rotate-medium': 'rotate 10s linear infinite',
+        'rotate-fast': 'rotate 5s linear infinite',
+        'scan-line': 'scanLine 3s linear infinite',
+        'data-node': 'dataNode 4s ease-in-out infinite',
+        'binary-fade': 'binaryFade 8s ease-in-out infinite',
+        'matrix-fall': 'matrixFall 10s linear infinite',
       },
       keyframes: {
         dataFlow: {
@@ -50,10 +59,81 @@ export default {
         pulse: {
           '0%, 100%': { opacity: '0.6' },
           '50%': { opacity: '0.3' }
+        },
+        circuitPulse: {
+          '0%': { 
+            boxShadow: '0 0 0 0 rgba(56, 189, 248, 0.4)',
+            opacity: '1'
+          },
+          '70%': { 
+            boxShadow: '0 0 0 10px rgba(56, 189, 248, 0)',
+            opacity: '0.8'
+          },
+          '100%': { 
+            boxShadow: '0 0 0 0 rgba(56, 189, 248, 0)',
+            opacity: '1'
+          }
+        },
+        glow: {
+          '0%, 100%': { 
+            filter: 'brightness(1) drop-shadow(0 0 5px rgba(56, 189, 248, 0.5))'
+          },
+          '50%': { 
+            filter: 'brightness(1.2) drop-shadow(0 0 10px rgba(56, 189, 248, 0.8))'
+          }
+        },
+        rotate: {
+          '0%': { transform: 'rotate(0deg)' },
+          '100%': { transform: 'rotate(360deg)' }
+        },
+        scanLine: {
+          '0%': { 
+            transform: 'translateY(-100%)',
+            opacity: '0.5'
+          },
+          '50%': { 
+            opacity: '0.8'
+          },
+          '100%': { 
+            transform: 'translateY(100%)',
+            opacity: '0.5'
+          }
+        },
+        dataNode: {
+          '0%, 100%': { 
+            transform: 'scale(1)',
+            opacity: '0.7',
+            boxShadow: '0 0 0 rgba(56, 189, 248, 0.4)'
+          },
+          '50%': { 
+            transform: 'scale(1.3)',
+            opacity: '1',
+            boxShadow: '0 0 15px rgba(56, 189, 248, 0.7)'
+          }
+        },
+        binaryFade: {
+          '0%, 100%': { opacity: '0.1' },
+          '50%': { opacity: '0.3' }
+        },
+        matrixFall: {
+          '0%': { transform: 'translateY(-100%)' },
+          '100%': { transform: 'translateY(100%)' }
         }
       },
       scale: {
         '102': '1.02',
+      },
+      perspective: {
+        '1000': '1000px',
+      },
+      rotate: {
+        'x-60': 'rotateX(60deg)',
+      },
+      backgroundImage: {
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+      },
+      transformOrigin: {
+        'center': 'center',
       },
     },
   },
