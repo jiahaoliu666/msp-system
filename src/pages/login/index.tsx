@@ -337,7 +337,7 @@ export default function Login() {
               <img
                 src="/metaage-logo1.png"
                 alt="Logo"
-                className="h-14 mx-auto transform transition-transform duration-300 hover:scale-105 mb-6 lg:hidden animate-glow"
+                className="h-14 mx-auto transform transition-transform duration-300 hover:scale-105 mb-6 lg:hidden"
               />
               <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-3">歡迎回來</h2>
               <p className="text-gray-600 dark:text-gray-300 mb-8">請登入您的帳號以繼續</p>
