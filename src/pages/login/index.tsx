@@ -175,8 +175,8 @@ export default function Login() {
         
         {/* MetaAge 主要內容 */}
         <div className="relative z-10 text-center">
-          <div className="mb-8">
-            <img src="/metaage-logo1.png" alt="MetaAge Logo" className="h-24 mx-auto mb-6 filter drop-shadow-xl" />
+          <div className="mb-10">
+            <img src="/metaage-logo1.png" alt="MetaAge Logo" className="h-32 mx-auto mb-8 filter drop-shadow-xl" />
           </div>
           
           <div className="max-w-xl mx-auto relative">
@@ -305,11 +305,11 @@ export default function Login() {
 
 function FeatureItem({ icon, text }: { icon: React.ReactElement<IconProps>; text: string }) {
   return (
-    <div className="flex items-center space-x-4 bg-white/10 rounded-xl p-5 backdrop-blur-sm transition-all duration-300 hover:bg-white/15 hover:transform hover:scale-102 hover:shadow-lg border border-white/10">
-      <div className="flex-shrink-0 text-cyan-300 flex items-center justify-center bg-blue-700/30 p-3 rounded-lg">
-        {React.cloneElement(icon, { className: "w-6 h-6" })}
+    <div className="flex items-center bg-white/10 rounded-xl p-5 backdrop-blur-sm transition-all duration-300 hover:bg-white/15 hover:transform hover:scale-102 hover:shadow-lg border border-white/10">
+      <div className="flex-shrink-0 text-cyan-300 flex items-center justify-center bg-blue-700/30 p-4 rounded-lg mr-5">
+        {React.cloneElement(icon, { className: "w-7 h-7" })}
       </div>
-      <div className="flex-1">
+      <div className="flex-none w-3/5">
         <p className="text-lg font-medium text-white">{text}</p>
       </div>
     </div>
