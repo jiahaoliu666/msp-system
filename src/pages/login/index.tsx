@@ -1,5 +1,3 @@
-
-
 "use client"
 
 import { useState, useEffect } from "react"
@@ -133,22 +131,60 @@ export default function Login() {
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-blue-50 via-blue-100 to-indigo-100 dark:from-gray-900 dark:via-gray-800 dark:to-indigo-950">
-      {/* Left side - Branding and Features */}
-      <div className="hidden lg:flex lg:w-1/2 xl:w-2/3 bg-gradient-to-br from-blue-600 to-indigo-800 items-center justify-center p-12 relative overflow-hidden">
-        <div className="absolute inset-0 bg-pattern opacity-10"></div>
-        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-500/20 to-indigo-600/20 backdrop-blur-sm"></div>
+      {/* Left side - Futuristic Cybersecurity Visual */}
+      <div className="hidden lg:flex lg:w-1/2 xl:w-2/3 bg-gradient-to-br from-blue-900 to-indigo-950 items-center justify-center p-12 relative overflow-hidden">
+        {/* 背景層 - 深邃的深藍色背景 */}
+        <div className="absolute inset-0 bg-[#050b2e] opacity-90"></div>
         
-        <div className="max-w-2xl mb-16 relative z-10">
-          <div className="text-center mb-12">
-            <img src="/metaage-logo1.png" alt="MetaAge Logo" className="h-28 mx-auto mb-10 filter drop-shadow-xl animate-float" />
-            <h1 className="text-5xl font-bold text-white mb-6 tracking-tight leading-tight">專業可靠的 IT 解決方案</h1>
-            <p className="text-xl text-blue-100 max-w-xl mx-auto">助您企業數位轉型，成就卓越未來</p>
+        {/* 低不透明度的幾何形狀 */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-blue-600/10 blur-2xl animate-pulse"></div>
+          <div className="absolute bottom-1/3 right-1/4 w-64 h-64 rounded-full bg-cyan-500/10 blur-xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+          <div className="absolute top-1/2 right-1/3 w-80 h-80 rounded-full bg-indigo-600/10 blur-2xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+        </div>
+        
+        {/* 數字化連接線條 */}
+        <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
+        <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at 30% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%)' }}></div>
+        <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at 70% 60%, rgba(99, 102, 241, 0.1) 0%, transparent 50%)' }}></div>
+        
+        {/* 流動的數據流視覺效果 */}
+        <div className="absolute inset-0">
+          <div className="absolute h-px w-full top-1/4 left-0 bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent animate-data-flow"></div>
+          <div className="absolute h-px w-full top-1/3 left-0 bg-gradient-to-r from-transparent via-blue-500/20 to-transparent animate-data-flow" style={{ animationDelay: '0.5s' }}></div>
+          <div className="absolute h-px w-full top-1/2 left-0 bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent animate-data-flow" style={{ animationDelay: '1s' }}></div>
+          <div className="absolute h-px w-full top-2/3 left-0 bg-gradient-to-r from-transparent via-blue-400/20 to-transparent animate-data-flow" style={{ animationDelay: '1.5s' }}></div>
+          <div className="absolute h-px w-full top-3/4 left-0 bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent animate-data-flow" style={{ animationDelay: '2s' }}></div>
+        </div>
+        
+        {/* 懸浮的全息粒子效果 */}
+        <div className="absolute inset-0 overflow-hidden">
+          {Array.from({ length: 20 }).map((_, i) => (
+            <div 
+              key={i}
+              className="absolute w-1 h-1 rounded-full bg-cyan-400/70 animate-float-particle"
+              style={{
+                top: `${Math.random() * 100}%`,
+                left: `${Math.random() * 100}%`,
+                animationDuration: `${3 + Math.random() * 7}s`,
+                animationDelay: `${Math.random() * 5}s`,
+              }}
+            ></div>
+          ))}
+        </div>
+        
+        {/* MetaAge 主要內容 */}
+        <div className="relative z-10 text-center">
+          <div className="mb-8">
+            <img src="/metaage-logo1.png" alt="MetaAge Logo" className="h-24 mx-auto mb-6 filter drop-shadow-xl" />
           </div>
-
-          <div className="grid gap-6 mt-16">
-            <FeatureItem icon={<FaShieldAlt />} text="全方位支持，成就客戶的下一步" />
-            <FeatureItem icon={<FaHeadset />} text="24/7 專業技術支援服務" />
-            <FeatureItem icon={<FaRocket />} text="助您企業數位轉型起飛" />
+          
+          <div className="max-w-xl mx-auto relative">
+            <div className="grid gap-6 mt-8">
+              <FeatureItem icon={<FaShieldAlt />} text="全方位支持，成就客戶的下一步" />
+              <FeatureItem icon={<FaHeadset />} text="24/7 專業技術支援服務" />
+              <FeatureItem icon={<FaRocket />} text="助您企業數位轉型起飛" />
+            </div>
           </div>
         </div>
       </div>
@@ -270,7 +306,7 @@ export default function Login() {
 function FeatureItem({ icon, text }: { icon: React.ReactElement<IconProps>; text: string }) {
   return (
     <div className="flex items-center space-x-4 bg-white/10 rounded-xl p-5 backdrop-blur-sm transition-all duration-300 hover:bg-white/15 hover:transform hover:scale-102 hover:shadow-lg border border-white/10">
-      <div className="flex-shrink-0 text-blue-100 flex items-center justify-center bg-blue-700/30 p-3 rounded-lg">
+      <div className="flex-shrink-0 text-cyan-300 flex items-center justify-center bg-blue-700/30 p-3 rounded-lg">
         {React.cloneElement(icon, { className: "w-6 h-6" })}
       </div>
       <div className="flex-1">
