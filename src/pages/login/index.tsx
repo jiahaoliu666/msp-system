@@ -290,14 +290,54 @@ export default function Login() {
       </div>
 
       {/* Right side - Login Form */}
-      <div className="w-full lg:w-1/2 xl:w-1/3 flex items-center justify-center p-8 sm:p-12 bg-gradient-to-br from-white/80 to-blue-50/80 dark:from-gray-900/90 dark:to-indigo-950/90 backdrop-blur-sm">
-        <div className="w-full max-w-md">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 sm:p-10 transition-all duration-300 hover:shadow-2xl border border-gray-100 dark:border-gray-700">
-            <div className="text-center mb-8">
+      <div className="w-full lg:w-1/2 xl:w-1/3 flex items-center justify-center p-8 sm:p-12 bg-gradient-to-br from-white/80 to-blue-50/80 dark:from-gray-900/90 dark:to-indigo-950/90 backdrop-blur-sm relative overflow-hidden">
+        {/* 科技感背景元素 */}
+        <div className="absolute inset-0 bg-tech-grid opacity-5 dark:opacity-10"></div>
+        <div className="absolute inset-0 circuit-pattern opacity-5 dark:opacity-10"></div>
+        
+        {/* 微妙的光暈效果 */}
+        <div className="absolute top-0 right-0 w-[300px] h-[300px] rounded-full bg-gradient-radial from-blue-400/5 via-transparent to-transparent blur-2xl"></div>
+        <div className="absolute bottom-0 left-0 w-[250px] h-[250px] rounded-full bg-gradient-radial from-cyan-400/5 via-transparent to-transparent blur-xl"></div>
+        
+        {/* 微妙的數據流線條 */}
+        <div className="absolute right-10 top-0 h-full w-px bg-gradient-to-b from-transparent via-blue-400/10 to-transparent"></div>
+        <div className="absolute left-1/4 bottom-0 w-full h-px bg-gradient-to-r from-transparent via-cyan-400/10 to-transparent"></div>
+        
+        {/* 動態粒子效果 - 更加微妙 */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {Array.from({ length: 15 }).map((_, i) => (
+            <div 
+              key={`particle-right-${i}`}
+              className="absolute rounded-full animate-float-particle"
+              style={{
+                top: `${Math.random() * 100}%`,
+                left: `${Math.random() * 100}%`,
+                width: `${Math.random() * 1.5 + 0.5}px`,
+                height: `${Math.random() * 1.5 + 0.5}px`,
+                backgroundColor: i % 3 === 0 ? 'rgba(56, 189, 248, 0.4)' : i % 3 === 1 ? 'rgba(59, 130, 246, 0.4)' : 'rgba(99, 102, 241, 0.4)',
+                animationDuration: `${5 + Math.random() * 10}s`,
+                animationDelay: `${Math.random() * 5}s`,
+                opacity: '0.4'
+              }}
+            ></div>
+          ))}
+        </div>
+        
+        {/* 掃描線效果 - 更加微妙 */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute h-40 w-full left-0 bg-gradient-to-b from-transparent via-blue-500/2 to-transparent animate-scan-line" style={{ animationDuration: '8s' }}></div>
+        </div>
+        
+        <div className="w-full max-w-md relative z-10">
+          <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-xl p-8 sm:p-10 transition-all duration-300 hover:shadow-2xl border border-gray-100/80 dark:border-gray-700/80 relative overflow-hidden">
+            {/* 卡片內部的微妙邊框發光效果 */}
+            <div className="absolute inset-0 border border-blue-500/5 dark:border-blue-400/10 rounded-2xl"></div>
+            
+            <div className="text-center mb-8 relative">
               <img
                 src="/metaage-logo1.png"
                 alt="Logo"
-                className="h-14 mx-auto transform transition-transform duration-300 hover:scale-105 mb-6 lg:hidden"
+                className="h-14 mx-auto transform transition-transform duration-300 hover:scale-105 mb-6 lg:hidden animate-glow"
               />
               <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-3">歡迎回來</h2>
               <p className="text-gray-600 dark:text-gray-300 mb-8">請登入您的帳號以繼續</p>
@@ -309,13 +349,14 @@ export default function Login() {
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     電子郵件
                   </label>
-                  <div className="relative">
+                  <div className="relative group">
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-lg blur opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition duration-300"></div>
                     <input
                       id="email"
                       type="email"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ease-in-out shadow-sm"
+                      className="relative w-full px-4 py-3 rounded-lg border border-gray-300/80 dark:border-gray-600/80 bg-white/90 dark:bg-gray-700/90 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ease-in-out shadow-sm backdrop-blur-sm input-glow"
                       placeholder="請輸入您的電子郵件"
                       required
                     />
@@ -326,20 +367,21 @@ export default function Login() {
                   <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     密碼
                   </label>
-                  <div className="relative">
+                  <div className="relative group">
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-lg blur opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition duration-300"></div>
                     <input
                       id="password"
                       type={showPassword ? "text" : "password"}
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ease-in-out pr-12 shadow-sm"
+                      className="relative w-full px-4 py-3 rounded-lg border border-gray-300/80 dark:border-gray-600/80 bg-white/90 dark:bg-gray-700/90 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ease-in-out pr-12 shadow-sm backdrop-blur-sm input-glow"
                       placeholder="請輸入您的密碼"
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none transition-colors duration-200"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none transition-colors duration-200 z-10"
                       aria-label={showPassword ? "隱藏密碼" : "顯示密碼"}
                     >
                       {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
@@ -348,47 +390,51 @@ export default function Login() {
                 </div>
               </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className={`w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-medium rounded-lg transition duration-300 ease-in-out transform hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${loading ? "opacity-70 cursor-not-allowed" : "hover:from-blue-700 hover:to-indigo-800"}`}
-              >
-                {loading ? (
-                  <div className="flex items-center justify-center">
-                    <svg
-                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    登入中...
-                  </div>
-                ) : (
-                  "登入"
-                )}
-              </button>
+              <div className="relative group mt-8">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600/50 to-indigo-600/50 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className={`relative w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-medium rounded-lg transition duration-300 ease-in-out transform hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 button-glow ${loading ? "opacity-70 cursor-not-allowed" : "hover:from-blue-700 hover:to-indigo-800"}`}
+                >
+                  {loading ? (
+                    <div className="flex items-center justify-center">
+                      <svg
+                        className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      登入中...
+                    </div>
+                  ) : (
+                    "登入"
+                  )}
+                </button>
+              </div>
 
               <div className="text-center mt-4">
                 <button
                   type="button"
                   onClick={handleForgotPassword}
-                  className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors duration-200 font-medium focus:outline-none focus:underline"
+                  className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors duration-200 font-medium focus:outline-none focus:underline relative inline-block"
                 >
-                  忘記密碼？
+                  <span className="relative z-10">忘記密碼？</span>
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-400/30 group-hover:w-full transition-all duration-300"></span>
                 </button>
               </div>
             </form>
