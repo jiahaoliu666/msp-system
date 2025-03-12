@@ -309,178 +309,241 @@ export default function ForgotPassword() {
   const allRulesPassed = Object.values(passwordRules).every((rule) => rule) && passwordsMatch
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="w-full max-w-md m-auto">
-        <div className="bg-white rounded-2xl shadow-xl p-8 sm:p-10 transition-all duration-300 hover:shadow-2xl">
-          <div className="text-center mb-8">
-          <img
-            src="/metaage-logo1.png"
-            alt="Logo"
-            className="h-12 mx-auto transform transition-transform duration-300 hover:scale-105 mb-4"
-          />
-            <h2 className="text-3xl font-bold text-gray-800 mb-2">忘記密碼</h2>
-            <p className="text-gray-600">{!codeSent ? "請輸入您的電子郵件以接收驗證碼" : "請輸入驗證碼和新密碼"}</p>
+    <div className="flex min-h-screen bg-gradient-to-br from-blue-50 via-blue-100 to-indigo-100 dark:from-gray-900 dark:via-gray-800 dark:to-indigo-950">
+      {/* 右側 - 忘記密碼表單 */}
+      <div className="w-full flex items-center justify-center p-8 sm:p-12 bg-gradient-to-br from-white/80 to-blue-50/80 dark:from-gray-900/90 dark:to-indigo-950/90 backdrop-blur-sm relative overflow-hidden">
+        {/* 科技感背景元素 */}
+        <div className="absolute inset-0 bg-tech-grid opacity-5 dark:opacity-10"></div>
+        <div className="absolute inset-0 circuit-pattern opacity-5 dark:opacity-10"></div>
+        
+        {/* 微妙的光暈效果 */}
+        <div className="absolute top-0 right-0 w-[300px] h-[300px] rounded-full bg-gradient-radial from-blue-400/5 via-transparent to-transparent blur-2xl"></div>
+        <div className="absolute bottom-0 left-0 w-[250px] h-[250px] rounded-full bg-gradient-radial from-cyan-400/5 via-transparent to-transparent blur-xl"></div>
+        
+        {/* 微妙的數據流線條 */}
+        <div className="absolute right-10 top-0 h-full w-px bg-gradient-to-b from-transparent via-blue-400/10 to-transparent"></div>
+        <div className="absolute left-1/4 bottom-0 w-full h-px bg-gradient-to-r from-transparent via-cyan-400/10 to-transparent"></div>
+        
+        {/* 動態粒子效果 - 更加微妙 */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {Array.from({ length: 15 }).map((_, i) => (
+            <div 
+              key={`particle-right-${i}`}
+              className="absolute rounded-full animate-float-particle"
+              style={{
+                top: `${Math.random() * 100}%`,
+                left: `${Math.random() * 100}%`,
+                width: `${Math.random() * 1.5 + 0.5}px`,
+                height: `${Math.random() * 1.5 + 0.5}px`,
+                backgroundColor: i % 3 === 0 ? 'rgba(56, 189, 248, 0.4)' : i % 3 === 1 ? 'rgba(59, 130, 246, 0.4)' : 'rgba(99, 102, 241, 0.4)',
+                animationDuration: `${5 + Math.random() * 10}s`,
+                animationDelay: `${Math.random() * 5}s`,
+                opacity: '0.4'
+              }}
+            ></div>
+          ))}
+        </div>
+        
+        {/* 掃描線效果 - 更加微妙 */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute h-40 w-full left-0 bg-gradient-to-b from-transparent via-blue-500/2 to-transparent animate-scan-line" style={{ animationDuration: '8s' }}></div>
+        </div>
+        
+        <div className="w-full max-w-md relative z-10">
+          <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-xl p-8 sm:p-10 transition-all duration-300 hover:shadow-2xl border border-gray-100/80 dark:border-gray-700/80 relative overflow-hidden">
+            {/* 卡片內部的微妙邊框發光效果 */}
+            <div className="absolute inset-0 border border-blue-500/5 dark:border-blue-400/10 rounded-2xl"></div>
+            
+            <div className="text-center mb-8 relative">
+              <img
+                src="/metaage-logo1.png"
+                alt="Logo"
+                className="h-14 mx-auto transform transition-transform duration-300 hover:scale-105 mb-6"
+              />
+              <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-3">忘記密碼</h2>
+              <p className="text-gray-600 dark:text-gray-300 mb-4">{!codeSent ? "請輸入您的電子郵件以接收驗證碼" : "請輸入驗證碼和新密碼"}</p>
+            </div>
+
+            {!codeSent ? (
+              <form onSubmit={handleSendCode} className="space-y-6">
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    電子郵件
+                  </label>
+                  <div className="relative group">
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-lg blur opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition duration-300"></div>
+                    <input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="relative w-full px-4 py-3 rounded-lg border border-gray-300/80 dark:border-gray-600/80 bg-white/90 dark:bg-gray-700/90 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ease-in-out shadow-sm backdrop-blur-sm input-glow"
+                      placeholder="請輸入您的電子郵件"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="relative group mt-8">
+                  <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600/50 to-indigo-600/50 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
+                  <button
+                    type="submit"
+                    disabled={loading || cooldown > 0}
+                    className={`relative w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-medium rounded-lg transition duration-300 ease-in-out transform hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 button-glow ${loading || cooldown > 0 ? "opacity-70 cursor-not-allowed" : "hover:from-blue-700 hover:to-indigo-800"}`}
+                  >
+                    {loading ? (
+                      <div className="flex items-center justify-center">
+                        <svg
+                          className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        發送中...
+                      </div>
+                    ) : cooldown > 0 ? (
+                      `${cooldown} 秒後可重試`
+                    ) : (
+                      "發送驗證碼"
+                    )}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={handleResetPassword} className="space-y-6">
+                <div>
+                  <label htmlFor="code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    驗證碼
+                  </label>
+                  <div className="relative group">
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-lg blur opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition duration-300"></div>
+                    <input
+                      id="code"
+                      type="text"
+                      value={verificationCode}
+                      onChange={(e) => setVerificationCode(e.target.value)}
+                      className="relative w-full px-4 py-3 rounded-lg border border-gray-300/80 dark:border-gray-600/80 bg-white/90 dark:bg-gray-700/90 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ease-in-out shadow-sm backdrop-blur-sm input-glow"
+                      placeholder="請輸入驗證碼"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="new-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    新密碼
+                  </label>
+                  <div className="relative group">
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-lg blur opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition duration-300"></div>
+                    <input
+                      id="new-password"
+                      type={showPassword ? "text" : "password"}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="relative w-full px-4 py-3 rounded-lg border border-gray-300/80 dark:border-gray-600/80 bg-white/90 dark:bg-gray-700/90 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ease-in-out pr-12 shadow-sm backdrop-blur-sm input-glow"
+                      placeholder="請輸入新密碼"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none transition-colors duration-200 z-10"
+                    >
+                      {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    確認密碼
+                  </label>
+                  <div className="relative group">
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-lg blur opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition duration-300"></div>
+                    <input
+                      id="confirm-password"
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="relative w-full px-4 py-3 rounded-lg border border-gray-300/80 dark:border-gray-600/80 bg-white/90 dark:bg-gray-700/90 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ease-in-out pr-12 shadow-sm backdrop-blur-sm input-glow"
+                      placeholder="請再次輸入新密碼"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none transition-colors duration-200 z-10"
+                    >
+                      {showConfirmPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg space-y-2 border border-blue-100/80 dark:border-blue-800/30">
+                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">密碼要求：</p>
+                  <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                    <li className={passwordRules.length ? "text-green-600 dark:text-green-400" : ""}>• 至少 8 個字符</li>
+                    <li className={passwordRules.uppercase ? "text-green-600 dark:text-green-400" : ""}>• 包含大寫字母</li>
+                    <li className={passwordRules.lowercase ? "text-green-600 dark:text-green-400" : ""}>• 包含小寫字母</li>
+                    <li className={passwordRules.number ? "text-green-600 dark:text-green-400" : ""}>• 包含數字</li>
+                    <li className={passwordRules.special ? "text-green-600 dark:text-green-400" : ""}>• 包含特殊字符 (!@#$%^&*)</li>
+                    <li className={passwordsMatch ? "text-green-600 dark:text-green-400" : ""}>• 密碼匹配</li>
+                  </ul>
+                </div>
+
+                <div className="relative group mt-4">
+                  <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600/50 to-indigo-600/50 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
+                  <button
+                    type="submit"
+                    disabled={loading || !allRulesPassed}
+                    className={`relative w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-medium rounded-lg transition duration-300 ease-in-out transform hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 button-glow ${loading || !allRulesPassed ? "opacity-70 cursor-not-allowed" : "hover:from-blue-700 hover:to-indigo-800"}`}
+                  >
+                    {loading ? "處理中..." : allRulesPassed ? "重設密碼" : "請符合所有密碼要求"}
+                  </button>
+                </div>
+
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={handleResendCode}
+                    disabled={loading || cooldown > 0}
+                    className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:underline relative inline-block"
+                  >
+                    <span className="relative z-10">{cooldown > 0 ? `${cooldown} 秒後可重新發送` : "重新發送驗證碼"}</span>
+                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-400/30 group-hover:w-full transition-all duration-300"></span>
+                  </button>
+                </div>
+              </form>
+            )}
+
+            <div className="text-center mt-6">
+              <button
+                type="button"
+                onClick={() => router.push("/login")}
+                className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors font-medium focus:outline-none focus:underline relative inline-block"
+              >
+                <span className="relative z-10">返回登入</span>
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-400/30 group-hover:w-full transition-all duration-300"></span>
+              </button>
+            </div>
           </div>
 
-          {!codeSent ? (
-            <form onSubmit={handleSendCode} className="space-y-6">
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                  電子郵件
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ease-in-out"
-                  placeholder="請輸入您的電子郵件"
-                  required
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading || cooldown > 0}
-                className={`w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-medium rounded-lg transition duration-300 ease-in-out transform hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${loading || cooldown > 0 ? "opacity-70 cursor-not-allowed" : "hover:from-blue-700 hover:to-indigo-800"}`}
-              >
-                {loading ? (
-                  <div className="flex items-center justify-center">
-                    <svg
-                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    發送中...
-                  </div>
-                ) : cooldown > 0 ? (
-                  `${cooldown} 秒後可重試`
-                ) : (
-                  "發送驗證碼"
-                )}
-              </button>
-            </form>
-          ) : (
-            <form onSubmit={handleResetPassword} className="space-y-6">
-              <div>
-                <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-2">
-                  驗證碼
-                </label>
-                <input
-                  id="code"
-                  type="text"
-                  value={verificationCode}
-                  onChange={(e) => setVerificationCode(e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ease-in-out"
-                  placeholder="請輸入驗證碼"
-                  required
-                />
-              </div>
-
-              <div>
-                <label htmlFor="new-password" className="block text-sm font-medium text-gray-700 mb-2">
-                  新密碼
-                </label>
-                <div className="relative">
-                  <input
-                    id="new-password"
-                    type={showPassword ? "text" : "password"}
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ease-in-out pr-12"
-                    placeholder="請輸入新密碼"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none transition-colors duration-200"
-                  >
-                    {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-2">
-                  確認密碼
-                </label>
-                <div className="relative">
-                  <input
-                    id="confirm-password"
-                    type={showConfirmPassword ? "text" : "password"}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ease-in-out pr-12"
-                    placeholder="請再次輸入新密碼"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none transition-colors duration-200"
-                  >
-                    {showConfirmPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
-                  </button>
-                </div>
-              </div>
-
-              <div className="bg-blue-50 p-4 rounded-lg space-y-2">
-                <p className="text-sm font-semibold text-gray-700">密碼要求：</p>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  <li className={passwordRules.length ? "text-green-600" : ""}>• 至少 8 個字符</li>
-                  <li className={passwordRules.uppercase ? "text-green-600" : ""}>• 包含大寫字母</li>
-                  <li className={passwordRules.lowercase ? "text-green-600" : ""}>• 包含小寫字母</li>
-                  <li className={passwordRules.number ? "text-green-600" : ""}>• 包含數字</li>
-                  <li className={passwordRules.special ? "text-green-600" : ""}>• 包含特殊字符 (!@#$%^&*)</li>
-                  <li className={passwordsMatch ? "text-green-600" : ""}>• 密碼匹配</li>
-                </ul>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading || !allRulesPassed}
-                className={`w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-medium rounded-lg transition duration-300 ease-in-out transform hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${loading || !allRulesPassed ? "opacity-70 cursor-not-allowed" : "hover:from-blue-700 hover:to-indigo-800"}`}
-              >
-                {loading ? "處理中..." : allRulesPassed ? "重設密碼" : "請符合所有密碼要求"}
-              </button>
-
-              <div className="text-center">
-                <button
-                  type="button"
-                  onClick={handleResendCode}
-                  disabled={loading || cooldown > 0}
-                  className="text-sm text-blue-600 hover:text-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {cooldown > 0 ? `${cooldown} 秒後可重新發送` : "重新發送驗證碼"}
-                </button>
-              </div>
-            </form>
-          )}
-
-          <div className="text-center mt-6">
-            <button
-              type="button"
-              onClick={() => router.push("/login")}
-              className="text-sm text-gray-600 hover:text-gray-800 transition-colors font-medium"
-            >
-              返回登入
-            </button>
+          <div className="mt-8 text-center text-sm text-gray-600 dark:text-gray-400">
+            <p>© 2025 MetaAge MSP. All rights reserved.</p>
           </div>
         </div>
       </div>
