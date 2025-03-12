@@ -311,14 +311,19 @@ export default function ForgotPassword() {
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-blue-50 via-blue-100 to-indigo-100 dark:from-gray-900 dark:via-gray-800 dark:to-indigo-950">
       {/* 右側 - 忘記密碼表單 */}
-      <div className="w-full flex items-center justify-center p-8 sm:p-12 bg-gradient-to-br from-white/80 to-blue-50/80 dark:from-gray-900/90 dark:to-indigo-950/90 backdrop-blur-sm relative overflow-hidden">
+      <div className="w-full flex items-center justify-center p-8 sm:p-12 bg-gradient-to-br from-white/80 via-blue-50/60 to-indigo-50/80 dark:from-gray-900/90 dark:via-indigo-950/80 dark:to-blue-950/90 backdrop-blur-sm relative overflow-hidden">
+        {/* 額外的漸層背景效果 */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/5 via-transparent to-indigo-500/5"></div>
+        <div className="absolute inset-0 bg-gradient-to-bl from-cyan-500/5 via-transparent to-blue-500/5"></div>
+        
         {/* 科技感背景元素 */}
         <div className="absolute inset-0 bg-tech-grid opacity-5 dark:opacity-10"></div>
         <div className="absolute inset-0 circuit-pattern opacity-5 dark:opacity-10"></div>
         
         {/* 微妙的光暈效果 */}
-        <div className="absolute top-0 right-0 w-[300px] h-[300px] rounded-full bg-gradient-radial from-blue-400/5 via-transparent to-transparent blur-2xl"></div>
-        <div className="absolute bottom-0 left-0 w-[250px] h-[250px] rounded-full bg-gradient-radial from-cyan-400/5 via-transparent to-transparent blur-xl"></div>
+        <div className="absolute top-0 right-0 w-[300px] h-[300px] rounded-full bg-gradient-radial from-blue-400/10 via-transparent to-transparent blur-2xl"></div>
+        <div className="absolute bottom-0 left-0 w-[250px] h-[250px] rounded-full bg-gradient-radial from-cyan-400/10 via-transparent to-transparent blur-xl"></div>
+        <div className="absolute top-1/3 left-1/4 w-[200px] h-[200px] rounded-full bg-gradient-radial from-indigo-400/5 via-transparent to-transparent blur-xl"></div>
         
         {/* 微妙的數據流線條 */}
         <div className="absolute right-10 top-0 h-full w-px bg-gradient-to-b from-transparent via-blue-400/10 to-transparent"></div>
@@ -353,6 +358,8 @@ export default function ForgotPassword() {
           <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-xl p-8 sm:p-10 transition-all duration-300 hover:shadow-2xl border border-gray-100/80 dark:border-gray-700/80 relative overflow-hidden">
             {/* 卡片內部的微妙邊框發光效果 */}
             <div className="absolute inset-0 border border-blue-500/5 dark:border-blue-400/10 rounded-2xl"></div>
+            {/* 卡片內部的漸層背景 */}
+            <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-blue-50/40 dark:from-gray-800/40 dark:to-indigo-950/40 rounded-2xl"></div>
             
             <div className="text-center mb-8 relative">
               <img
