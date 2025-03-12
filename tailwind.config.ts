@@ -32,7 +32,7 @@ export default {
         'float-particle': 'floatParticle 8s ease-in-out infinite',
         'pulse': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'circuit-pulse': 'circuitPulse 3s ease-in-out infinite',
-        'glow': 'glow 2s ease-in-out infinite',
+        'glow': 'glow 5s ease-in-out infinite',
         'rotate-slow': 'rotate 15s linear infinite',
         'rotate-medium': 'rotate 10s linear infinite',
         'rotate-fast': 'rotate 5s linear infinite',
@@ -75,11 +75,20 @@ export default {
           }
         },
         glow: {
-          '0%, 100%': { 
+          '0%': { 
             filter: 'brightness(1) drop-shadow(0 0 5px rgba(56, 189, 248, 0.5))'
+          },
+          '25%': { 
+            filter: 'brightness(1.1) drop-shadow(0 0 7px rgba(56, 189, 248, 0.6))'
           },
           '50%': { 
             filter: 'brightness(1.2) drop-shadow(0 0 10px rgba(56, 189, 248, 0.8))'
+          },
+          '75%': { 
+            filter: 'brightness(1.1) drop-shadow(0 0 7px rgba(56, 189, 248, 0.6))'
+          },
+          '100%': { 
+            filter: 'brightness(1) drop-shadow(0 0 5px rgba(56, 189, 248, 0.5))'
           }
         },
         rotate: {
