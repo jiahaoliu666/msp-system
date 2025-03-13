@@ -52,32 +52,26 @@ src/
 │   │   ├── CreateUserForm.tsx # 建立使用者表單
 │   ├── HandoverItem # 交接項目
 │   │   ├── CreateHandoverItemForm.tsx # 建立交接項目表單
-│   ├── Storage # 檔案儲存     
-│       ├── types.ts 所有介面和類型定義
-│       ├── FileList UI 組件
-│       │   ├── index.tsx         # 檔案列表主組件，負責檔案篩選、排序和分頁
-│       │   ├── GridView.tsx      # 網格視圖顯示檔案和資料夾
-│       │   ├── ListView.tsx      # 列表視圖顯示檔案和資料夾
-│       │   └── FileItem.tsx      # 檔案項目組件
-│       ├── FilePreview UI 組件
-│       │   ├── index.tsx         # 檔案預覽主組件
-│       │   └── PreviewTypes.tsx  # 不同類型檔案的預覽處理
-│       ├── ToolBar/
-│       │   ├── index.tsx         # 工具欄主組件
-│       │   ├── SearchBar.tsx     # 搜索欄
-│       │   └── ActionButtons.tsx # 操作按鈕
-│       ├── Dialogs/
-│       │   ├── CreateFolder.tsx  # 創建資料夾對話框
-│       │   ├── DeleteConfirm.tsx # 刪除確認對話框
-│       │   └── DuplicateFile.tsx # 檔案重複處理對話框
-│       ├── ContextMenu UI 組件
-│       │   └── index.tsx         # 右鍵選單
-│       ├── StatusBar/
-│       │   └── index.tsx         # 狀態顯示
-│       └── hooks 邏輯層 
-│           ├── useFileManager.ts # 檔案列表管理、資料夾導航、選擇項目等基本功能
-│           ├── useUpload.ts      # 檔案上傳、拖放上傳、處理重複檔案等功能
-│           └── useFileOperations.ts # 檔案下載、刪除、預覽、右鍵選單等操作功能
+│   ├── Storage # 檔案儲存
+│   │   ├── ContextMenu # 右鍵選單
+│   │   │   └── index.tsx # 右鍵選單組件
+│   │   ├── EmptyState # 空狀態
+│   │   │   └── index.tsx # 空狀態組件
+│   │   ├── FileList # 檔案列表
+│   │   │   ├── GridView.tsx # 網格視圖
+│   │   │   ├── index.tsx # 檔案列表組件
+│   │   │   └── ListView.tsx # 列表視圖
+│   │   ├── FilePreview # 檔案預覽
+│   │   │   └── index.tsx # 檔案預覽組件
+│   │   ├── hooks # 自定義hooks
+│   │   │   ├── useFileManager.ts # 檔案管理
+│   │   │   ├── useFileOperations.ts # 檔案操作
+│   │   │   └── useUpload.ts # 檔案上傳
+│   │   ├── StatusBar # 狀態欄
+│   │   │   └── index.tsx # 狀態欄組件
+│   │   ├── UploadProgress # 上傳進度
+│   │   │   └── index.tsx # 上傳進度組件
+│   │   └── types.ts # 類型定義
 ├── services-----------------------------------------------------------AWS服務
 │   ├── auth
 │   │   ├── cognito.ts # 認證服務 (更新、刪除用戶)
