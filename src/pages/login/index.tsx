@@ -274,13 +274,13 @@ export default function Login() {
         </div>
         
         {/* MetaAge 主要內容 */}
-        <div className="relative z-10 text-center">
-          <div className="mb-10">
-            <img src="/metaage-logo1.png" alt="MetaAge Logo" className="h-32 mx-auto mb-8 filter drop-shadow-xl animate-glow" />
+        <div className="relative z-10 text-center mt-[-80px]">
+          <div className="mb-6">
+            <img src="/metaage-logo1.png" alt="MetaAge Logo" className="h-32 mx-auto mb-6 filter drop-shadow-xl animate-glow" />
           </div>
           
           <div className="max-w-xl mx-auto relative">
-            <div className="grid gap-6 mt-8">
+            <div className="grid gap-5 mt-4">
               <FeatureItem icon={<FaShieldAlt />} text="全方位支持，成就客戶的下一步" />
               <FeatureItem icon={<FaHeadset />} text="24/7 專業技術支援服務" />
               <FeatureItem icon={<FaRocket />} text="助您企業數位轉型起飛" />
