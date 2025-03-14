@@ -162,8 +162,8 @@ const ListView: React.FC<ListViewProps> = ({
             <td className="px-6 py-4 align-middle text-gray-500 dark:text-gray-400">
               {formatDateTime(folder.lastModified)}
             </td>
-            <td className="px-6 py-4 align-middle">
-              <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <td className="px-6 py-4 whitespace-nowrap">
+              <div className="flex items-center justify-center h-full space-x-2 z-20 action-button-always-visible">
                 <button
                   onClick={() => onDeleteFolder(folder.name)}
                   className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg 
@@ -208,8 +208,8 @@ const ListView: React.FC<ListViewProps> = ({
             <td className="px-6 py-4 align-middle text-gray-500 dark:text-gray-400">
               {file.LastModified ? formatDateTime(file.LastModified) : '-'}
             </td>
-            <td className="px-6 py-4 align-middle">
-              <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <td className="px-6 py-4 whitespace-nowrap">
+              <div className="flex items-center justify-center h-full space-x-2 z-20 action-button-always-visible">
                 <button
                   onClick={() => onDownload(file.Key || '', file.Key?.split('/').pop() || '')}
                   className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg 

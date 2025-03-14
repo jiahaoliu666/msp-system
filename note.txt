@@ -16,7 +16,7 @@ ses
 
 storage資料夾底下有各種的storage相關的代碼，以及使用src/pages/storage.tsx作為主檔案，幫我將此storage添加更多功能和修改樣式變的更加完整完善易讀且人性化，要使用 AWS SDK for JavaScript v3 和 Tailwind CSS 作為唯一的樣式框架
  
-
+，把類型、大小、修改時間、操作這些欄位 和下方文字內容垂直置中對齊 不要一左一右
 --------------------------------
 
 
@@ -178,6 +178,8 @@ src/pages/handover-item/index.tsx 交接項目
 src/pages/storage.tsx 檔案儲存
 
 綁s3 資料夾
+
+檔案icon要能變更
 
 --------------------------------
 

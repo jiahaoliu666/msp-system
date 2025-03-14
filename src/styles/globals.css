@@ -62,6 +62,13 @@
   opacity: 1;
 }
 
+/* 確保操作按鈕 (如垃圾桶圖標) 始終可見 */
+.action-button-always-visible {
+  opacity: 1 !important;
+  z-index: 20;
+  visibility: visible !important;
+}
+
 @layer base {
   :root {
     /* 字體設置 */

@@ -55,7 +55,7 @@ const GridView: React.FC<GridViewProps> = ({
                 </div>
               </div>
             </div>
-            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="absolute top-2 right-2 opacity-100 z-20 action-button-always-visible">
               <button
                 onClick={() => onDeleteFolder(folder.name)}
                 className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg 
@@ -100,8 +100,7 @@ const GridView: React.FC<GridViewProps> = ({
                 </div>
               </div>
             </div>
-            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 
-                          transition-opacity flex space-x-1">
+            <div className="absolute top-2 right-2 opacity-100 flex space-x-1 z-20 action-button-always-visible">
               <button
                 onClick={() => onDownload(file.Key || '', file.Key?.split('/').pop() || '')}
                 className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg 
