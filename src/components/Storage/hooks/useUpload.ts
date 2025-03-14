@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import { uploadFile, deleteFile } from '@/services/storage/s3';
 import { S3_CONFIG } from '@/config/s3-config';
 import { formatFileSize } from '@/config/s3-config';
-import { FileItem, UploadReturn } from '../types';
+import { FileItem, UploadReturn } from '@/components/storage/types';
 
 export const useUpload = (
   currentPath: string,

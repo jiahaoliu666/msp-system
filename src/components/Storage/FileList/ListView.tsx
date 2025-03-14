@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileItem, FolderItem } from '../types';
+import { FileItem, FolderItem } from '@/components/storage/types';
 import { formatFileSize, formatDateTime } from '@/services/storage/s3';
 
 interface ListViewProps {

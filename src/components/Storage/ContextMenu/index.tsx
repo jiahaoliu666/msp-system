@@ -1,5 +1,5 @@
 import { useRef, useEffect } from 'react';
-import { ContextMenuProps } from '../types';
+import { ContextMenuProps } from '@/components/storage/types';
 
 const ContextMenu: React.FC<ContextMenuProps> = ({ file, position, onClose, onAction }) => {
   const menuRef = useRef<HTMLDivElement>(null);

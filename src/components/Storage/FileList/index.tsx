@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { FileItem, FolderItem } from '../types';
+import { FileItem, FolderItem } from '@/components/storage/types';
 import { formatFileSize, formatDateTime, getFileTypeIcon } from '@/services/storage/s3';
-import GridView from '@/components/Storage/FileList/GridView';
-import ListView from '@/components/Storage/FileList/ListView';
+import GridView from '@/components/storage/FileList/GridView';
+import ListView from '@/components/storage/FileList/ListView';
 
 interface FileListProps {
   files: FileItem[];

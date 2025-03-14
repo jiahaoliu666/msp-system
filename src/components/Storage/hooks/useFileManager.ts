@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
 import { listFilesInFolder } from '@/services/storage/s3';
-import { FileItem, FolderItem, FileManagerReturn } from '../types';
+import { FileItem, FolderItem, FileManagerReturn } from '@/components/storage/types';
 
 export const useFileManager = (): FileManagerReturn => {
   // 狀態管理

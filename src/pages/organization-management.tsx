@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import CreateOrganizationForm from '../components/UserManagement/CreateOrganizationForm';
+import CreateOrganizationForm from '../components/usermanagement/CreateOrganizationForm';
 import { useState, useEffect, Fragment } from 'react';
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, ScanCommand, DeleteCommand, PutCommand } from "@aws-sdk/lib-dynamodb";

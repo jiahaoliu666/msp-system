@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, ScanCommand, DeleteCommand, PutCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
-import CreateContractForm from '../components/UserManagement/CreateContractForm';
+import CreateContractForm from '../components/usermanagement/CreateContractForm';
 import { Dialog, Transition } from '@headlessui/react';
 import { DB_CONFIG } from '../config/db-config';
 import { CONTRACT_TYPES, CONTRACT_STATUS, Contract, getContractTypeLabel, getContractStatusLabel, getContractStatusStyle } from '../config/contract-config';

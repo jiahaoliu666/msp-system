@@ -1,4 +1,4 @@
-import { EmptyStateProps } from '../types';
+import { EmptyStateProps } from '@/components/storage/types';
 
 const EmptyState: React.FC<EmptyStateProps> = ({ type, searchTerm }) => (
   <div className="flex flex-col items-center justify-center py-20">

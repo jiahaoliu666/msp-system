@@ -8,7 +8,7 @@ import {
   generateShareLink,
   isPreviewable
 } from '@/services/storage/s3';
-import { FileItem, FileOperationsReturn } from '../types';
+import { FileItem, FileOperationsReturn } from '@/components/storage/types';
 
 export const useFileOperations = (
   currentPath: string,

@@ -3,17 +3,17 @@ import { toast } from 'react-toastify';
 import { testCORSConfiguration } from '@/services/storage/s3';
 
 // 引入組件
-import FileList from '@/components/Storage/FileList';
-import EmptyState from '@/components/Storage/EmptyState';
-import UploadProgress from '@/components/Storage/UploadProgress';
-import StatusBar from '@/components/Storage/StatusBar';
-import FilePreview from '@/components/Storage/FilePreview';
-import ContextMenu from '@/components/Storage/ContextMenu';
+import FileList from '@/components/storage/FileList';
+import EmptyState from '@/components/storage/EmptyState';
+import UploadProgress from '@/components/storage/UploadProgress';
+import StatusBar from '@/components/storage/StatusBar';
+import FilePreview from '@/components/storage/FilePreview';
+import ContextMenu from '@/components/storage/ContextMenu';
 
 // 引入 hooks
-import { useFileManager } from '@/components/Storage/hooks/useFileManager';
-import { useUpload } from '@/components/Storage/hooks/useUpload';
-import { useFileOperations } from '@/components/Storage/hooks/useFileOperations';
+import { useFileManager } from '@/components/storage/hooks/useFileManager';
+import { useUpload } from '@/components/storage/hooks/useUpload';
+import { useFileOperations } from '@/components/storage/hooks/useFileOperations';
 
 export default function Storage() {
   // 狀態管理

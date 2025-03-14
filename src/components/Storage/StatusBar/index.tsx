@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { getStorageQuota } from '@/services/storage/s3';
 import { formatFileSize } from '@/config/s3-config';
 import { STATUS_BAR_CONFIG } from '@/config/s3-config';
-import { StatusBarProps } from '../types';
+import { StatusBarProps } from '@/components/storage/types';
 
 const StatusBar: React.FC<StatusBarProps> = ({ 
   selectedItems, 

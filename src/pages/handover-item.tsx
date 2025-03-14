@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { DragDropContext, Droppable, Draggable, DroppableProvided, DraggableProvided, DropResult } from 'react-beautiful-dnd';
-import CreateHandoverItemForm from '../components/HandoverItem/CreateHandoverItemForm';
+import CreateHandoverItemForm from '../components/handoveritem/CreateHandoverItemForm';
 import { IoAdd, IoCheckmark, IoTime, IoWarning, IoChatbubble, IoAttach } from 'react-icons/io5';
 
 interface HandoverItem {

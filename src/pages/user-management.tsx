@@ -3,7 +3,7 @@ import { CognitoService } from '@/services/auth/cognito';
 import { UserType, AttributeType } from '@aws-sdk/client-cognito-identity-provider';
 import Link from 'next/link';
 import { Dialog, Transition } from '@headlessui/react';
-import CreateUserForm from '@/components/UserManagement/CreateUserForm';
+import CreateUserForm from '@/components/usermanagement/CreateUserForm';
 import { useToast } from '@/context/ToastContext';
 import { useRouter } from 'next/router';
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";

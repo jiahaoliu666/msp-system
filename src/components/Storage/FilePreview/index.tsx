@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { getFilePreviewUrl } from '@/services/storage/s3';
 import { PREVIEW_CONFIG } from '@/config/s3-config';
 import { formatFileSize, formatDateTime } from '@/services/storage/s3';
-import { FilePreviewProps } from '../types';
+import { FilePreviewProps } from '@/components/storage/types';
 
 const FilePreview: React.FC<FilePreviewProps> = ({ file, onClose }) => {
   const [previewUrl, setPreviewUrl] = useState<string>('');

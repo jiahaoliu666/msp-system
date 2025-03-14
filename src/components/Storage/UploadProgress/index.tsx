@@ -1,4 +1,4 @@
-import { UploadProgressProps } from '../types';
+import { UploadProgressProps } from '@/components/storage/types';
 
 const UploadProgress: React.FC<UploadProgressProps> = ({ progress }) => (
   <div className="fixed bottom-6 right-6 bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-5 w-96
