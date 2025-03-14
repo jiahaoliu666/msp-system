@@ -297,6 +297,8 @@ src/pages/operation-record/index.tsx 操作紀錄
 
 src/pages/system-setting/index.tsx 系統設定
 
+要能選擇每次訪問左側欄後是否要持續展開或隱藏左側欄
+
 --------------------------------
 
 src/pages/version-record/index.tsx 更版紀錄
@@ -366,6 +368,8 @@ suport -> case 到ticket system
 添加其他二線資訊、purestoreage 或 其他產品的資訊
 
 © 2025 MetaAge MSP. All rights reserved. 要能抓到對應的年
+
+
 
 
 
