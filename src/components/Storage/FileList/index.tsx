@@ -26,6 +26,7 @@ interface FileListProps {
   onFilePreview: (file: FileItem) => void;
   onContextMenu: (e: React.MouseEvent, file: FileItem) => void;
   onSort: (key: string) => void;
+  starredItems: FileItem[];
 }
 
 const FileList: React.FC<FileListProps> = ({
@@ -46,7 +47,8 @@ const FileList: React.FC<FileListProps> = ({
   onDelete,
   onFilePreview,
   onContextMenu,
-  onSort
+  onSort,
+  starredItems
 }) => {
   // 檔案篩選與排序
   const filteredFiles = files

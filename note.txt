@@ -13,7 +13,14 @@ ses
 
 並重構 src/pages/storage.tsx 主頁面，使其引用這些組件並組合它們
 同時符合 Next.js 的最佳實踐，將邏輯與 UI 分離，提高了代碼的可維護性和可重用性。
+
+storage資料夾底下有各種的storage相關的代碼，以及使用src/pages/storage.tsx作為主檔案，幫我將此storage添加更多功能和修改樣式變的更加完整完善易讀且人性化，要使用 AWS SDK for JavaScript v3 和 Tailwind CSS 作為唯一的樣式框架
+ 
+
 --------------------------------
+
+
+
 
 src/pages/login/index.tsx 登入介面
 

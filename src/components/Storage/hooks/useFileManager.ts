@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
 import { listFilesInFolder } from '@/services/storage/s3';
-import { FileItem, FolderItem, FileManagerReturn } from '@/components/storage/types';
+import { FileItem, FolderItem, FileManagerReturn, FileFilters } from '@/components/storage/types';
 
 export const useFileManager = (): FileManagerReturn => {
+  console.log("useFileManager hook 初始化");
   // 狀態管理
   const [files, setFiles] = useState<FileItem[]>([]);
   const [folders, setFolders] = useState<FolderItem[]>([]);
@@ -15,6 +16,10 @@ export const useFileManager = (): FileManagerReturn => {
   const [parentPath, setParentPath] = useState<string | null>(null);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [totalSize, setTotalSize] = useState<number>(0);
+  const [filteredItems, setFilteredItems] = useState<{ files: FileItem[]; folders: FolderItem[] }>({ files: [], folders: [] });
+  const [starredItems, setStarredItems] = useState<Set<string>>(new Set());
+  const [breadcrumbs, setBreadcrumbs] = useState<string[]>([]);
+  const [recentFolders, setRecentFolders] = useState<string[]>([]);
 
   const maxRetries = 3;
   const retryDelay = 2000;
@@ -115,6 +120,35 @@ export const useFileManager = (): FileManagerReturn => {
     setTotalSize(size);
   }, [files]);
 
+  // 處理麵包屑
+  useEffect(() => {
+    if (!currentPath) {
+      setBreadcrumbs([]);
+      return;
+    }
+    
+    const pathParts = currentPath.split('/').filter(Boolean);
+    const breadcrumbPaths: string[] = [];
+    
+    let currentBreadcrumb = '';
+    for (const part of pathParts) {
+      currentBreadcrumb = currentBreadcrumb ? `${currentBreadcrumb}/${part}` : part;
+      breadcrumbPaths.push(currentBreadcrumb);
+    }
+    
+    setBreadcrumbs(breadcrumbPaths);
+  }, [currentPath]);
+
+  // 最近訪問的資料夾
+  useEffect(() => {
+    if (currentPath) {
+      setRecentFolders(prev => {
+        const newRecentFolders = [currentPath, ...prev.filter(f => f !== currentPath)].slice(0, 5);
+        return newRecentFolders;
+      });
+    }
+  }, [currentPath]);
+
   // 進入資料夾
   const handleEnterFolder = (folderName: string) => {
     const newPath = currentPath 
@@ -154,7 +188,94 @@ export const useFileManager = (): FileManagerReturn => {
     }
   };
 
-  return {
+  // 應用過濾器
+  const applyFilters = useCallback((filters: FileFilters) => {
+    console.log("原始 applyFilters 函數被調用，過濾條件:", filters);
+    
+    let filteredFiles = [...files];
+    let filteredFolders = [...folders];
+
+    // 搜尋詞過濾
+    if (filters.searchTerm) {
+      const searchLower = filters.searchTerm.toLowerCase();
+      filteredFiles = filteredFiles.filter(file => 
+        file.Key?.toLowerCase().includes(searchLower)
+      );
+      filteredFolders = filteredFolders.filter(folder => 
+        folder.name.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // 檔案類型過濾
+    if (filters.fileTypes && filters.fileTypes.length > 0) {
+      filteredFiles = filteredFiles.filter(file => 
+        filters.fileTypes?.includes(file.type || '')
+      );
+    }
+
+    // 日期範圍過濾
+    if (filters.dateRange) {
+      const [startDate, endDate] = filters.dateRange;
+      filteredFiles = filteredFiles.filter(file => {
+        const fileDate = file.LastModified;
+        if (!fileDate) return false;
+        
+        if (startDate && endDate) {
+          return fileDate >= startDate && fileDate <= endDate;
+        } else if (startDate) {
+          return fileDate >= startDate;
+        } else if (endDate) {
+          return fileDate <= endDate;
+        }
+        return true;
+      });
+    }
+
+    // 排序
+    if (filters.sortBy) {
+      const direction = filters.sortDirection === 'desc' ? -1 : 1;
+      filteredFiles.sort((a, b) => {
+        switch (filters.sortBy) {
+          case 'name':
+            return direction * (a.Key || '').localeCompare(b.Key || '');
+          case 'date':
+            return direction * ((b.LastModified?.getTime() || 0) - (a.LastModified?.getTime() || 0));
+          case 'size':
+            return direction * ((b.Size || 0) - (a.Size || 0));
+          case 'type':
+            return direction * (a.type || '').localeCompare(b.type || '');
+          default:
+            return 0;
+        }
+      });
+    }
+
+    setFilteredItems({ files: filteredFiles, folders: filteredFolders });
+  }, [files, folders]);
+
+  // 初始化時立即設置 filteredItems
+  useEffect(() => {
+    // 確保文件加載後初始化過濾結果
+    console.log("初始化 filteredItems", {files: files.length, folders: folders.length});
+    setFilteredItems({files, folders});
+  }, [files, folders]);
+
+  // 切換星號標記
+  const toggleStarred = useCallback(async (key: string) => {
+    setStarredItems(prev => {
+      const newStarred = new Set(prev);
+      if (newStarred.has(key)) {
+        newStarred.delete(key);
+        toast.info('已取消標記');
+      } else {
+        newStarred.add(key);
+        toast.success('已標記為星號');
+      }
+      return newStarred;
+    });
+  }, []);
+
+  const returnObj = {
     files,
     folders,
     isLoading,
@@ -163,6 +284,7 @@ export const useFileManager = (): FileManagerReturn => {
     parentPath,
     selectedItems,
     totalSize,
+    filteredItems,
     loadFiles,
     handleRetry,
     handleEnterFolder,
@@ -170,6 +292,32 @@ export const useFileManager = (): FileManagerReturn => {
     handleSelectItem,
     handleSelectAll,
     setCurrentPath,
-    setSelectedItems
+    setSelectedItems,
+    applyFilters,
+    starredItems,
+    toggleStarred,
+    breadcrumbs,
+    recentFolders
   };
+  
+  console.log("useFileManager 返回前檢查:", {
+    filesCount: files.length,
+    foldersCount: folders.length,
+    hasApplyFilters: typeof applyFilters === 'function',
+    hasFilteredItems: !!filteredItems
+  });
+  
+  // 調試輸出
+  console.log("useFileManager 返回對象中 applyFilters 類型:", typeof returnObj.applyFilters);
+  
+  // 確保 applyFilters 始終是一個函數
+  if (typeof returnObj.applyFilters !== 'function') {
+    console.error("applyFilters 未正確初始化，設置為空函數");
+    returnObj.applyFilters = (filters: FileFilters) => {
+      console.log("使用備用 applyFilters 函數", filters);
+      setFilteredItems({ files, folders });
+    };
+  }
+  
+  return returnObj;
 }; 

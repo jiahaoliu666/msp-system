@@ -20,6 +20,15 @@ export const useUpload = (
     newKey: string;
   } | null>(null);
 
+  // 添加缺少的狀態
+  const [uploadQueue, setUploadQueue] = useState<File[]>([]);
+  const [uploadSpeed, setUploadSpeed] = useState<number>(0);
+  const [uploadStartTime, setUploadStartTime] = useState<Date | null>(null);
+  const [estimatedTimeRemaining, setEstimatedTimeRemaining] = useState<number | null>(null);
+  const [currentFileIndex, setCurrentFileIndex] = useState<number>(0);
+  const [totalFiles, setTotalFiles] = useState<number>(0);
+  const [isPaused, setIsPaused] = useState<boolean>(false);
+
   // 檔案上傳處理
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) {
@@ -154,6 +163,28 @@ export const useUpload = (
     noClick: true
   });
 
+  // 暫停上傳
+  const pauseUpload = () => {
+    setIsPaused(true);
+    toast.info('上傳已暫停');
+  };
+
+  // 繼續上傳
+  const resumeUpload = () => {
+    setIsPaused(false);
+    toast.info('上傳已繼續');
+  };
+
+  // 取消上傳
+  const cancelUpload = () => {
+    setIsUploading(false);
+    setUploadQueue([]);
+    setUploadProgress(0);
+    setCurrentFileIndex(0);
+    setTotalFiles(0);
+    toast.info('上傳已取消');
+  };
+
   return {
     isUploading,
     uploadProgress,
@@ -165,6 +196,16 @@ export const useUpload = (
     setDraggedOver,
     getRootProps,
     getInputProps,
-    isDragActive
+    isDragActive,
+    // 添加缺少的返回值
+    uploadQueue,
+    uploadSpeed,
+    uploadStartTime,
+    estimatedTimeRemaining,
+    pauseUpload,
+    resumeUpload,
+    cancelUpload,
+    currentFileIndex,
+    totalFiles
   };
 }; 

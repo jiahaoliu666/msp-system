@@ -311,6 +311,14 @@ export function getFileTypeIcon(fileName: string): string {
 // 測試 CORS 配置
 export async function testCORSConfiguration(): Promise<boolean> {
   try {
+    console.log('開始測試 S3 CORS 配置...');
+    console.log('S3 配置信息:', {
+      bucketName: S3_CONFIG.bucketName,
+      region: AWS_CONFIG.region,
+      endpoint: AWS_CONFIG.endpoint,
+      hasCredentials: !!(AWS_CONFIG.credentials?.accessKeyId && AWS_CONFIG.credentials?.secretAccessKey)
+    });
+    
     validateS3Config();
     
     // 檢查網路連接
@@ -325,36 +333,51 @@ export async function testCORSConfiguration(): Promise<boolean> {
     });
 
     try {
+      console.log('發送 S3 列表請求...');
       const response = await s3Client.send(command);
-      console.log('CORS 配置正確, 響應:', response);
+      console.log('S3 CORS 測試成功，響應:', response);
       return true;
     } catch (error: any) {
-      console.error('CORS 測試錯誤:', {
+      console.error('S3 CORS 測試請求失敗:', {
         name: error.name,
         message: error.message,
         stack: error.stack,
         metadata: error.$metadata
       });
       
+      // 輸出更多診斷信息
+      if (error.$metadata) {
+        console.error('S3 請求元數據:', {
+          httpStatusCode: error.$metadata.httpStatusCode,
+          requestId: error.$metadata.requestId,
+          attempts: error.$metadata.attempts,
+          totalRetryDelay: error.$metadata.totalRetryDelay
+        });
+      }
+      
       if (error instanceof TypeError && error.message === 'Failed to fetch') {
         if (!navigator.onLine) {
           throw new Error(ErrorMessages.NETWORK_ERROR);
         }
         console.error('請求失敗，可能是 CORS 或網路問題');
-        throw new Error(ErrorMessages.CORS_ERROR);
+        throw new Error(`${ErrorMessages.CORS_ERROR} - 詳細信息: ${error.message}`);
       }
 
       if (error.$metadata?.httpStatusCode === 403) {
-        console.error('權限錯誤');
-        throw new Error(ErrorMessages.PERMISSION_DENIED);
+        console.error('權限錯誤 - 可能是 AWS 認證無效或過期');
+        throw new Error(`${ErrorMessages.PERMISSION_DENIED} - 請檢查 AWS 認證是否有效`);
       }
       
-      throw error;
+      if (error.$metadata?.httpStatusCode === 404) {
+        console.error('資源不存在 - 可能是儲存桶名稱錯誤');
+        throw new Error(`找不到儲存桶 '${S3_CONFIG.bucketName}' - 請檢查儲存桶名稱是否正確`);
+      }
+      
+      throw new Error(`S3 連接測試失敗: ${error.message || '未知錯誤'}`);
     }
-  } catch (error) {
-    console.error('測試 CORS 配置失敗:', error);
-    handleS3Error(error);
-    return false;
+  } catch (error: any) {
+    console.error('測試 S3 CORS 配置失敗:', error);
+    throw new Error(`S3 連接測試失敗: ${error.message || '未知錯誤'}`);
   }
 }
 
@@ -751,4 +774,46 @@ function getMimeType(extension: string): string {
   };
   
   return mimeTypes[extension] || 'application/octet-stream';
+}
+
+// 重新初始化 S3 客戶端
+export function reinitializeS3Client(config?: {
+  accessKeyId?: string;
+  secretAccessKey?: string;
+  region?: string;
+  endpoint?: string;
+}) {
+  try {
+    console.log('重新初始化 S3 客戶端...');
+    
+    // 更新配置
+    if (config) {
+      if (config.accessKeyId) AWS_CONFIG.credentials.accessKeyId = config.accessKeyId;
+      if (config.secretAccessKey) AWS_CONFIG.credentials.secretAccessKey = config.secretAccessKey;
+      if (config.region) AWS_CONFIG.region = config.region;
+      if (config.endpoint) AWS_CONFIG.endpoint = config.endpoint;
+    }
+    
+    // 重新創建客戶端
+    const newClient = new S3Client({
+      region: AWS_CONFIG.region,
+      credentials: AWS_CONFIG.credentials,
+      endpoint: AWS_CONFIG.endpoint,
+      forcePathStyle: true,
+      maxAttempts: AWS_CONFIG.maxAttempts,
+      retryMode: AWS_CONFIG.retryMode,
+      requestHandler: new FetchHttpHandler({
+        requestTimeout: AWS_CONFIG.requestTimeout
+      })
+    });
+    
+    // 更新全局客戶端
+    Object.assign(s3Client, newClient);
+    
+    console.log('S3 客戶端重新初始化成功');
+    return true;
+  } catch (error) {
+    console.error('S3 客戶端重新初始化失敗:', error);
+    return false;
+  }
 } 
