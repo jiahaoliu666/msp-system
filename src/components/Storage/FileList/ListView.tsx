@@ -40,7 +40,7 @@ const ListView: React.FC<ListViewProps> = ({
     <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
       <thead className="bg-gray-50 dark:bg-gray-900">
         <tr>
-          <th className="w-[40px] px-6 py-3 text-left">
+          <th className="w-[40px] px-6 py-3 text-center align-middle">
             <input
               type="checkbox"
               checked={selectedItems.size > 0}
@@ -53,7 +53,7 @@ const ListView: React.FC<ListViewProps> = ({
           </th>
           <th 
             onClick={() => onSort('name')}
-            className="px-6 py-3 text-left text-xs font-medium text-gray-500 
+            className="px-6 py-3 text-left align-middle text-xs font-medium text-gray-500 
                      dark:text-gray-400 uppercase tracking-wider cursor-pointer 
                      hover:bg-gray-100 dark:hover:bg-gray-800"
           >
@@ -72,11 +72,11 @@ const ListView: React.FC<ListViewProps> = ({
           </th>
           <th 
             onClick={() => onSort('type')}
-            className="w-[120px] px-6 py-3 text-left text-xs font-medium text-gray-500 
+            className="w-[120px] px-6 py-3 text-center align-middle text-xs font-medium text-gray-500 
                      dark:text-gray-400 uppercase tracking-wider cursor-pointer 
                      hover:bg-gray-100 dark:hover:bg-gray-800"
           >
-            <div className="flex items-center space-x-1">
+            <div className="flex items-center justify-center space-x-1">
               <span>類型</span>
               {sortConfig.key === 'type' && (
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -91,11 +91,11 @@ const ListView: React.FC<ListViewProps> = ({
           </th>
           <th 
             onClick={() => onSort('size')}
-            className="w-[120px] px-6 py-3 text-left text-xs font-medium text-gray-500 
+            className="w-[120px] px-6 py-3 text-center align-middle text-xs font-medium text-gray-500 
                      dark:text-gray-400 uppercase tracking-wider cursor-pointer 
                      hover:bg-gray-100 dark:hover:bg-gray-800"
           >
-            <div className="flex items-center space-x-1">
+            <div className="flex items-center justify-center space-x-1">
               <span>大小</span>
               {sortConfig.key === 'size' && (
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -110,11 +110,11 @@ const ListView: React.FC<ListViewProps> = ({
           </th>
           <th 
             onClick={() => onSort('date')}
-            className="w-[180px] px-6 py-3 text-left text-xs font-medium text-gray-500 
+            className="w-[180px] px-6 py-3 text-center align-middle text-xs font-medium text-gray-500 
                      dark:text-gray-400 uppercase tracking-wider cursor-pointer 
                      hover:bg-gray-100 dark:hover:bg-gray-800"
           >
-            <div className="flex items-center space-x-1">
+            <div className="flex items-center justify-center space-x-1">
               <span>修改時間</span>
               {sortConfig.key === 'date' && (
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -127,7 +127,7 @@ const ListView: React.FC<ListViewProps> = ({
               )}
             </div>
           </th>
-          <th className="w-[120px] px-6 py-3 text-left text-xs font-medium text-gray-500 
+          <th className="w-[120px] px-6 py-3 text-center align-middle text-xs font-medium text-gray-500 
                         dark:text-gray-400 uppercase tracking-wider">操作</th>
         </tr>
       </thead>
@@ -139,7 +139,7 @@ const ListView: React.FC<ListViewProps> = ({
             className="group hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
             onContextMenu={(e) => onContextMenu(e, { ...folder, type: 'folder' } as FileItem)}
           >
-            <td className="px-6 py-4 align-middle">
+            <td className="px-6 py-4 align-middle text-center">
               <input
                 type="checkbox"
                 checked={selectedItems.has(`${currentPath}/${folder.name}/`)}
@@ -149,7 +149,7 @@ const ListView: React.FC<ListViewProps> = ({
                          dark:checked:bg-blue-500 dark:focus:ring-offset-gray-800"
               />
             </td>
-            <td className="px-6 py-4 align-middle">
+            <td className="px-6 py-4 align-middle text-left">
               <button
                 onClick={() => onEnterFolder(folder.name)}
                 className="flex items-center text-blue-600 dark:text-blue-400 hover:underline"
@@ -157,12 +157,12 @@ const ListView: React.FC<ListViewProps> = ({
                 <span className="font-medium">{folder.name}</span>
               </button>
             </td>
-            <td className="px-6 py-4 align-middle text-gray-500 dark:text-gray-400">資料夾</td>
-            <td className="px-6 py-4 align-middle text-gray-500 dark:text-gray-400">{formatFileSize(folder.size)}</td>
-            <td className="px-6 py-4 align-middle text-gray-500 dark:text-gray-400">
+            <td className="px-6 py-4 align-middle text-center text-gray-500 dark:text-gray-400">資料夾</td>
+            <td className="px-6 py-4 align-middle text-center text-gray-500 dark:text-gray-400">{formatFileSize(folder.size)}</td>
+            <td className="px-6 py-4 align-middle text-center text-gray-500 dark:text-gray-400">
               {formatDateTime(folder.lastModified)}
             </td>
-            <td className="px-6 py-4 whitespace-nowrap">
+            <td className="px-6 py-4 whitespace-nowrap align-middle text-center">
               <div className="flex items-center justify-center h-full space-x-2 z-20 action-button-always-visible">
                 <button
                   onClick={() => onDeleteFolder(folder.name)}
@@ -188,7 +188,7 @@ const ListView: React.FC<ListViewProps> = ({
             onContextMenu={(e) => onContextMenu(e, file)}
             onDoubleClick={() => onFilePreview(file)}
           >
-            <td className="px-6 py-4 align-middle">
+            <td className="px-6 py-4 align-middle text-center">
               <input
                 type="checkbox"
                 checked={selectedItems.has(`${currentPath}/${file.Key}`)}
@@ -198,17 +198,17 @@ const ListView: React.FC<ListViewProps> = ({
                          dark:checked:bg-blue-500 dark:focus:ring-offset-gray-800"
               />
             </td>
-            <td className="px-6 py-4 align-middle">
+            <td className="px-6 py-4 align-middle text-left">
               <div className="flex items-center">
                 <span className="font-medium text-gray-900 dark:text-gray-100">{file.Key?.split('/').pop() || ''}</span>
               </div>
             </td>
-            <td className="px-6 py-4 align-middle text-gray-500 dark:text-gray-400">{file.type.toUpperCase()}</td>
-            <td className="px-6 py-4 align-middle text-gray-500 dark:text-gray-400">{formatFileSize(file.Size || 0)}</td>
-            <td className="px-6 py-4 align-middle text-gray-500 dark:text-gray-400">
+            <td className="px-6 py-4 align-middle text-center text-gray-500 dark:text-gray-400">{file.type.toUpperCase()}</td>
+            <td className="px-6 py-4 align-middle text-center text-gray-500 dark:text-gray-400">{formatFileSize(file.Size || 0)}</td>
+            <td className="px-6 py-4 align-middle text-center text-gray-500 dark:text-gray-400">
               {file.LastModified ? formatDateTime(file.LastModified) : '-'}
             </td>
-            <td className="px-6 py-4 whitespace-nowrap">
+            <td className="px-6 py-4 whitespace-nowrap align-middle text-center">
               <div className="flex items-center justify-center h-full space-x-2 z-20 action-button-always-visible">
                 <button
                   onClick={() => onDownload(file.Key || '', file.Key?.split('/').pop() || '')}
