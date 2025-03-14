@@ -1,3 +1,4 @@
+/* postcss-preset-env and tailwindcss */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
@@ -30,36 +31,36 @@
 
 /* 輸入框發光效果 */
 .input-glow {
-  box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
-  transition: box-shadow 0.3s ease-in-out;
+  transition: box-shadow 0.3s ease;
 }
 
 .input-glow:focus {
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3), 0 0 15px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.5);
 }
 
 /* 按鈕發光效果 */
 .button-glow {
   position: relative;
-  z-index: 1;
+  overflow: hidden;
 }
 
 .button-glow::before {
   content: '';
   position: absolute;
-  z-index: -1;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(to right, rgba(59, 130, 246, 0.7), rgba(79, 70, 229, 0.7));
-  border-radius: 0.5rem;
-  opacity: 0;
-  transition: opacity 0.3s ease-in-out;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(
+    transparent, 
+    rgba(56, 189, 248, 0.1), 
+    transparent 30%
+  );
+  animation: rotate 4s linear infinite;
 }
 
 .button-glow:hover::before {
-  opacity: 1;
+  animation: rotate 2s linear infinite;
 }
 
 /* 確保操作按鈕 (如垃圾桶圖標) 始終可見 */
@@ -67,6 +68,59 @@
   opacity: 1 !important;
   z-index: 20;
   visibility: visible !important;
+}
+
+/* 欄位調整相關樣式 */
+.column-resizer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 5px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 10;
+  transition: background-color 0.2s;
+}
+
+.column-resizer:hover {
+  background-color: rgba(59, 130, 246, 0.5);
+}
+
+.column-resizer.active {
+  background-color: rgba(59, 130, 246, 0.8);
+}
+
+.table-column-resizing {
+  cursor: col-resize !important;
+  user-select: none;
+}
+
+/* 在調整時顯示輔助線 */
+.column-resize-line {
+  position: fixed;
+  top: 0;
+  width: 2px;
+  height: 100vh;
+  background-color: rgba(59, 130, 246, 0.8);
+  z-index: 9999;
+  pointer-events: none;
+  box-shadow: 0 0 4px rgba(59, 130, 246, 0.6);
+  animation: pulse-blue 1.5s infinite;
+}
+
+@keyframes pulse-blue {
+  0%, 100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* 表格中的欄位和單元格通用樣式 */
+th, td {
+  transition: width 0.2s ease;
+  position: relative;
 }
 
 @layer base {

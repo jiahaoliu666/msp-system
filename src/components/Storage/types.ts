@@ -222,6 +222,22 @@ export interface FileFilters {
   sortDirection?: 'asc' | 'desc';
 }
 
+// 新增: 欄位寬度設置
+export interface ColumnWidths {
+  name: number;
+  type: number;
+  size: number;
+  lastModified: number;
+  actions: number;
+}
+
+// 新增: 欄位寬度配置 Props
+export interface ColumnWidthsConfigProps {
+  columnWidths: ColumnWidths;
+  onColumnWidthChange: (column: keyof ColumnWidths, width: number) => void;
+  onResetColumnWidths: () => void;
+}
+
 // 新增: 資料夾選擇器 Props
 export interface FolderSelectorProps {
   currentPath: string;
