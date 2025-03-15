@@ -148,11 +148,14 @@ const ListView: React.FC<ListViewProps> = ({
       // 直接計算新寬度，完全基於滑鼠移動距離
       const newWidth = Math.max(50, currentColumnWidth + adjustedDiff);
       
-      // 立即更新DOM以獲得即時反應
-      if (targetColumnElement) {
-        targetColumnElement.style.width = `${newWidth}px`;
-        currentColumnWidth = newWidth;
-      }
+      // 使用 requestAnimationFrame 優化視覺更新
+      requestAnimationFrame(() => {
+        // 立即更新DOM以獲得即時反應
+        if (targetColumnElement) {
+          targetColumnElement.style.width = `${newWidth}px`;
+          currentColumnWidth = newWidth;
+        }
+      });
       
       // 更新最後位置
       lastPositionRef.current = currentX;
@@ -264,11 +267,10 @@ const ListView: React.FC<ListViewProps> = ({
   }, []);
 
   return (
-    <div className="relative overflow-x-auto shadow-md rounded-lg">
+    <div className="relative overflow-x-auto border border-gray-300 dark:border-gray-600 shadow-lg rounded-xl bg-white dark:bg-gray-800 transition-all duration-200 hover:shadow-xl mx-auto my-4 max-w-full">
       <table 
         ref={tableRef} 
         className={`w-full text-sm text-left text-gray-700 dark:text-gray-300`}
-        title={precisionMode ? "精確調整模式（Shift鍵已啟用）" : "按住Shift鍵以啟用精確調整模式"}
       >
         <thead className="text-xs text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 select-none">
           <tr ref={headerRowRef}>
@@ -349,7 +351,7 @@ const ListView: React.FC<ListViewProps> = ({
           {folders.map((folder, index) => (
             <tr 
               key={`folder-${index}`}
-              className={`bg-white dark:bg-gray-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 ${
+              className={`bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 ${
                 selectedItems.has(folder.name) ? 'bg-blue-50 dark:bg-blue-900/30' : ''
               }`}
               onClick={() => onSelectItem(folder.name)}
@@ -403,7 +405,7 @@ const ListView: React.FC<ListViewProps> = ({
             return (
               <tr
                 key={`file-${index}`}
-                className={`bg-white dark:bg-gray-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 ${
+                className={`bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 ${
                   selectedItems.has(fileKey) ? 'bg-blue-50 dark:bg-blue-900/30' : ''
                 }`}
                 onClick={() => onSelectItem(fileKey)}
