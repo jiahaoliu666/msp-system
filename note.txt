@@ -65,6 +65,8 @@ src/pages/_app.tsx 頂部欄、側邊欄
 
 側邊欄導入aws同步共編儲存資料夾
 
+移除頂部欄 hover時會顯示切換至淺/深色模式的字眼
+
 --------------------------------
 
 src/pages/check-in/index.tsx 值班簽到
