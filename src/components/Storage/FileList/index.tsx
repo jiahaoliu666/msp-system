@@ -12,11 +12,6 @@ interface FileListProps {
   selectedItems: Set<string>;
   viewMode: 'list' | 'grid';
   searchTerm: string;
-  fileType: string;
-  sortConfig: {
-    key: string;
-    direction: string;
-  };
   currentPage: number;
   itemsPerPage: number;
   onSelectItem: (key: string) => void;
@@ -28,6 +23,8 @@ interface FileListProps {
   onContextMenu: (e: React.MouseEvent, file: FileItem) => void;
   onSort: (key: string) => void;
   starredItems: FileItem[];
+  isEmptyFolder?: boolean;
+  onCreateFolder?: () => void;
 }
 
 // 默認列寬
@@ -48,8 +45,6 @@ const FileList: React.FC<FileListProps> = ({
   selectedItems,
   viewMode,
   searchTerm,
-  fileType,
-  sortConfig,
   currentPage,
   itemsPerPage,
   onSelectItem,
@@ -60,7 +55,9 @@ const FileList: React.FC<FileListProps> = ({
   onFilePreview,
   onContextMenu,
   onSort,
-  starredItems
+  starredItems,
+  isEmptyFolder = false,
+  onCreateFolder
 }) => {
   // 欄位寬度狀態
   const [columnWidths, setColumnWidths] = useState<ColumnWidths>(DEFAULT_COLUMN_WIDTHS);
@@ -99,23 +96,10 @@ const FileList: React.FC<FileListProps> = ({
     .filter(file => {
       const fileName = file.Key?.toLowerCase() || '';
       const searchMatch = fileName.includes(searchTerm.toLowerCase());
-      const typeMatch = !fileType || file.type === fileType;
-      return searchMatch && typeMatch;
+      return searchMatch;
     })
     .sort((a, b) => {
-      const direction = sortConfig.direction === 'asc' ? 1 : -1;
-      switch (sortConfig.key) {
-        case 'name':
-          return direction * (a.Key || '').localeCompare(b.Key || '');
-        case 'date':
-          return direction * ((b.LastModified?.getTime() || 0) - (a.LastModified?.getTime() || 0));
-        case 'size':
-          return direction * ((b.Size || 0) - (a.Size || 0));
-        case 'type':
-          return direction * (a.type || '').localeCompare(b.type || '');
-        default:
-          return 0;
-      }
+      return (a.Key || '').localeCompare(b.Key || '');
     });
 
   // 分頁處理
@@ -127,43 +111,60 @@ const FileList: React.FC<FileListProps> = ({
   // 根據視圖模式顯示不同的檔案列表
   return (
     <>
-      {((folders.length === 0 && files.length === 0) || filteredFiles.length === 0) ? (
-        <EmptyState 
-          type={searchTerm ? 'search' : 'folder'} 
-          searchTerm={searchTerm} 
-        />
-      ) : viewMode === 'grid' ? (
-        <GridView
-          folders={folders}
-          files={paginatedFiles}
-          currentPath={currentPath}
-          selectedItems={selectedItems}
-          onSelectItem={onSelectItem}
-          onEnterFolder={onEnterFolder}
-          onDeleteFolder={onDeleteFolder}
-          onDownload={onDownload}
-          onDelete={onDelete}
-          onFilePreview={onFilePreview}
-          onContextMenu={onContextMenu}
-        />
+      {viewMode === 'grid' ? (
+        <div>
+          {isEmptyFolder ? (
+            <div className="mt-10">
+              <EmptyState 
+                type="folder" 
+                onCreateFolder={onCreateFolder} 
+              />
+            </div>
+          ) : (
+            <GridView
+              folders={folders}
+              files={paginatedFiles}
+              currentPath={currentPath}
+              selectedItems={selectedItems}
+              onSelectItem={onSelectItem}
+              onEnterFolder={onEnterFolder}
+              onDeleteFolder={onDeleteFolder}
+              onDownload={onDownload}
+              onDelete={onDelete}
+              onFilePreview={onFilePreview}
+              onContextMenu={onContextMenu}
+            />
+          )}
+        </div>
       ) : (
-        <ListView
-          folders={folders}
-          files={paginatedFiles}
-          currentPath={currentPath}
-          selectedItems={selectedItems}
-          sortConfig={sortConfig}
-          onSelectItem={onSelectItem}
-          onEnterFolder={onEnterFolder}
-          onDeleteFolder={onDeleteFolder}
-          onDownload={onDownload}
-          onDelete={onDelete}
-          onFilePreview={onFilePreview}
-          onContextMenu={onContextMenu}
-          onSort={onSort}
-          columnWidths={columnWidths}
-          onColumnWidthChange={handleColumnWidthChange}
-        />
+        <div>
+          {isEmptyFolder ? (
+            <div className="mt-10">
+              <EmptyState 
+                type="folder" 
+                onCreateFolder={onCreateFolder} 
+              />
+            </div>
+          ) : (
+            <ListView
+              folders={folders}
+              files={paginatedFiles}
+              currentPath={currentPath}
+              selectedItems={selectedItems}
+              sortConfig={{ key: 'name', direction: 'asc' }}
+              onSelectItem={onSelectItem}
+              onEnterFolder={onEnterFolder}
+              onDeleteFolder={onDeleteFolder}
+              onDownload={onDownload}
+              onDelete={onDelete}
+              onFilePreview={onFilePreview}
+              onContextMenu={onContextMenu}
+              onSort={onSort}
+              columnWidths={columnWidths}
+              onColumnWidthChange={handleColumnWidthChange}
+            />
+          )}
+        </div>
       )}
     </>
   );

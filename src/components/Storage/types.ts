@@ -81,13 +81,6 @@ export interface UploadProgressProps {
 export interface SearchFilterProps {
   searchTerm: string;
   onSearchChange: (term: string) => void;
-  fileType: string;
-  onFileTypeChange: (type: string) => void;
-  dateRange: [Date | null, Date | null];
-  onDateRangeChange: (range: [Date | null, Date | null]) => void;
-  sortConfig: { key: string; direction: string };
-  onSortChange: (key: string) => void;
-  onClearFilters: () => void;
 }
 
 // 標籤管理 Props

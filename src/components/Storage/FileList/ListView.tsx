@@ -41,7 +41,7 @@ const ListView: React.FC<ListViewProps> = ({
   selectedItems,
   multiSelectMode,
   itemsPerPage,
-  sortConfig,
+  sortConfig = { key: 'name', direction: 'asc' },
   onSelectItem,
   onEnterFolder,
   onDeleteFolder,
@@ -49,7 +49,7 @@ const ListView: React.FC<ListViewProps> = ({
   onDelete,
   onFilePreview,
   onContextMenu,
-  onSort,
+  onSort = () => {},
   columnWidths = DEFAULT_COLUMN_WIDTHS,
   onColumnWidthChange
 }) => {
@@ -128,17 +128,11 @@ const ListView: React.FC<ListViewProps> = ({
         <thead className="text-xs text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 select-none">
           <tr>
             <th 
-              className="p-4 relative cursor-pointer" 
+              className="p-4 relative" 
               style={{ width: columnWidths.name }}
-              onClick={() => onSort('name')}
             >
               <div className="flex items-center">
                 <span className="flex-grow">名稱</span>
-                {sortConfig.key === 'name' && (
-                  <span className="ml-2">
-                    {sortConfig.direction === 'asc' ? '↑' : '↓'}
-                  </span>
-                )}
               </div>
               {onColumnWidthChange && (
                 <div
@@ -148,17 +142,11 @@ const ListView: React.FC<ListViewProps> = ({
               )}
             </th>
             <th 
-              className="p-4 relative cursor-pointer" 
+              className="p-4 relative" 
               style={{ width: columnWidths.type }}
-              onClick={() => onSort('type')}
             >
               <div className="flex items-center">
                 <span className="flex-grow">類型</span>
-                {sortConfig.key === 'type' && (
-                  <span className="ml-2">
-                    {sortConfig.direction === 'asc' ? '↑' : '↓'}
-                  </span>
-                )}
               </div>
               {onColumnWidthChange && (
                 <div
@@ -168,17 +156,11 @@ const ListView: React.FC<ListViewProps> = ({
               )}
             </th>
             <th 
-              className="p-4 relative cursor-pointer" 
+              className="p-4 relative" 
               style={{ width: columnWidths.size }}
-              onClick={() => onSort('size')}
             >
               <div className="flex items-center">
                 <span className="flex-grow">大小</span>
-                {sortConfig.key === 'size' && (
-                  <span className="ml-2">
-                    {sortConfig.direction === 'asc' ? '↑' : '↓'}
-                  </span>
-                )}
               </div>
               {onColumnWidthChange && (
                 <div
@@ -188,17 +170,11 @@ const ListView: React.FC<ListViewProps> = ({
               )}
             </th>
             <th 
-              className="p-4 relative cursor-pointer" 
+              className="p-4 relative" 
               style={{ width: columnWidths.lastModified }}
-              onClick={() => onSort('lastModified')}
             >
               <div className="flex items-center">
                 <span className="flex-grow">修改日期</span>
-                {sortConfig.key === 'lastModified' && (
-                  <span className="ml-2">
-                    {sortConfig.direction === 'asc' ? '↑' : '↓'}
-                  </span>
-                )}
               </div>
               {onColumnWidthChange && (
                 <div

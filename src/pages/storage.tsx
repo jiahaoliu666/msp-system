@@ -35,18 +35,11 @@ const FileManagerLayout: React.FC<{
   breadcrumbs: string[];
   viewMode: 'list' | 'grid';
   searchTerm: string;
-  fileType: string;
-  dateRange: [Date | null, Date | null];
-  sortConfig: { key: string; direction: string };
   multiSelectMode: boolean;
   onGoBack: () => void;
   onSetCurrentPath: (path: string) => void;
   onSetViewMode: (mode: 'list' | 'grid') => void;
   onSearchChange: (term: string) => void;
-  onFileTypeChange: (type: string) => void;
-  onDateRangeChange: (range: [Date | null, Date | null]) => void;
-  onSortChange: (key: string) => void;
-  onClearFilters: () => void;
   onToggleMultiSelectMode: () => void;
   onCreateFolder: () => void;
   onUploadClick: () => void;
@@ -57,18 +50,11 @@ const FileManagerLayout: React.FC<{
   breadcrumbs,
   viewMode,
   searchTerm,
-  fileType,
-  dateRange,
-  sortConfig,
   multiSelectMode,
   onGoBack,
   onSetCurrentPath,
   onSetViewMode,
   onSearchChange,
-  onFileTypeChange,
-  onDateRangeChange,
-  onSortChange,
-  onClearFilters,
   onToggleMultiSelectMode,
   onCreateFolder,
   onUploadClick
@@ -121,13 +107,6 @@ const FileManagerLayout: React.FC<{
             <SearchFilter
               searchTerm={searchTerm}
               onSearchChange={onSearchChange}
-              fileType={fileType}
-              onFileTypeChange={onFileTypeChange}
-              dateRange={dateRange}
-              onDateRangeChange={onDateRangeChange}
-              sortConfig={sortConfig}
-              onSortChange={onSortChange}
-              onClearFilters={onClearFilters}
             />
           </div>
           
@@ -200,14 +179,13 @@ const FileManagerLayout: React.FC<{
 };
 
 export default function Storage() {
-  // 狀態管理
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  // UI狀態
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
   const [searchTerm, setSearchTerm] = useState('');
-  const [fileType, setFileType] = useState('');
-  const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([null, null]);
-  const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(50);
+
+  // 狀態管理
   const [isOnline, setIsOnline] = useState(true);
   const [showFileInfo, setShowFileInfo] = useState(false);
   const [fileInfoTarget, setFileInfoTarget] = useState<FileItem | FolderItem | null>(null);
@@ -215,13 +193,13 @@ export default function Storage() {
   const [storageQuota, setStorageQuota] = useState<{ used: number; total: number } | null>(null);
   const [isTagManagerOpen, setIsTagManagerOpen] = useState(false);
   const [taggedItem, setTaggedItem] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   // 使用自定義 hooks
   const {
     files,
     folders,
     isLoading,
+    error,
     currentPath,
     parentPath,
     selectedItems,
@@ -397,58 +375,27 @@ export default function Storage() {
     return () => clearInterval(intervalId);
   }, []);
 
-  // 篩選處理
-  const handleApplyFilters = useCallback(() => {
-    console.log("handleApplyFilters 被調用了"); // 添加日誌
-    
-    // 防禦性編程：如果 applyFilters 未定義或不是函數，使用本地過濾
-    if (typeof applyFilters !== 'function') {
-      console.error("applyFilters 不是一個函數！", applyFilters);
-      
-      // 本地實現基本過濾邏輯 (如果 applyFilters 無效)
-      const localFilter = () => {
-        console.log("使用本地過濾邏輯替代 applyFilters");
-        // 可以在這裡實現簡單過濾邏輯，或者設置一個空的過濾結果
-        const safeFilteredItems = { 
-          files: files || [], 
-          folders: folders || [] 
-        };
-        // 模擬 filteredItems 設置
-        console.log("本地過濾結果:", safeFilteredItems);
+  // 應用篩選條件
+  useEffect(() => {
+    try {
+      const filters: FileFilters = {
+        searchTerm,
+        fileTypes: undefined,
+        dateRange: undefined,
+        sortBy: 'name',
+        sortDirection: 'asc'
       };
       
-      localFilter();
-      return;
-    }
-    
-    const filters: FileFilters = {
-      searchTerm,
-      fileTypes: fileType ? [fileType] : undefined,
-      dateRange: dateRange[0] || dateRange[1] ? dateRange : undefined,
-      sortBy: sortConfig.key,
-      sortDirection: sortConfig.direction as 'asc' | 'desc'
-    };
-    
-    // 嘗試調用 applyFilters 並捕獲任何錯誤
-    try {
       applyFilters(filters);
-    } catch (error) {
-      console.error("調用 applyFilters 時發生錯誤:", error);
+    } catch (err) {
+      console.error("篩選檔案時發生錯誤:", err);
       toast.error("過濾檔案時發生錯誤，請重試");
     }
-  }, [searchTerm, fileType, dateRange, sortConfig, applyFilters, files, folders]);
-
-  // 當篩選條件變更時應用篩選
-  useEffect(() => {
-    handleApplyFilters();
-  }, [handleApplyFilters]);
+  }, [searchTerm, applyFilters]);
 
   // 處理清除篩選條件
   const handleClearFilters = () => {
     setSearchTerm('');
-    setFileType('');
-    setDateRange([null, null]);
-    setSortConfig({ key: 'name', direction: 'asc' });
   };
 
   // 開啟檔案信息面板
@@ -506,119 +453,67 @@ export default function Storage() {
     }
   };
 
-  // 定義切換項目選擇函數
+  // 處理項目選擇
   const toggleItemSelection = (itemKey: string) => {
-    const newSelected = new Set(selectedItems);
-    if (newSelected.has(itemKey)) {
-      newSelected.delete(itemKey);
-    } else {
-      newSelected.add(itemKey);
-    }
-    setSelectedItems(newSelected);
+    handleSelectItem(itemKey);
   };
 
-  // 渲染檔案列表或空狀態
+  // 渲染檔案列表
   const renderFileList = () => {
-    // 如果檔案正在加載
     if (isLoading) {
       return (
-        <div className="h-full w-full flex items-center justify-center">
-          <LoadingSpinner size="lg" />
+        <div className="flex items-center justify-center h-64">
+          <div className="relative">
+            <div className="h-16 w-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+            <div className="mt-4 text-gray-600 dark:text-gray-400">載入中...</div>
+          </div>
         </div>
       );
     }
 
-    // 如果發生錯誤
     if (error) {
       return (
-        <EmptyState 
-          type="error" 
-          errorMessage={error} 
-          onRetry={handleRetry}
-          onCreateFolder={() => setIsCreatingFolder(true)}
-        />
+        <div className="flex flex-col items-center justify-center h-64 text-red-500">
+          <div className="text-center mb-4">{error}</div>
+          <button
+            onClick={handleRetry}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none"
+          >
+            重試
+          </button>
+        </div>
       );
     }
 
-    // 如果正在搜尋但沒有結果
-    if (searchTerm && folders.length === 0 && files.length === 0) {
-      return (
-        <EmptyState 
-          type="search" 
-          searchTerm={searchTerm} 
-          onClearFilter={handleClearFilters}
-          onCreateFolder={() => setIsCreatingFolder(true)}
-        />
-      );
+    // 搜尋結果為空時顯示相應的提示
+    if (searchTerm && filteredItems.folders.length === 0 && filteredItems.files.length === 0) {
+      return <EmptyState type="search" searchTerm={searchTerm} onClearFilter={() => setSearchTerm('')} />;
     }
 
-    // 如果存在篩選條件但沒有結果
-    if ((fileType || dateRange[0] !== null || dateRange[1] !== null) && folders.length === 0 && files.length === 0) {
-      return (
-        <EmptyState 
-          type="filter" 
-          filterType={fileType || '日期範圍'} 
-          onClearFilter={handleClearFilters}
-          onCreateFolder={() => setIsCreatingFolder(true)}
-        />
-      );
-    }
-
-    // 如果資料夾為空（沒有檔案也沒有資料夾）
-    if (folders.length === 0 && files.length === 0) {
-      return (
-        <EmptyState 
-          type="folder" 
-          onCreateFolder={() => setIsCreatingFolder(true)}
-        />
-      );
-    }
-
-    // 渲染網格視圖或列表視圖
-    if (viewMode === 'grid') {
-      return (
-        <GridView
-          folders={folders}
-          files={files}
-          selectedItems={selectedItems}
-          multiSelectMode={multiSelectMode}
-          itemsPerPage={itemsPerPage}
-          onSelectItem={toggleItemSelection}
-          onEnterFolder={handleEnterFolder}
-          onDeleteFolder={handleDeleteFolder}
-          onDownload={handleDownload}
-          onDelete={handleDelete}
-          onFilePreview={handleFilePreview}
-          onContextMenu={handleContextMenu}
-          onSort={(key: string) => setSortConfig(prevConfig => ({
-            key,
-            direction: prevConfig.key === key && prevConfig.direction === 'asc' ? 'desc' : 'asc'
-          }))}
-        />
-      );
-    } else {
-      return (
-        <ListView
-          folders={folders}
-          files={files}
-          selectedItems={selectedItems}
-          multiSelectMode={multiSelectMode}
-          sortConfig={sortConfig}
-          itemsPerPage={itemsPerPage}
-          onSelectItem={toggleItemSelection}
-          onEnterFolder={handleEnterFolder}
-          onDeleteFolder={handleDeleteFolder}
-          onDownload={handleDownload}
-          onDelete={handleDelete}
-          onFilePreview={handleFilePreview}
-          onContextMenu={handleContextMenu}
-          onSort={(key: string) => setSortConfig(prevConfig => ({
-            key,
-            direction: prevConfig.key === key && prevConfig.direction === 'asc' ? 'desc' : 'asc'
-          }))}
-        />
-      );
-    }
+    // 始終顯示檔案列表，即使為空
+    return (
+      <FileList
+        files={filteredItems.files}
+        folders={filteredItems.folders}
+        currentPath={currentPath}
+        selectedItems={selectedItems}
+        viewMode={viewMode}
+        searchTerm={searchTerm}
+        onSelectItem={toggleItemSelection}
+        onEnterFolder={handleEnterFolder}
+        onDeleteFolder={handleDeleteFolder}
+        onDownload={handleDownload}
+        onDelete={handleDelete}
+        onFilePreview={handleFilePreview}
+        onContextMenu={handleContextMenu}
+        currentPage={currentPage}
+        itemsPerPage={itemsPerPage}
+        onSort={() => {}}
+        starredItems={[]}
+        isEmptyFolder={folders.length === 0 && files.length === 0}
+        onCreateFolder={() => setIsCreatingFolder(true)}
+      />
+    );
   };
 
   return (
@@ -628,21 +523,11 @@ export default function Storage() {
       breadcrumbs={breadcrumbs}
       viewMode={viewMode}
       searchTerm={searchTerm}
-      fileType={fileType}
-      dateRange={dateRange}
-      sortConfig={sortConfig}
       multiSelectMode={multiSelectMode}
       onGoBack={handleGoBack}
       onSetCurrentPath={setCurrentPath}
       onSetViewMode={setViewMode}
       onSearchChange={setSearchTerm}
-      onFileTypeChange={setFileType}
-      onDateRangeChange={setDateRange}
-      onSortChange={key => setSortConfig(prevConfig => ({
-        key,
-        direction: prevConfig.key === key && prevConfig.direction === 'asc' ? 'desc' : 'asc'
-      }))}
-      onClearFilters={handleClearFilters}
       onToggleMultiSelectMode={toggleMultiSelectMode}
       onCreateFolder={() => setIsCreatingFolder(true)}
       onUploadClick={handleUploadClick}
