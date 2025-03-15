@@ -149,30 +149,16 @@ export const useFileManager = (): FileManagerReturn => {
     loadFiles();
   }, [loadFiles]);
 
+  // 當路徑變化時重新載入檔案
+  useEffect(() => {
+    loadFiles();
+  }, [currentPath, loadFiles]);
+
   // 計算總大小
   useEffect(() => {
     const size = files.reduce((sum, file) => sum + (file.Size || 0), 0);
     setTotalSize(size);
   }, [files]);
-
-  // 處理麵包屑
-  useEffect(() => {
-    if (!currentPath) {
-      setBreadcrumbs([]);
-      return;
-    }
-    
-    const pathParts = currentPath.split('/').filter(Boolean);
-    const breadcrumbPaths: string[] = [];
-    
-    let currentBreadcrumb = '';
-    for (const part of pathParts) {
-      currentBreadcrumb = currentBreadcrumb ? `${currentBreadcrumb}/${part}` : part;
-      breadcrumbPaths.push(currentBreadcrumb);
-    }
-    
-    setBreadcrumbs(breadcrumbPaths);
-  }, [currentPath]);
 
   // 最近訪問的資料夾
   useEffect(() => {
@@ -313,13 +299,13 @@ export const useFileManager = (): FileManagerReturn => {
   // 更新麵包屑
   const updateBreadcrumbs = (path: string) => {
     const pathParts = path.split('/').filter(Boolean);
-    const crumbs = ['根目錄'];
+    const crumbs: string[] = [];
     
     // 累積路徑部分
     let accumulatedPath = '';
     pathParts.forEach(part => {
       accumulatedPath += part + '/';
-      crumbs.push(part);
+      crumbs.push(accumulatedPath);
     });
     
     setBreadcrumbs(crumbs);

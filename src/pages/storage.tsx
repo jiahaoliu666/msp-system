@@ -87,15 +87,19 @@ const FileManagerLayout: React.FC<{
               根目錄
             </button>
             
+            {breadcrumbs && breadcrumbs.length > 0 && (
+              <span className="mx-1">/</span>
+            )}
+            
             {breadcrumbs && breadcrumbs.length > 0 ? breadcrumbs.map((folder, index) => (
               <div key={index} className="flex items-center">
-                <span className="mx-1">/</span>
                 <button
                   onClick={() => onSetCurrentPath(folder)}
                   className="hover:text-blue-600 dark:hover:text-blue-400 whitespace-nowrap"
                 >
                   {folder.split('/').filter(Boolean).pop() || ''}
                 </button>
+                {index < breadcrumbs.length - 1 && <span className="mx-1">/</span>}
               </div>
             )) : null}
           </div>
