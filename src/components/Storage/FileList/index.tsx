@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { FileItem, FolderItem, ColumnWidths } from '@/components/storage/types';
 import { formatFileSize, formatDateTime, getFileTypeIcon } from '@/services/storage/s3';
 import GridView from '@/components/storage/FileList/GridView';
@@ -61,35 +61,56 @@ const FileList: React.FC<FileListProps> = ({
 }) => {
   // 欄位寬度狀態
   const [columnWidths, setColumnWidths] = useState<ColumnWidths>(DEFAULT_COLUMN_WIDTHS);
+  const columnWidthsRef = useRef<ColumnWidths>(DEFAULT_COLUMN_WIDTHS);
   
-  // 本地存儲欄位寬度，持久化用戶設置
+  // 從本地存儲加載保存的欄位寬度設置
   useEffect(() => {
-    // 從本地存儲加載保存的欄位寬度設置
-    const savedWidths = localStorage.getItem('fileList-columnWidths');
-    if (savedWidths) {
-      try {
+    try {
+      const savedWidths = localStorage.getItem('fileList-columnWidths');
+      console.log('加載保存的欄位寬度:', savedWidths);
+      
+      if (savedWidths) {
         const parsed = JSON.parse(savedWidths);
         setColumnWidths(parsed);
-      } catch (e) {
-        console.error('無法解析保存的欄位寬度', e);
+        columnWidthsRef.current = parsed;
       }
+    } catch (e) {
+      console.error('無法解析保存的欄位寬度', e);
     }
   }, []);
 
   // 處理欄位寬度變更
-  const handleColumnWidthChange = (column: keyof ColumnWidths, width: number) => {
-    const newWidths = { ...columnWidths, [column]: width };
-    setColumnWidths(newWidths);
+  const handleColumnWidthChange = useCallback((column: keyof ColumnWidths, width: number) => {
+    console.log(`調整 ${column} 欄寬為: ${width}px`);
     
-    // 保存到本地存儲
-    localStorage.setItem('fileList-columnWidths', JSON.stringify(newWidths));
-  };
+    // 更新引用值，用於即時調整
+    columnWidthsRef.current = { 
+      ...columnWidthsRef.current, 
+      [column]: width 
+    };
+    
+    // 更新狀態
+    setColumnWidths(prev => {
+      const newWidths = { ...prev, [column]: width };
+      
+      // 保存到本地存儲
+      localStorage.setItem('fileList-columnWidths', JSON.stringify(newWidths));
+      
+      return newWidths;
+    });
+  }, []);
 
   // 重設欄位寬度
-  const handleResetColumnWidths = () => {
+  const handleResetColumnWidths = useCallback(() => {
+    console.log('重置欄位寬度到默認值');
+    
+    // 更新引用和狀態
+    columnWidthsRef.current = DEFAULT_COLUMN_WIDTHS;
     setColumnWidths(DEFAULT_COLUMN_WIDTHS);
+    
+    // 清除本地存儲
     localStorage.removeItem('fileList-columnWidths');
-  };
+  }, []);
 
   // 檔案篩選與排序
   const filteredFiles = files
@@ -146,23 +167,37 @@ const FileList: React.FC<FileListProps> = ({
               />
             </div>
           ) : (
-            <ListView
-              folders={folders}
-              files={paginatedFiles}
-              currentPath={currentPath}
-              selectedItems={selectedItems}
-              sortConfig={{ key: 'name', direction: 'asc' }}
-              onSelectItem={onSelectItem}
-              onEnterFolder={onEnterFolder}
-              onDeleteFolder={onDeleteFolder}
-              onDownload={onDownload}
-              onDelete={onDelete}
-              onFilePreview={onFilePreview}
-              onContextMenu={onContextMenu}
-              onSort={onSort}
-              columnWidths={columnWidths}
-              onColumnWidthChange={handleColumnWidthChange}
-            />
+            <>
+              <div className="flex justify-end mb-2">
+                <button
+                  onClick={handleResetColumnWidths}
+                  className="text-xs text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 flex items-center space-x-1"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  <span>重置欄位寬度</span>
+                </button>
+              </div>
+              <ListView
+                folders={folders}
+                files={paginatedFiles}
+                currentPath={currentPath}
+                selectedItems={selectedItems}
+                sortConfig={{ key: 'name', direction: 'asc' }}
+                onSelectItem={onSelectItem}
+                onEnterFolder={onEnterFolder}
+                onDeleteFolder={onDeleteFolder}
+                onDownload={onDownload}
+                onDelete={onDelete}
+                onFilePreview={onFilePreview}
+                onContextMenu={onContextMenu}
+                onSort={onSort}
+                columnWidths={columnWidths}
+                onColumnWidthChange={handleColumnWidthChange}
+              />
+            </>
           )}
         </div>
       )}
