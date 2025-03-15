@@ -67,9 +67,9 @@ const FileManagerLayout: React.FC<{
         <div className="flex items-center space-x-2 flex-grow">
           <button
             onClick={onGoBack}
-            disabled={!parentPath}
+            disabled={parentPath === null}
             className={`p-2 rounded-lg ${
-              parentPath
+              parentPath !== null
                 ? 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                 : 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
             }`}
@@ -507,22 +507,25 @@ export default function Storage() {
   };
 
   return (
-    <FileManagerLayout
-      currentPath={currentPath}
-      parentPath={parentPath}
-      breadcrumbs={breadcrumbs}
-      viewMode={viewMode}
-      searchTerm={searchTerm}
-      multiSelectMode={multiSelectMode}
-      onGoBack={handleGoBack}
-      onSetCurrentPath={setCurrentPath}
-      onSetViewMode={setViewMode}
-      onSearchChange={setSearchTerm}
-      onToggleMultiSelectMode={toggleMultiSelectMode}
-      onCreateFolder={() => setIsCreatingFolder(true)}
-      onUploadClick={handleUploadClick}
-    >
-      {renderFileList()}
-    </FileManagerLayout>
+    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+      {/* 文件管理器主界面 */}
+      <FileManagerLayout
+        currentPath={currentPath}
+        parentPath={parentPath}
+        breadcrumbs={breadcrumbs}
+        viewMode={viewMode}
+        searchTerm={searchTerm}
+        multiSelectMode={multiSelectMode}
+        onGoBack={handleGoBack}
+        onSetCurrentPath={setCurrentPath}
+        onSetViewMode={setViewMode}
+        onSearchChange={setSearchTerm}
+        onToggleMultiSelectMode={toggleMultiSelectMode}
+        onCreateFolder={handleCreateFolder}
+        onUploadClick={handleUploadClick}
+      >
+        {renderFileList()}
+      </FileManagerLayout>
+    </div>
   );
 }

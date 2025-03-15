@@ -594,10 +594,17 @@ export async function listFilesInFolder(folderPath: string = ''): Promise<{
     let parentPath: string | null = null;
     if (folderPath) {
       const pathParts = folderPath.split('/').filter(Boolean);
-      parentPath = pathParts.length > 1 
-        ? pathParts.slice(0, -1).join('/')
-        : '';  // 如果是第一級目錄，父路徑為空字符串（根目錄）
+      if (pathParts.length > 1) {
+        // 如果是多層目錄，返回上一層路徑
+        parentPath = pathParts.slice(0, -1).join('/');
+      } else if (pathParts.length === 1) {
+        // 如果是第一級目錄，父路徑為空字串（根目錄）
+        parentPath = '';
+      }
+      // 如果沒有路徑部分（根目錄），保持 parentPath 為 null
     }
+    
+    console.log('listFilesInFolder 計算的 parentPath:', parentPath, '原始路徑:', folderPath);
 
     return {
       files,

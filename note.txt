@@ -367,7 +367,7 @@ suport -> case 到ticket system
 
 © 2025 MetaAge MSP. All rights reserved. 要能抓到對應的年
 
-
+在後台當頁面放大或縮小時不要將左側欄展開
 
 
 

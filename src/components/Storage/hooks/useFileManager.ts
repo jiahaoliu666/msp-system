@@ -74,6 +74,10 @@ export const useFileManager = (): FileManagerReturn => {
       })));
       setParentPath(parent);
       
+      // 添加日誌輸出
+      console.log('設置 parentPath:', parent);
+      console.log('當前路徑 currentPath:', currentPath);
+      
       // 更新麵包屑
       updateBreadcrumbs(currentPath);
       
@@ -180,7 +184,9 @@ export const useFileManager = (): FileManagerReturn => {
 
   // 返回上層資料夾
   const handleGoBack = () => {
+    console.log('handleGoBack 被調用，當前 parentPath:', parentPath);
     if (parentPath !== null) {
+      console.log('設置當前路徑為:', parentPath);
       setCurrentPath(parentPath);
     }
   };
