@@ -175,9 +175,9 @@ src/pages/handover-item/index.tsx 交接項目
 
 src/pages/storage.tsx 檔案儲存
 
-綁s3 資料夾
-
 檔案icon要能變更
+
+要能添加連結 例如 onedrive 錄影檔內容等等
 
 --------------------------------
 

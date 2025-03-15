@@ -396,4 +396,126 @@ th, td {
   .input-label {
     @apply text-sm font-medium text-text-secondary;
   }
+
+  /* 表格容器樣式 */
+  .table-container {
+    @apply relative overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 
+           shadow-lg transition-shadow duration-300 
+           after:absolute after:top-[2px] after:left-0 after:right-0 after:h-8 
+           after:bg-gradient-to-b after:from-white/40 after:to-transparent after:pointer-events-none 
+           dark:after:from-gray-900/40 
+           before:absolute before:bottom-[2px] before:left-0 before:right-0 before:h-8 
+           before:bg-gradient-to-t before:from-white/40 before:to-transparent before:pointer-events-none 
+           dark:before:from-gray-900/40;
+  }
+
+  /* 專業的表格樣式 */
+  .table-modern {
+    @apply w-full text-sm text-left text-gray-700 dark:text-gray-300 overflow-hidden;
+  }
+
+  /* 表頭樣式 */
+  .table-modern thead {
+    @apply text-xs uppercase bg-gray-100 dark:bg-gray-800 select-none sticky top-0 z-10
+           after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 
+           after:h-[2px] after:bg-gradient-to-r after:from-gray-200 after:via-gray-300 after:to-gray-200
+           dark:after:from-gray-700 dark:after:via-gray-600 dark:after:to-gray-700;
+  }
+
+  /* 表頭單元格樣式 */
+  .table-modern th {
+    @apply px-6 py-3 font-semibold relative border-r border-gray-100/50 dark:border-gray-700/50 last:border-r-0;
+  }
+
+  /* 表格行樣式 */
+  .table-modern tbody tr {
+    @apply bg-white dark:bg-gray-800 border-b border-gray-200/80 dark:border-gray-700/80 
+           hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-colors duration-150;
+  }
+
+  /* 表格行懸停時的底部邊界效果 */
+  .table-modern tbody tr:hover {
+    @apply shadow-sm relative z-10;
+  }
+
+  /* 表格最後一行特殊處理 */
+  .table-modern tbody tr:last-child {
+    @apply border-b-0;
+  }
+
+  /* 表格單元格樣式 */
+  .table-modern td {
+    @apply px-6 py-3 align-middle border-r border-gray-100/50 dark:border-gray-700/30 last:border-r-0;
+  }
+
+  /* 檔案名稱單元格特殊處理 */
+  .table-modern td:first-child {
+    @apply pl-4 md:pl-6;
+  }
+
+  /* 檔案操作單元格特殊處理 */
+  .table-modern td:last-child {
+    @apply pr-4 md:pr-6;
+  }
+
+  /* 表格文件類型標籤 */
+  .file-type-tag {
+    @apply px-2 py-1 rounded-lg text-xs font-medium border border-transparent inline-flex items-center;
+  }
+
+  /* 文件類型：文件夾 */
+  .file-type-folder {
+    @apply bg-blue-100/80 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300
+           border-blue-200 dark:border-blue-800/50;
+  }
+
+  /* 文件類型：一般文件 */
+  .file-type-default {
+    @apply bg-gray-100/80 dark:bg-gray-700/80 text-gray-800 dark:text-gray-300
+           border-gray-200/80 dark:border-gray-600/50;
+  }
+
+  /* 表格控制按鈕 */
+  .table-action-btn {
+    @apply p-2 rounded-full transition-all duration-150 border border-transparent
+           hover:shadow-sm active:scale-95;
+  }
+
+  /* 下載按鈕 */
+  .download-btn {
+    @apply hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-500 dark:text-gray-400 
+           hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-200 dark:hover:border-blue-800/50;
+  }
+
+  /* 刪除按鈕 */
+  .delete-btn {
+    @apply hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-500 dark:text-gray-400 
+           hover:text-red-600 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-800/50;
+  }
+
+  /* 空內容提示 */
+  .empty-content {
+    @apply flex flex-col items-center justify-center space-y-2 py-12 text-center text-gray-500 dark:text-gray-400 
+           border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg m-4
+           bg-gradient-to-b from-gray-50 to-white dark:from-gray-800/50 dark:to-gray-800;
+  }
+
+  /* 選中行樣式 */
+  .row-selected {
+    @apply bg-blue-50 dark:bg-blue-900/30 relative !important;
+  }
+
+  /* 選中行左側邊界強調 */
+  .row-selected::before {
+    content: '';
+    @apply absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-blue-400 to-blue-500 dark:from-blue-500 dark:to-blue-600
+           shadow-[0_0_8px_rgba(59,130,246,0.5)];
+  }
+
+  /* 調整列寬的分隔線 */
+  .column-resize-divider {
+    @apply w-0.5 h-4/5 bg-gradient-to-b from-gray-300 to-gray-400 dark:from-gray-600 dark:to-gray-500 
+           hover:from-blue-400 hover:to-blue-500 hover:w-1 transition-all duration-150
+           rounded-full shadow-sm;
+  }
 }

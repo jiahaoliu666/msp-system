@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import plugin from 'tailwindcss/plugin';
 
 export default {
   content: [
@@ -22,10 +23,22 @@ export default {
         'warning-color': 'var(--warning-color)',
         'error-color': 'var(--error-color)',
         'info-color': 'var(--info-color)',
+        
+        // 添加表格特定顏色
+        'table-header': '#f8fafc',
+        'table-header-dark': '#1e293b',
+        'table-row-hover': '#f1f5f9',
+        'table-row-hover-dark': '#334155',
+        'table-row-selected': '#eff6ff',
+        'table-row-selected-dark': '#1e3a8a',
+        'table-border': '#e2e8f0',
+        'table-border-dark': '#334155',
       },
       boxShadow: {
         'card': '0 2px 4px rgba(0,0,0,0.05), 0 4px 8px rgba(0,0,0,0.05)',
         'card-hover': '0 4px 6px rgba(0,0,0,0.05), 0 10px 15px rgba(0,0,0,0.1)',
+        'table': '0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.1)',
+        'dropdown': '0 2px 5px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)',
       },
       animation: {
         'data-flow': 'dataFlow 8s linear infinite',
@@ -144,7 +157,68 @@ export default {
       transformOrigin: {
         'center': 'center',
       },
+      fontSize: {
+        'xxs': '0.625rem', // 10px
+      },
+      
+      minWidth: {
+        'table-cell': '80px',
+        'table-action': '100px', 
+      },
+      
+      maxWidth: {
+        'name-cell': '240px',
+      },
+      
+      zIndex: {
+        'table-header': '5',
+        'table-action': '10',
+        'dropdown': '50',
+        'modal': '100',
+      },
+    },
+    screens: {
+      'xs': '480px',
+      'sm': '640px',
+      'md': '768px',
+      'lg': '1024px',
+      'xl': '1280px',
+      '2xl': '1536px',
     },
   },
-  plugins: [],
+  plugins: [
+    // 添加自定義工具類來處理表格交互
+    plugin(function({ addUtilities }) {
+      const newUtilities = {
+        '.table-compact': {
+          '& th, & td': {
+            padding: '0.5rem 0.75rem',
+          },
+        },
+        '.table-normal': {
+          '& th, & td': {
+            padding: '0.75rem 1rem',
+          },
+        },
+        '.table-relaxed': {
+          '& th, & td': {
+            padding: '1rem 1.5rem',
+          },
+        },
+        '.cell-truncate': {
+          maxWidth: '0',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        },
+        '.sticky-header': {
+          position: 'sticky',
+          top: '0',
+          zIndex: '10',
+          backgroundColor: 'inherit',
+        },
+      }
+      addUtilities(newUtilities)
+    })
+  ],
 } satisfies Config;
