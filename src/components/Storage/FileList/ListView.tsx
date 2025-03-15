@@ -54,6 +54,9 @@ const ListView: React.FC<ListViewProps> = ({
   onColumnWidthChange
 }) => {
   const tableRef = useRef<HTMLTableElement>(null);
+  const headerRowRef = useRef<HTMLTableRowElement>(null);
+  const resizing = useRef(false);
+  const lastPositionRef = useRef(0);
   const [resizeLine, setResizeLine] = useState({
     visible: false,
     position: 0,
@@ -61,13 +64,25 @@ const ListView: React.FC<ListViewProps> = ({
     startX: 0,
     columnStartWidth: 0
   });
+  const [precisionMode, setPrecisionMode] = useState(false);
 
+  // 預計算列的索引順序
+  const columnOrder: (keyof ColumnWidths)[] = ['name', 'lastModified', 'type', 'size', 'actions'];
+  const getColumnIndex = (columnName: keyof ColumnWidths): number => {
+    return columnOrder.indexOf(columnName);
+  };
+
+  // 移除固定減速係數，改用基於速度的適應性控制
   const handleResizeStart = (e: React.MouseEvent, column: keyof ColumnWidths) => {
     e.preventDefault();
     e.stopPropagation();
     
     const startX = e.clientX;
+    lastPositionRef.current = startX;
     console.log('開始調整欄位寬度:', column, '初始寬度:', columnWidths[column]);
+    
+    // 使用普通變數追蹤當前寬度
+    let currentColumnWidth = columnWidths[column];
     
     // 設置初始狀態
     setResizeLine({
@@ -78,33 +93,90 @@ const ListView: React.FC<ListViewProps> = ({
       columnStartWidth: columnWidths[column]
     });
     
-    // 設定拖動處理
+    // 設置正在調整標誌
+    resizing.current = true;
+    
+    // 使用requestAnimationFrame來優化渲染
+    let animationFrameId: number | null = null;
+    let lastMoveTime = performance.now();
+    
+    // 預先獲取目標列元素，避免重複查詢DOM
+    const columnIndex = getColumnIndex(column);
+    let targetColumnElement: HTMLTableHeaderCellElement | null = null;
+    
+    if (tableRef.current && headerRowRef.current) {
+      const headerCells = headerRowRef.current.querySelectorAll('th');
+      if (columnIndex >= 0 && columnIndex < headerCells.length) {
+        targetColumnElement = headerCells[columnIndex] as HTMLTableHeaderCellElement;
+      }
+    }
+    
+    // 設定拖動處理 - 直接反應滑鼠移動
     const handleMove = (moveEvent: MouseEvent) => {
+      if (!resizing.current) return;
+      
       moveEvent.preventDefault();
       moveEvent.stopPropagation();
       
-      const diffX = moveEvent.clientX - startX;
-      const newWidth = Math.max(50, columnWidths[column] + diffX);
+      // 計算移動距離
+      const currentX = moveEvent.clientX;
+      const moveDistance = currentX - lastPositionRef.current;
+      
+      // 更新最後移動時間記錄
+      lastMoveTime = performance.now();
+      
+      // 檢查是否需要進入精確模式
+      const isPrecisionMode = moveEvent.shiftKey;
+      if (isPrecisionMode !== precisionMode) {
+        setPrecisionMode(isPrecisionMode);
+        if (isPrecisionMode) {
+          document.body.classList.add('cursor-precision');
+        } else {
+          document.body.classList.remove('cursor-precision');
+        }
+      }
+      
+      // 直接使用滑鼠移動距離計算新寬度
+      let adjustedDiff = moveDistance;
+      
+      // 按住Shift鍵時進入精確模式，減慢速度
+      if (isPrecisionMode) {
+        // 在精確模式下減慢速度為原來的1/10
+        adjustedDiff = moveDistance * 0.1;
+      }
+      
+      // 直接計算新寬度，完全基於滑鼠移動距離
+      const newWidth = Math.max(50, currentColumnWidth + adjustedDiff);
+      
+      // 立即更新DOM以獲得即時反應
+      if (targetColumnElement) {
+        targetColumnElement.style.width = `${newWidth}px`;
+        currentColumnWidth = newWidth;
+      }
+      
+      // 更新最後位置
+      lastPositionRef.current = currentX;
       
       // 更新拖動線位置
-      if (tableRef.current) {
-        setResizeLine(prev => ({
-          ...prev,
-          position: moveEvent.clientX
-        }));
-      }
-      
-      // 直接調整欄位寬度（即時反饋）
-      if (onColumnWidthChange) {
-        onColumnWidthChange(column, newWidth);
-        console.log('調整欄位寬度:', column, '新寬度:', newWidth);
-      }
+      setResizeLine(prev => ({
+        ...prev,
+        position: currentX
+      }));
     };
     
     // 設定結束拖動處理
     const handleUp = (upEvent: MouseEvent) => {
       upEvent.preventDefault();
       upEvent.stopPropagation();
+      
+      // 重置調整標誌
+      resizing.current = false;
+      
+      // 取消任何待處理的動畫幀
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+      }
       
       // 隱藏調整線
       setResizeLine(prev => ({
@@ -119,43 +191,79 @@ const ListView: React.FC<ListViewProps> = ({
       // 恢復游標和用戶選擇
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
+      document.body.classList.remove('cursor-precision');
+      setPrecisionMode(false);
       
-      console.log('完成欄位寬度調整:', column);
+      // 在拖動結束時才通知父組件寬度變化
+      if (onColumnWidthChange && currentColumnWidth !== columnWidths[column]) {
+        onColumnWidthChange(column, currentColumnWidth);
+        console.log('完成欄位寬度調整:', column, '新寬度:', currentColumnWidth);
+      }
     };
     
     // 設置調整過程中的視覺樣式
-    document.body.style.cursor = 'col-resize';
+    document.body.style.cursor = 'ew-resize';
     document.body.style.userSelect = 'none';
     
-    // 添加事件監聽器
-    document.addEventListener('mousemove', handleMove);
+    // 添加事件監聽器 - 使用passive: false來提高觸摸設備上的性能
+    document.addEventListener('mousemove', handleMove, { passive: false });
     document.addEventListener('mouseup', handleUp);
   };
   
+  // 更新精確模式游標樣式
   useEffect(() => {
+    // 添加精確游標樣式
+    const styleElement = document.createElement('style');
+    styleElement.textContent = `
+      .cursor-precision {
+        cursor: ew-resize !important;
+      }
+      .cursor-precision::after {
+        content: "精確模式";
+        position: fixed;
+        bottom: 15px;
+        right: 15px;
+        background: rgba(59, 130, 246, 0.9);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        pointer-events: none;
+        z-index: 9999;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      }
+    `;
+    document.head.appendChild(styleElement);
+    
     return () => {
-      // 確保在組件卸載時清理任何剩餘的事件監聽器和樣式
+      // 清理樣式
+      document.head.removeChild(styleElement);
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
+      resizing.current = false;
+    };
+  }, []);
+
+  // 簡化Shift鍵監聽邏輯，移至handleMove中直接處理
+  useEffect(() => {
+    return () => {
+      document.body.classList.remove('cursor-precision');
     };
   }, []);
 
   return (
     <div className="relative overflow-x-auto shadow-md rounded-lg">
-      {resizeLine.visible && (
-        <div 
-          className="absolute top-0 bottom-0 w-1.5 bg-blue-500 z-50 animate-pulse"
-          style={{ 
-            left: `${resizeLine.position}px`, 
-            height: tableRef.current?.offsetHeight,
-            boxShadow: '0 0 8px rgba(59, 130, 246, 0.8)'
-          }}
-        />
-      )}
-      
-      <table ref={tableRef} className="w-full text-sm text-left text-gray-700 dark:text-gray-300">
+      <table 
+        ref={tableRef} 
+        className={`w-full text-sm text-left text-gray-700 dark:text-gray-300 ${
+          resizeLine.visible ? 'border border-blue-200 dark:border-blue-800 transition-colors duration-150' : ''
+        } ${
+          precisionMode && resizeLine.visible ? 'bg-blue-50/20 dark:bg-blue-900/10' : ''
+        }`}
+        title={resizeLine.visible ? (precisionMode ? "精確調整模式（Shift鍵已啟用）" : "按住Shift鍵以啟用精確調整模式") : ""}
+      >
         <thead className="text-xs text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 select-none">
-          <tr>
+          <tr ref={headerRowRef}>
             <th 
               className="p-4 relative" 
               style={{ width: columnWidths.name }}
@@ -166,7 +274,7 @@ const ListView: React.FC<ListViewProps> = ({
               {onColumnWidthChange && (
                 <div
                   onMouseDown={(e) => handleResizeStart(e, 'name')}
-                  className="absolute right-0 top-0 h-full w-6 cursor-col-resize flex items-center justify-center z-20"
+                  className="absolute right-0 top-0 h-full w-6 cursor-col-resize flex items-center justify-center z-20 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                   title="拖動調整欄位寬度"
                 >
                   <div className="w-0.5 h-4/5 bg-gray-300 dark:bg-gray-600 hover:bg-blue-500 hover:w-1" />
@@ -183,7 +291,7 @@ const ListView: React.FC<ListViewProps> = ({
               {onColumnWidthChange && (
                 <div
                   onMouseDown={(e) => handleResizeStart(e, 'lastModified')}
-                  className="absolute right-0 top-0 h-full w-6 cursor-col-resize flex items-center justify-center z-20"
+                  className="absolute right-0 top-0 h-full w-6 cursor-col-resize flex items-center justify-center z-20 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                   title="拖動調整欄位寬度"
                 >
                   <div className="w-0.5 h-4/5 bg-gray-300 dark:bg-gray-600 hover:bg-blue-500 hover:w-1" />
@@ -195,12 +303,12 @@ const ListView: React.FC<ListViewProps> = ({
               style={{ width: columnWidths.type }}
             >
               <div className="flex items-center">
-                <span className="flex-grow">類型</span>
+                <span className="flex-grow">檔案類型</span>
               </div>
               {onColumnWidthChange && (
                 <div
                   onMouseDown={(e) => handleResizeStart(e, 'type')}
-                  className="absolute right-0 top-0 h-full w-6 cursor-col-resize flex items-center justify-center z-20"
+                  className="absolute right-0 top-0 h-full w-6 cursor-col-resize flex items-center justify-center z-20 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                   title="拖動調整欄位寬度"
                 >
                   <div className="w-0.5 h-4/5 bg-gray-300 dark:bg-gray-600 hover:bg-blue-500 hover:w-1" />
@@ -212,12 +320,12 @@ const ListView: React.FC<ListViewProps> = ({
               style={{ width: columnWidths.size }}
             >
               <div className="flex items-center">
-                <span className="flex-grow">大小</span>
+                <span className="flex-grow">檔案大小</span>
               </div>
               {onColumnWidthChange && (
                 <div
                   onMouseDown={(e) => handleResizeStart(e, 'size')}
-                  className="absolute right-0 top-0 h-full w-6 cursor-col-resize flex items-center justify-center z-20"
+                  className="absolute right-0 top-0 h-full w-6 cursor-col-resize flex items-center justify-center z-20 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                   title="拖動調整欄位寬度"
                 >
                   <div className="w-0.5 h-4/5 bg-gray-300 dark:bg-gray-600 hover:bg-blue-500 hover:w-1" />
