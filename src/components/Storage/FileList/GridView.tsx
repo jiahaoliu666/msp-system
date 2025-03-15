@@ -2,6 +2,7 @@ import React from 'react';
 import { FileItem, FolderItem } from '@/components/storage/types';
 import { formatFileSize, getFileTypeIcon } from '@/services/storage/s3';
 import { formatFolderItemCount } from '@/config/s3-config';
+import EmptyState from '../EmptyState';
 
 interface GridViewProps {
   folders: FolderItem[];
@@ -18,6 +19,7 @@ interface GridViewProps {
   onFilePreview: (file: FileItem) => void;
   onContextMenu: (e: React.MouseEvent, file: FileItem | FolderItem) => void;
   onSort?: (key: string) => void;
+  isEmptyFolder?: boolean;
 }
 
 const GridView: React.FC<GridViewProps> = ({
@@ -33,8 +35,17 @@ const GridView: React.FC<GridViewProps> = ({
   onDownload,
   onDelete,
   onFilePreview,
-  onContextMenu
+  onContextMenu,
+  isEmptyFolder
 }) => {
+  if (isEmptyFolder) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-300 dark:border-gray-600 p-6">
+        <EmptyState type="folder" />
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
       {folders.map((folder: FolderItem, index: number) => (

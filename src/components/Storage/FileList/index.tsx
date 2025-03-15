@@ -135,12 +135,20 @@ const FileList: React.FC<FileListProps> = ({
       {viewMode === 'grid' ? (
         <div>
           {isEmptyFolder ? (
-            <div className="mt-10">
-              <EmptyState 
-                type="folder" 
-                onCreateFolder={onCreateFolder} 
-              />
-            </div>
+            <GridView
+              folders={[]}
+              files={[]}
+              currentPath={currentPath}
+              selectedItems={selectedItems}
+              onSelectItem={onSelectItem}
+              onEnterFolder={onEnterFolder}
+              onDeleteFolder={onDeleteFolder}
+              onDownload={onDownload}
+              onDelete={onDelete}
+              onFilePreview={onFilePreview}
+              onContextMenu={onContextMenu}
+              isEmptyFolder={true}
+            />
           ) : (
             <GridView
               folders={folders}
@@ -160,12 +168,38 @@ const FileList: React.FC<FileListProps> = ({
       ) : (
         <div>
           {isEmptyFolder ? (
-            <div className="mt-10">
-              <EmptyState 
-                type="folder" 
-                onCreateFolder={onCreateFolder} 
+            <>
+              <div className="flex justify-end mb-2">
+                <button
+                  onClick={handleResetColumnWidths}
+                  className="text-xs text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 flex items-center space-x-1"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  <span>重置欄位寬度</span>
+                </button>
+              </div>
+              <ListView
+                folders={[]}
+                files={[]}
+                currentPath={currentPath}
+                selectedItems={selectedItems}
+                sortConfig={{ key: 'name', direction: 'asc' }}
+                onSelectItem={onSelectItem}
+                onEnterFolder={onEnterFolder}
+                onDeleteFolder={onDeleteFolder}
+                onDownload={onDownload}
+                onDelete={onDelete}
+                onFilePreview={onFilePreview}
+                onContextMenu={onContextMenu}
+                onSort={onSort}
+                columnWidths={columnWidths}
+                onColumnWidthChange={handleColumnWidthChange}
+                isEmptyFolder={true}
               />
-            </div>
+            </>
           ) : (
             <>
               <div className="flex justify-end mb-2">
