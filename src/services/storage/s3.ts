@@ -538,7 +538,12 @@ export async function listFilesInFolder(folderPath: string = ''): Promise<{
           Delimiter: S3_CONFIG.folderDelimiter,
         }));
         
-        const itemCount = (folderItems.Contents?.length || 0) + (folderItems.CommonPrefixes?.length || 0);
+        // 計算真實項目數，排除資料夾本身的標記（以斜線結尾的項目）
+        const realContents = folderItems.Contents?.filter(item => 
+          item.Key && item.Key !== folderPath && !item.Key.endsWith('/')
+        ) || [];
+        
+        const itemCount = realContents.length + (folderItems.CommonPrefixes?.length || 0);
         
         // 獲取資料夾最後修改時間（使用資料夾內最新的檔案時間）
         const folderContents = await s3Client.send(new ListObjectsV2Command({

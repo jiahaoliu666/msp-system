@@ -143,6 +143,20 @@ const ListView: React.FC<ListViewProps> = ({
             </th>
             <th 
               className="p-4 relative" 
+              style={{ width: columnWidths.lastModified }}
+            >
+              <div className="flex items-center">
+                <span className="flex-grow">修改時間</span>
+              </div>
+              {onColumnWidthChange && (
+                <div
+                  onMouseDown={(e) => handleResizeStart(e, 'lastModified')}
+                  className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-blue-500 flex items-center after:content-['⋮'] after:text-gray-400 after:text-xs"
+                />
+              )}
+            </th>
+            <th 
+              className="p-4 relative" 
               style={{ width: columnWidths.type }}
             >
               <div className="flex items-center">
@@ -165,20 +179,6 @@ const ListView: React.FC<ListViewProps> = ({
               {onColumnWidthChange && (
                 <div
                   onMouseDown={(e) => handleResizeStart(e, 'size')}
-                  className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-blue-500 flex items-center after:content-['⋮'] after:text-gray-400 after:text-xs"
-                />
-              )}
-            </th>
-            <th 
-              className="p-4 relative" 
-              style={{ width: columnWidths.lastModified }}
-            >
-              <div className="flex items-center">
-                <span className="flex-grow">修改日期</span>
-              </div>
-              {onColumnWidthChange && (
-                <div
-                  onMouseDown={(e) => handleResizeStart(e, 'lastModified')}
                   className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-blue-500 flex items-center after:content-['⋮'] after:text-gray-400 after:text-xs"
                 />
               )}
@@ -212,12 +212,14 @@ const ListView: React.FC<ListViewProps> = ({
                   </button>
                 </div>
               </td>
-              <td className="p-4 align-middle">資料夾</td>
-              <td className="p-4 align-middle">
-                {folder.children ? formatFolderItemCount(folder.children) : formatFolderItemCount(0)}
-              </td>
               <td className="p-4 align-middle">
                 {new Date(folder.lastModified).toLocaleString('zh-TW')}
+              </td>
+              <td className="p-4 align-middle">資料夾</td>
+              <td className="p-4 align-middle">
+                {folder.children !== undefined && folder.children > 0 
+                  ? formatFolderItemCount(folder.children) 
+                  : formatFolderItemCount(0)}
               </td>
               <td className="p-4 align-middle">
                 <div className="flex items-center justify-center space-x-2">
@@ -269,12 +271,12 @@ const ListView: React.FC<ListViewProps> = ({
                   </div>
                 </td>
                 <td className="p-4 align-middle">
+                  {file.LastModified ? new Date(file.LastModified).toLocaleString('zh-TW') : '-'}
+                </td>
+                <td className="p-4 align-middle">
                   {file.type || fileKey.split('.').pop()?.toUpperCase() || 'Unknown'}
                 </td>
                 <td className="p-4 align-middle">{formatFileSize(file.Size || 0)}</td>
-                <td className="p-4 align-middle">
-                  {file.LastModified ? new Date(file.LastModified).toLocaleString('zh-TW') : '-'}
-                </td>
                 <td className="p-4 align-middle">
                   <div className="flex items-center justify-center space-x-2">
                     <button
