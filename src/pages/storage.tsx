@@ -116,18 +116,45 @@ const FileManagerLayout: React.FC<{
         </div>
 
         {/* 高級搜尋與篩選 */}
-        <div className="flex-grow max-w-xl">
-          <SearchFilter
-            searchTerm={searchTerm}
-            onSearchChange={onSearchChange}
-            fileType={fileType}
-            onFileTypeChange={onFileTypeChange}
-            dateRange={dateRange}
-            onDateRangeChange={onDateRangeChange}
-            sortConfig={sortConfig}
-            onSortChange={onSortChange}
-            onClearFilters={onClearFilters}
-          />
+        <div className="flex-grow max-w-xl flex items-center">
+          <div className="flex-grow">
+            <SearchFilter
+              searchTerm={searchTerm}
+              onSearchChange={onSearchChange}
+              fileType={fileType}
+              onFileTypeChange={onFileTypeChange}
+              dateRange={dateRange}
+              onDateRangeChange={onDateRangeChange}
+              sortConfig={sortConfig}
+              onSortChange={onSortChange}
+              onClearFilters={onClearFilters}
+            />
+          </div>
+          
+          {/* 主要操作按鈕 - 更顯眼的位置 */}
+          <div className="flex items-center ml-4 space-x-2">
+            <button
+              onClick={onCreateFolder}
+              className="px-3 py-2 bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800 rounded-lg flex items-center space-x-1 transition-all duration-200 shadow-sm"
+              title="新建資料夾"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <span className="text-sm font-medium">新增資料夾</span>
+            </button>
+            
+            <button
+              onClick={onUploadClick}
+              className="px-3 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg flex items-center space-x-1 transition-all duration-200 shadow-sm"
+              title="上傳檔案"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L7 8m4-4v12" />
+              </svg>
+              <span className="text-sm font-medium">上傳檔案</span>
+            </button>
+          </div>
         </div>
 
         {/* 操作按鈕 */}
@@ -159,26 +186,6 @@ const FileManagerLayout: React.FC<{
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-          </button>
-          
-          <button
-            onClick={onCreateFolder}
-            className="p-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-            title="新建資料夾"
-          >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-          </button>
-          
-          <button
-            onClick={onUploadClick}
-            className="p-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-            title="上傳檔案"
-          >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L7 8m4-4v12" />
             </svg>
           </button>
         </div>
