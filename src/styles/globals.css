@@ -63,6 +63,13 @@
   animation: rotate 2s linear infinite;
 }
 
+/* 自定義按鈕置中類 */
+.button-center-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
 /* 確保操作按鈕 (如垃圾桶圖標) 始終可見 */
 .action-button-always-visible {
   opacity: 1 !important;

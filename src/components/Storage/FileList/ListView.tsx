@@ -57,14 +57,11 @@ const ListView: React.FC<ListViewProps> = ({
   const headerRowRef = useRef<HTMLTableRowElement>(null);
   const resizing = useRef(false);
   const lastPositionRef = useRef(0);
-  const [resizeLine, setResizeLine] = useState({
-    visible: false,
-    position: 0,
-    column: '' as keyof ColumnWidths,
-    startX: 0,
-    columnStartWidth: 0
-  });
   const [precisionMode, setPrecisionMode] = useState(false);
+
+  // 定義移動和釋放事件處理器的引用，確保正確移除
+  const moveHandlerRef = useRef<((e: MouseEvent) => void) | null>(null);
+  const upHandlerRef = useRef<((e: MouseEvent) => void) | null>(null);
 
   // 預計算列的索引順序
   const columnOrder: (keyof ColumnWidths)[] = ['name', 'lastModified', 'type', 'size', 'actions'];
@@ -77,6 +74,25 @@ const ListView: React.FC<ListViewProps> = ({
     e.preventDefault();
     e.stopPropagation();
     
+    // 強制重置所有狀態，確保可以進行新的拖動操作
+    resizing.current = false;
+    
+    // 確保之前的事件處理器已被清理
+    if (moveHandlerRef.current) {
+      document.removeEventListener('mousemove', moveHandlerRef.current);
+      moveHandlerRef.current = null;
+    }
+    if (upHandlerRef.current) {
+      document.removeEventListener('mouseup', upHandlerRef.current);
+      upHandlerRef.current = null;
+    }
+    
+    // 清理之前的視覺狀態
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+    document.body.classList.remove('cursor-precision');
+    setPrecisionMode(false);
+    
     const startX = e.clientX;
     lastPositionRef.current = startX;
     console.log('開始調整欄位寬度:', column, '初始寬度:', columnWidths[column]);
@@ -84,21 +100,8 @@ const ListView: React.FC<ListViewProps> = ({
     // 使用普通變數追蹤當前寬度
     let currentColumnWidth = columnWidths[column];
     
-    // 設置初始狀態
-    setResizeLine({
-      visible: true,
-      position: e.clientX,
-      column,
-      startX,
-      columnStartWidth: columnWidths[column]
-    });
-    
     // 設置正在調整標誌
     resizing.current = true;
-    
-    // 使用requestAnimationFrame來優化渲染
-    let animationFrameId: number | null = null;
-    let lastMoveTime = performance.now();
     
     // 預先獲取目標列元素，避免重複查詢DOM
     const columnIndex = getColumnIndex(column);
@@ -111,19 +114,16 @@ const ListView: React.FC<ListViewProps> = ({
       }
     }
     
-    // 設定拖動處理 - 直接反應滑鼠移動
+    // 設定拖動處理函數 - 直接反應滑鼠移動
     const handleMove = (moveEvent: MouseEvent) => {
       if (!resizing.current) return;
       
+      // 這裡添加preventDefault以確保拖動時不會選中文字等
       moveEvent.preventDefault();
-      moveEvent.stopPropagation();
       
       // 計算移動距離
       const currentX = moveEvent.clientX;
       const moveDistance = currentX - lastPositionRef.current;
-      
-      // 更新最後移動時間記錄
-      lastMoveTime = performance.now();
       
       // 檢查是否需要進入精確模式
       const isPrecisionMode = moveEvent.shiftKey;
@@ -156,37 +156,28 @@ const ListView: React.FC<ListViewProps> = ({
       
       // 更新最後位置
       lastPositionRef.current = currentX;
-      
-      // 更新拖動線位置
-      setResizeLine(prev => ({
-        ...prev,
-        position: currentX
-      }));
     };
     
     // 設定結束拖動處理
     const handleUp = (upEvent: MouseEvent) => {
+      // 防止重複處理
+      if (!resizing.current) return;
+      
       upEvent.preventDefault();
       upEvent.stopPropagation();
       
       // 重置調整標誌
       resizing.current = false;
       
-      // 取消任何待處理的動畫幀
-      if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-        animationFrameId = null;
-      }
-      
-      // 隱藏調整線
-      setResizeLine(prev => ({
-        ...prev,
-        visible: false
-      }));
-      
       // 移除事件監聽器
-      document.removeEventListener('mousemove', handleMove);
-      document.removeEventListener('mouseup', handleUp);
+      if (moveHandlerRef.current) {
+        document.removeEventListener('mousemove', moveHandlerRef.current);
+        moveHandlerRef.current = null;
+      }
+      if (upHandlerRef.current) {
+        document.removeEventListener('mouseup', upHandlerRef.current);
+        upHandlerRef.current = null;
+      }
       
       // 恢復游標和用戶選擇
       document.body.style.cursor = '';
@@ -199,17 +190,38 @@ const ListView: React.FC<ListViewProps> = ({
         onColumnWidthChange(column, currentColumnWidth);
         console.log('完成欄位寬度調整:', column, '新寬度:', currentColumnWidth);
       }
+      
+      // 確保所有狀態重置完成，允許下一次拖動
+      setTimeout(() => {
+        console.log('拖動狀態重置完成，可以進行下一次拖動');
+      }, 10);
     };
+    
+    // 保存事件處理器的引用，以便正確移除
+    moveHandlerRef.current = handleMove;
+    upHandlerRef.current = handleUp;
     
     // 設置調整過程中的視覺樣式
     document.body.style.cursor = 'ew-resize';
     document.body.style.userSelect = 'none';
     
-    // 添加事件監聽器 - 使用passive: false來提高觸摸設備上的性能
-    document.addEventListener('mousemove', handleMove, { passive: false });
+    // 使用標準方式綁定事件，確保能夠正確移除
+    document.addEventListener('mousemove', handleMove);
     document.addEventListener('mouseup', handleUp);
   };
   
+  // 確保在組件卸載時清理所有事件監聽器
+  useEffect(() => {
+    return () => {
+      if (moveHandlerRef.current) {
+        document.removeEventListener('mousemove', moveHandlerRef.current);
+      }
+      if (upHandlerRef.current) {
+        document.removeEventListener('mouseup', upHandlerRef.current);
+      }
+    };
+  }, []);
+
   // 更新精確模式游標樣式
   useEffect(() => {
     // 添加精確游標樣式
@@ -255,12 +267,8 @@ const ListView: React.FC<ListViewProps> = ({
     <div className="relative overflow-x-auto shadow-md rounded-lg">
       <table 
         ref={tableRef} 
-        className={`w-full text-sm text-left text-gray-700 dark:text-gray-300 ${
-          resizeLine.visible ? 'border border-blue-200 dark:border-blue-800 transition-colors duration-150' : ''
-        } ${
-          precisionMode && resizeLine.visible ? 'bg-blue-50/20 dark:bg-blue-900/10' : ''
-        }`}
-        title={resizeLine.visible ? (precisionMode ? "精確調整模式（Shift鍵已啟用）" : "按住Shift鍵以啟用精確調整模式") : ""}
+        className={`w-full text-sm text-left text-gray-700 dark:text-gray-300`}
+        title={precisionMode ? "精確調整模式（Shift鍵已啟用）" : "按住Shift鍵以啟用精確調整模式"}
       >
         <thead className="text-xs text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 select-none">
           <tr ref={headerRowRef}>
@@ -371,22 +379,20 @@ const ListView: React.FC<ListViewProps> = ({
                   : formatFolderItemCount(0)}
               </td>
               <td className="p-4 align-middle">
-                <div className="flex items-center justify-center space-x-2">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDeleteFolder(folder.name);
-                    }}
-                    className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg 
-                           text-gray-500 dark:text-gray-400 hover:text-gray-700 
-                           dark:hover:text-gray-300 transition-colors"
-                  >
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
-                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeleteFolder(folder.name);
+                  }}
+                  className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg 
+                         text-gray-500 dark:text-gray-400 hover:text-gray-700 
+                         dark:hover:text-gray-300 transition-colors"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
               </td>
             </tr>
           ))}
@@ -427,7 +433,7 @@ const ListView: React.FC<ListViewProps> = ({
                 </td>
                 <td className="p-4 align-middle">{formatFileSize(file.Size || 0)}</td>
                 <td className="p-4 align-middle">
-                  <div className="flex items-center justify-center space-x-2">
+                  <div className="flex space-x-2">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
