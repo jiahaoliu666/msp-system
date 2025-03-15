@@ -70,8 +70,21 @@ function handleS3Error(error: any): never {
 // 驗證 S3 配置
 function validateS3Config() {
   if (!S3_CONFIG.bucketName) {
+    console.error('S3 bucket name is not configured');
     throw new Error(ErrorMessages.BUCKET_NOT_CONFIGURED);
   }
+  
+  if (!AWS_CONFIG.region) {
+    console.error('AWS region is not configured');
+    throw new Error(ErrorMessages.BUCKET_NOT_CONFIGURED);
+  }
+  
+  if (!AWS_CONFIG.credentials.accessKeyId || !AWS_CONFIG.credentials.secretAccessKey) {
+    console.error('AWS 認證信息缺失');
+    throw new Error(ErrorMessages.PERMISSION_DENIED);
+  }
+  
+  return true;
 }
 
 // 初始化 S3 客戶端
@@ -86,6 +99,27 @@ const s3Client = new S3Client({
     requestTimeout: AWS_CONFIG.requestTimeout
   })
 });
+
+// 檢查並確保 S3 連接可用
+export async function checkS3Connection(): Promise<boolean> {
+  try {
+    // 驗證配置
+    validateS3Config();
+    
+    // 嘗試列出儲存空間內容
+    const command = new ListObjectsV2Command({
+      Bucket: S3_CONFIG.bucketName,
+      MaxKeys: 1
+    });
+    
+    await s3Client.send(command);
+    console.log('S3 連接測試成功');
+    return true;
+  } catch (error) {
+    console.error('S3 連接測試失敗:', error);
+    return false;
+  }
+}
 
 // 將檔案轉換為 Buffer
 async function fileToBuffer(file: File): Promise<Buffer> {
@@ -420,17 +454,15 @@ export async function createFolder(folderPath: string): Promise<boolean> {
   }
 }
 
-// 格式化時間為台北時區
+// 格式化日期時間
 export function formatDateTime(date: Date): string {
   return date.toLocaleString('zh-TW', {
-    timeZone: 'Asia/Taipei',
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
-    minute: '2-digit',
-    hour12: false
-  }).replace(/\//g, '-');
+    minute: '2-digit'
+  });
 }
 
 // 計算資料夾大小
@@ -457,6 +489,7 @@ export async function listFilesInFolder(folderPath: string = ''): Promise<{
     name: string;
     size: number;
     lastModified: Date;
+    children?: number;
   }>;
   currentPath: string;
   parentPath: string | null;
@@ -464,24 +497,48 @@ export async function listFilesInFolder(folderPath: string = ''): Promise<{
   try {
     validateS3Config();
     
-    // 標準化路徑
-    folderPath = folderPath.replace(/^\/+|\/+$/g, '');
+    // 標準化路徑 - 移除前後斜線但保留中間的斜線
+    folderPath = folderPath.trim().replace(/^\/+|\/+$/g, '');
     const prefix = folderPath ? `${folderPath}/` : '';
+    
+    console.log('正在列出資料夾路徑:', prefix, '原始路徑:', folderPath);
     
     const command = new ListObjectsV2Command({
       Bucket: S3_CONFIG.bucketName,
       Prefix: prefix,
       Delimiter: S3_CONFIG.folderDelimiter,
+      MaxKeys: 1000  // 確保獲取足夠多的結果
     });
 
     const response = await s3Client.send(command);
+    console.log('S3 回應結果:', { 
+      CommonPrefixes: response.CommonPrefixes?.length || 0, 
+      Contents: response.Contents?.length || 0 
+    });
     
     // 處理資料夾
     const folderPromises = (response.CommonPrefixes || [])
       .map(async (prefix) => {
-        const folderPath = prefix.Prefix || '';
-        const folderName = folderPath.split('/').slice(-2, -1)[0];
+        if (!prefix.Prefix) return null;
+        
+        const folderPath = prefix.Prefix;
+        // 提取資料夾名稱 - 從完整路徑中去除前綴，獲取資料夾名稱
+        const pathParts = folderPath.split('/').filter(Boolean);
+        const folderName = pathParts[pathParts.length - 1] || '';
+        
+        console.log('處理資料夾:', { folderPath, folderName });
+        
+        // 獲取資料夾大小
         const size = await getFolderSize(folderPath);
+        
+        // 獲取資料夾內的項目數量，用於顯示 "X 個項目"
+        const folderItems = await s3Client.send(new ListObjectsV2Command({
+          Bucket: S3_CONFIG.bucketName,
+          Prefix: folderPath,
+          Delimiter: S3_CONFIG.folderDelimiter,
+        }));
+        
+        const itemCount = (folderItems.Contents?.length || 0) + (folderItems.CommonPrefixes?.length || 0);
         
         // 獲取資料夾最後修改時間（使用資料夾內最新的檔案時間）
         const folderContents = await s3Client.send(new ListObjectsV2Command({
@@ -490,34 +547,57 @@ export async function listFilesInFolder(folderPath: string = ''): Promise<{
           MaxKeys: 1000
         }));
         
-        const lastModified = (folderContents.Contents || [])
-          .reduce((latest, item) => {
-            const itemDate = item.LastModified || new Date(0);
-            return itemDate > latest ? itemDate : latest;
-          }, new Date(0));
+        const lastModified = (folderContents.Contents || []).length > 0
+          ? (folderContents.Contents || [])
+              .reduce((latest, item) => {
+                const itemDate = item.LastModified || new Date(0);
+                return itemDate > latest ? itemDate : latest;
+              }, new Date(0))
+          : new Date();  // 如果沒有檔案，使用當前時間
 
         return {
           name: folderName,
           size,
-          lastModified: lastModified
+          lastModified,
+          children: itemCount // 添加項目數量
         };
       });
 
-    const folders = await Promise.all(folderPromises);
+    const folders = (await Promise.all(folderPromises)).filter(Boolean) as Array<{
+      name: string;
+      size: number;
+      lastModified: Date;
+      children?: number;
+    }>;
     
-    // 處理檔案（排除資料夾標記檔案）
+    // 處理檔案（排除資料夾標記檔案，保留完整路徑）
     const files = (response.Contents || [])
-      .filter(item => !item.Key?.endsWith('/'))
-      .map(item => ({
-        ...item,
-        Key: item.Key?.replace(prefix, '') || ''
-      })) as S3File[];
+      .filter(item => {
+        // 排除資料夾標記和當前資料夾的標記
+        return item.Key && 
+               !item.Key.endsWith('/') && 
+               item.Key !== prefix;
+      })
+      .map(item => {
+        // 添加除錯信息
+        console.log('處理檔案:', item.Key);
+        return {
+          ...item,
+          // 保留原始的完整路徑
+          Key: item.Key || ''
+        };
+      }) as S3File[];
+
+    console.log(`找到 ${files.length} 個檔案和 ${folders.length} 個資料夾`);
 
     // 計算父資料夾路徑
-    const pathParts = folderPath.split('/');
-    const parentPath = pathParts.length > 1 
-      ? pathParts.slice(0, -1).join('/')
-      : pathParts.length === 1 ? '' : null;
+    let parentPath: string | null = null;
+    if (folderPath) {
+      const pathParts = folderPath.split('/').filter(Boolean);
+      parentPath = pathParts.length > 1 
+        ? pathParts.slice(0, -1).join('/')
+        : '';  // 如果是第一級目錄，父路徑為空字符串（根目錄）
+    }
 
     return {
       files,
@@ -526,6 +606,7 @@ export async function listFilesInFolder(folderPath: string = ''): Promise<{
       parentPath
     };
   } catch (error) {
+    console.error('列出資料夾內容時發生錯誤:', error);
     handleS3Error(error);
     return {
       files: [],
@@ -776,15 +857,15 @@ function getMimeType(extension: string): string {
   return mimeTypes[extension] || 'application/octet-stream';
 }
 
-// 重新初始化 S3 客戶端
+// 重新初始化 S3 客戶端，以修復連接問題
 export function reinitializeS3Client(config?: {
   accessKeyId?: string;
   secretAccessKey?: string;
   region?: string;
   endpoint?: string;
-}) {
+}): boolean {
   try {
-    console.log('重新初始化 S3 客戶端...');
+    console.log('正在重新初始化 S3 客戶端...');
     
     // 更新配置
     if (config) {
@@ -794,10 +875,13 @@ export function reinitializeS3Client(config?: {
       if (config.endpoint) AWS_CONFIG.endpoint = config.endpoint;
     }
     
-    // 重新創建客戶端
+    // 重新建立客戶端
     const newClient = new S3Client({
       region: AWS_CONFIG.region,
-      credentials: AWS_CONFIG.credentials,
+      credentials: {
+        accessKeyId: AWS_CONFIG.credentials.accessKeyId,
+        secretAccessKey: AWS_CONFIG.credentials.secretAccessKey
+      },
       endpoint: AWS_CONFIG.endpoint,
       forcePathStyle: true,
       maxAttempts: AWS_CONFIG.maxAttempts,
@@ -807,7 +891,7 @@ export function reinitializeS3Client(config?: {
       })
     });
     
-    // 更新全局客戶端
+    // 替換全局客戶端
     Object.assign(s3Client, newClient);
     
     console.log('S3 客戶端重新初始化成功');

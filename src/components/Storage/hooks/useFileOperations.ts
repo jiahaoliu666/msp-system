@@ -12,7 +12,7 @@ import { FileItem, FileOperationsReturn } from '@/components/storage/types';
 
 export const useFileOperations = (
   currentPath: string,
-  loadFiles: () => Promise<void>
+  loadFiles: () => Promise<{success: boolean, error?: string} | void>
 ): FileOperationsReturn => {
   const [selectedFile, setSelectedFile] = useState<FileItem | null>(null);
   const [previewFile, setPreviewFile] = useState<FileItem | null>(null);

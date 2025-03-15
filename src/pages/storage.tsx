@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
-import { testCORSConfiguration, getStorageQuota, reinitializeS3Client } from '@/services/storage/s3';
+import { testCORSConfiguration, getStorageQuota, reinitializeS3Client, checkS3Connection } from '@/services/storage/s3';
 import { AWS_CONFIG } from '@/config/aws-config';
 import { S3_CONFIG } from '@/config/s3-config';
 
 // 引入組件
 import FileList from '@/components/storage/FileList';
-import EmptyState from '@/components/storage/EmptyState';
+import EmptyState from '../components/storage/EmptyState';
 import UploadProgress from '@/components/storage/UploadProgress';
 import StatusBar from '@/components/storage/StatusBar';
 import FilePreview from '@/components/storage/FilePreview';
@@ -21,6 +21,176 @@ import { useFileManager } from '@/components/storage/hooks/useFileManager';
 import { useUpload } from '@/components/storage/hooks/useUpload';
 import { useFileOperations } from '@/components/storage/hooks/useFileOperations';
 import { FileFilters, FileItem, FolderItem } from '@/components/storage/types';
+
+// 導入相關元件
+import LoadingSpinner from '../components/common/LoadingSpinner';
+import GridView from '../components/storage/FileList/GridView';
+import ListView from '../components/storage/FileList/ListView';
+
+// 自定義的檔案管理器布局組件
+const FileManagerLayout: React.FC<{
+  children: React.ReactNode;
+  currentPath: string;
+  parentPath: string | null;
+  breadcrumbs: string[];
+  viewMode: 'list' | 'grid';
+  searchTerm: string;
+  fileType: string;
+  dateRange: [Date | null, Date | null];
+  sortConfig: { key: string; direction: string };
+  multiSelectMode: boolean;
+  onGoBack: () => void;
+  onSetCurrentPath: (path: string) => void;
+  onSetViewMode: (mode: 'list' | 'grid') => void;
+  onSearchChange: (term: string) => void;
+  onFileTypeChange: (type: string) => void;
+  onDateRangeChange: (range: [Date | null, Date | null]) => void;
+  onSortChange: (key: string) => void;
+  onClearFilters: () => void;
+  onToggleMultiSelectMode: () => void;
+  onCreateFolder: () => void;
+  onUploadClick: () => void;
+}> = ({
+  children,
+  currentPath,
+  parentPath,
+  breadcrumbs,
+  viewMode,
+  searchTerm,
+  fileType,
+  dateRange,
+  sortConfig,
+  multiSelectMode,
+  onGoBack,
+  onSetCurrentPath,
+  onSetViewMode,
+  onSearchChange,
+  onFileTypeChange,
+  onDateRangeChange,
+  onSortChange,
+  onClearFilters,
+  onToggleMultiSelectMode,
+  onCreateFolder,
+  onUploadClick
+}) => {
+  return (
+    <div className="flex flex-col h-full">
+      {/* 頂部工具列 */}
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex flex-wrap items-center justify-between gap-4">
+        {/* 路徑導航 */}
+        <div className="flex items-center space-x-2 flex-grow">
+          <button
+            onClick={onGoBack}
+            disabled={!parentPath}
+            className={`p-2 rounded-lg ${
+              parentPath
+                ? 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                : 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
+            }`}
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          
+          <div className="flex items-center space-x-1 text-sm text-gray-600 dark:text-gray-400 overflow-x-auto scrollbar-hide">
+            <button
+              onClick={() => onSetCurrentPath('')}
+              className="hover:text-blue-600 dark:hover:text-blue-400 whitespace-nowrap"
+            >
+              根目錄
+            </button>
+            
+            {breadcrumbs && breadcrumbs.length > 0 ? breadcrumbs.map((folder, index) => (
+              <div key={index} className="flex items-center">
+                <span className="mx-1">/</span>
+                <button
+                  onClick={() => onSetCurrentPath(folder)}
+                  className="hover:text-blue-600 dark:hover:text-blue-400 whitespace-nowrap"
+                >
+                  {folder.split('/').filter(Boolean).pop() || ''}
+                </button>
+              </div>
+            )) : null}
+          </div>
+        </div>
+
+        {/* 高級搜尋與篩選 */}
+        <div className="flex-grow max-w-xl">
+          <SearchFilter
+            searchTerm={searchTerm}
+            onSearchChange={onSearchChange}
+            fileType={fileType}
+            onFileTypeChange={onFileTypeChange}
+            dateRange={dateRange}
+            onDateRangeChange={onDateRangeChange}
+            sortConfig={sortConfig}
+            onSortChange={onSortChange}
+            onClearFilters={onClearFilters}
+          />
+        </div>
+
+        {/* 操作按鈕 */}
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => onSetViewMode(viewMode === 'list' ? 'grid' : 'list')}
+            className="p-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+            title={viewMode === 'list' ? '切換到網格視圖' : '切換到列表視圖'}
+          >
+            {viewMode === 'list' ? (
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+              </svg>
+            ) : (
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+              </svg>
+            )}
+          </button>
+          
+          <button
+            onClick={onToggleMultiSelectMode}
+            className={`p-2 rounded-lg ${
+              multiSelectMode
+                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+            }`}
+            title="多選模式"
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+          </button>
+          
+          <button
+            onClick={onCreateFolder}
+            className="p-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+            title="新建資料夾"
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </button>
+          
+          <button
+            onClick={onUploadClick}
+            className="p-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+            title="上傳檔案"
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L7 8m4-4v12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      
+      {/* 主要內容區域 */}
+      <div className="flex-grow overflow-auto p-6">
+        {children}
+      </div>
+    </div>
+  );
+};
 
 export default function Storage() {
   // 狀態管理
@@ -38,13 +208,13 @@ export default function Storage() {
   const [storageQuota, setStorageQuota] = useState<{ used: number; total: number } | null>(null);
   const [isTagManagerOpen, setIsTagManagerOpen] = useState(false);
   const [taggedItem, setTaggedItem] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // 使用自定義 hooks
   const {
     files,
     folders,
     isLoading,
-    error,
     currentPath,
     parentPath,
     selectedItems,
@@ -148,50 +318,41 @@ export default function Storage() {
     };
   }, [loadFiles]);
 
-  // 初始載入檔案
+  // S3 初始化和連接檢查
   useEffect(() => {
-    console.log('開始加載檔案...');
-    
-    // 詳細診斷 AWS 配置
-    console.log('AWS 連接配置詳細信息:', {
-      region: AWS_CONFIG.region,
-      endpoint: AWS_CONFIG.endpoint,
-      bucket: S3_CONFIG.bucketName,
-      accessKeyIdExists: !!AWS_CONFIG.credentials.accessKeyId,
-      secretAccessKeyExists: !!AWS_CONFIG.credentials.secretAccessKey,
-      // 顯示環境變數 (安全起見只顯示存在與否)
-      envVars: {
-        NEXT_PUBLIC_AWS_REGION: !!process.env.NEXT_PUBLIC_AWS_REGION,
-        NEXT_PUBLIC_AWS_ACCESS_KEY_ID: !!process.env.NEXT_PUBLIC_AWS_ACCESS_KEY_ID,
-        NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY: !!process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY,
-        NEXT_PUBLIC_S3_BUCKET_NAME: !!process.env.NEXT_PUBLIC_S3_BUCKET_NAME,
-        NEXT_PUBLIC_S3_ENDPOINT: process.env.NEXT_PUBLIC_S3_ENDPOINT
-      }
-    });
-    
-    // 測試 S3 連接
-    const testS3Connection = async () => {
+    const initializeS3Connection = async () => {
       try {
-        console.log('正在測試 S3 連接...');
-        await testCORSConfiguration();
-        console.log('S3 連接測試成功');
+        // 檢查連接狀態
+        const isConnected = await checkS3Connection();
+        
+        if (!isConnected) {
+          console.log('S3 連接失敗，嘗試重新初始化...');
+          const reinitialized = reinitializeS3Client();
+          
+          if (!reinitialized) {
+            console.error('S3 客戶端重新初始化失敗');
+            toast.error('無法連接到檔案儲存服務，請重新整理頁面或聯繫系統管理員');
+            return;
+          }
+        }
+        
+        // 加載文件
+        await loadFiles();
+        
+        // 加載儲存空間配額
+        try {
+          const quota = await getStorageQuota();
+          setStorageQuota(quota);
+        } catch (error) {
+          console.error('獲取儲存空間配額失敗:', error);
+        }
       } catch (error) {
-        console.error('S3 連接測試失敗:', error);
+        console.error('S3 連接初始化失敗:', error);
+        toast.error('檔案儲存服務暫時不可用，請稍後再試');
       }
     };
     
-    testS3Connection();
-    
-    loadFiles()
-      .then((result) => {
-        console.log('檔案加載成功', result);
-        handleApplyFilters();
-      })
-      .catch((error: Error) => {
-        console.error('檔案加載失敗:', error);
-        toast.error(`檔案加載失敗: ${error.message}`);
-      });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    initializeS3Connection();
   }, []);
 
   // 檢查 CORS 設定
@@ -338,540 +499,148 @@ export default function Storage() {
     }
   };
 
+  // 定義切換項目選擇函數
+  const toggleItemSelection = (itemKey: string) => {
+    const newSelected = new Set(selectedItems);
+    if (newSelected.has(itemKey)) {
+      newSelected.delete(itemKey);
+    } else {
+      newSelected.add(itemKey);
+    }
+    setSelectedItems(newSelected);
+  };
+
   // 渲染檔案列表或空狀態
   const renderFileList = () => {
-    // 初始化 filteredItems 以防止它是 undefined
-    const safeFilteredItems = filteredItems || { files: [], folders: [] };
-    // 確保 starredItems 存在且可迭代
-    const safeStarredItems = starredItems || new Set<string>();
-
+    // 如果檔案正在加載
     if (isLoading) {
       return (
-        <div className="flex items-center justify-center h-64">
-          <div className="relative">
-            <div className="w-12 h-12 border-4 border-blue-200 rounded-full animate-spin border-t-blue-600"></div>
-            <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">載入中...</div>
-          </div>
+        <div className="h-full w-full flex items-center justify-center">
+          <LoadingSpinner size="lg" />
         </div>
       );
     }
 
+    // 如果發生錯誤
     if (error) {
       return (
-        <div className="flex flex-col items-center justify-center h-64 text-red-500">
-          <svg className="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-          <div className="text-lg font-medium mb-2">{error}</div>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 text-center max-w-md">
-            可能是 AWS S3 連接問題。請檢查網絡連接或 AWS 認證是否有效。
-          </p>
-          <div className="flex space-x-4">
-            <button 
-              onClick={handleRetry}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 
-                       transform hover:scale-105 transition-all duration-200 
-                       shadow-lg hover:shadow-xl flex items-center space-x-2 
-                       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-            >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              <span>重試連接</span>
-            </button>
-            
-            <button 
-              onClick={() => {
-                // 嘗試重新初始化 S3 客戶端並重新加載
-                reinitializeS3Client();
-                toast.info('正在重新初始化 S3 連接...');
-                setTimeout(() => {
-                  handleRetry();
-                }, 1000);
-              }}
-              className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 
-                       transform hover:scale-105 transition-all duration-200 
-                       shadow-lg hover:shadow-xl flex items-center space-x-2 
-                       focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2"
-            >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              <span>重置 S3 連接</span>
-            </button>
-          </div>
-        </div>
+        <EmptyState 
+          type="error" 
+          errorMessage={error} 
+          onRetry={handleRetry}
+          onCreateFolder={() => setIsCreatingFolder(true)}
+        />
       );
     }
 
-    // 過濾後沒有結果
-    if (searchTerm && safeFilteredItems.files.length === 0 && safeFilteredItems.folders.length === 0) {
+    // 如果正在搜尋但沒有結果
+    if (searchTerm && folders.length === 0 && files.length === 0) {
       return (
         <EmptyState 
           type="search" 
-          searchTerm={searchTerm}
+          searchTerm={searchTerm} 
           onClearFilter={handleClearFilters}
+          onCreateFolder={() => setIsCreatingFolder(true)}
         />
       );
     }
 
-    // 過濾後沒有結果 (僅篩選條件)
-    if (!searchTerm && fileType && safeFilteredItems.files.length === 0 && safeFilteredItems.folders.length === 0) {
+    // 如果存在篩選條件但沒有結果
+    if ((fileType || dateRange[0] !== null || dateRange[1] !== null) && folders.length === 0 && files.length === 0) {
       return (
         <EmptyState 
           type="filter" 
-          filterType={fileType}
+          filterType={fileType || '日期範圍'} 
           onClearFilter={handleClearFilters}
+          onCreateFolder={() => setIsCreatingFolder(true)}
         />
       );
     }
 
-    // 空資料夾
-    if (files.length === 0 && folders.length === 0) {
+    // 如果資料夾為空（沒有檔案也沒有資料夾）
+    if (folders.length === 0 && files.length === 0) {
       return (
         <EmptyState 
           type="folder" 
+          onCreateFolder={() => setIsCreatingFolder(true)}
         />
       );
     }
 
-    return (
-      <div {...getRootProps({ className: 'outline-none' })}>
-        <input {...getInputProps()} />
-        <FileList
-          files={safeFilteredItems.files}
-          folders={safeFilteredItems.folders}
-          currentPath={currentPath}
+    // 渲染網格視圖或列表視圖
+    if (viewMode === 'grid') {
+      return (
+        <GridView
+          folders={folders}
+          files={files}
           selectedItems={selectedItems}
-          starredItems={Array.from(safeStarredItems).map(key => {
-            const file = safeFilteredItems.files.find(f => f.Key === key);
-            if (file) return file;
-            return { Key: key, type: 'unknown' } as FileItem;
-          })}
-          viewMode={viewMode}
-          searchTerm={searchTerm}
-          fileType={fileType}
-          sortConfig={sortConfig}
-          currentPage={currentPage}
+          multiSelectMode={multiSelectMode}
           itemsPerPage={itemsPerPage}
-          onSelectItem={handleSelectItem}
+          onSelectItem={toggleItemSelection}
           onEnterFolder={handleEnterFolder}
           onDeleteFolder={handleDeleteFolder}
           onDownload={handleDownload}
           onDelete={handleDelete}
           onFilePreview={handleFilePreview}
           onContextMenu={handleContextMenu}
-          onSort={key => setSortConfig(prevConfig => ({
+          onSort={(key: string) => setSortConfig(prevConfig => ({
             key,
             direction: prevConfig.key === key && prevConfig.direction === 'asc' ? 'desc' : 'asc'
           }))}
         />
-      </div>
-    );
+      );
+    } else {
+      return (
+        <ListView
+          folders={folders}
+          files={files}
+          selectedItems={selectedItems}
+          multiSelectMode={multiSelectMode}
+          sortConfig={sortConfig}
+          itemsPerPage={itemsPerPage}
+          onSelectItem={toggleItemSelection}
+          onEnterFolder={handleEnterFolder}
+          onDeleteFolder={handleDeleteFolder}
+          onDownload={handleDownload}
+          onDelete={handleDelete}
+          onFilePreview={handleFilePreview}
+          onContextMenu={handleContextMenu}
+          onSort={(key: string) => setSortConfig(prevConfig => ({
+            key,
+            direction: prevConfig.key === key && prevConfig.direction === 'asc' ? 'desc' : 'asc'
+          }))}
+        />
+      );
+    }
   };
 
   return (
-    <div className="flex flex-col h-full">
-      {/* 頂部工具列 */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex flex-wrap items-center justify-between gap-4">
-        {/* 路徑導航 */}
-        <div className="flex items-center space-x-2 flex-grow">
-          <button
-            onClick={handleGoBack}
-            disabled={!parentPath}
-            className={`p-2 rounded-lg ${
-              parentPath
-                ? 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                : 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
-            }`}
-          >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          
-          <div className="flex items-center space-x-1 text-sm text-gray-600 dark:text-gray-400 overflow-x-auto scrollbar-hide">
-            <button
-              onClick={() => setCurrentPath('')}
-              className="hover:text-blue-600 dark:hover:text-blue-400 whitespace-nowrap"
-            >
-              根目錄
-            </button>
-            
-            {breadcrumbs && breadcrumbs.length > 0 ? breadcrumbs.map((folder, index) => (
-              <div key={index} className="flex items-center">
-                <span className="mx-1">/</span>
-                <button
-                  onClick={() => setCurrentPath(folder)}
-                  className="hover:text-blue-600 dark:hover:text-blue-400 whitespace-nowrap"
-                >
-                  {folder.split('/').filter(Boolean).pop() || ''}
-                </button>
-              </div>
-            )) : null}
-          </div>
-        </div>
-
-        {/* 高級搜尋與篩選 */}
-        <div className="flex-grow max-w-xl">
-          <SearchFilter
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            fileType={fileType}
-            onFileTypeChange={setFileType}
-            dateRange={dateRange}
-            onDateRangeChange={setDateRange}
-            sortConfig={sortConfig}
-            onSortChange={key => setSortConfig(prevConfig => ({
-              key,
-              direction: prevConfig.key === key && prevConfig.direction === 'asc' ? 'desc' : 'asc'
-            }))}
-            onClearFilters={handleClearFilters}
-          />
-        </div>
-
-        {/* 操作按鈕 */}
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
-            className="p-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-            title={viewMode === 'list' ? '切換到網格視圖' : '切換到列表視圖'}
-          >
-            {viewMode === 'list' ? (
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-              </svg>
-            ) : (
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-              </svg>
-            )}
-          </button>
-          
-          <button
-            onClick={toggleMultiSelectMode}
-            className={`p-2 rounded-lg ${
-              multiSelectMode
-                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
-                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-            }`}
-            title={multiSelectMode ? '關閉多選模式' : '開啟多選模式'}
-          >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-          </button>
-          
-          <button
-            onClick={handleUploadClick}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 
-                     transform hover:scale-105 transition-all duration-200 
-                     shadow-lg hover:shadow-xl flex items-center space-x-2 
-                     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-            </svg>
-            <span>上傳</span>
-          </button>
-          
-          <button
-            onClick={() => setIsCreatingFolder(true)}
-            className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 
-                     rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 
-                     transform hover:scale-105 transition-all duration-200 
-                     shadow-md hover:shadow-lg flex items-center space-x-2 
-                     focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
-          >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-            </svg>
-            <span>新增資料夾</span>
-          </button>
-        </div>
-      </div>
-
-      {/* 主要內容區 */}
-      <div className={`flex-grow overflow-auto p-4 relative ${draggedOver ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
-           onDragOver={() => setDraggedOver(true)}
-           onDragLeave={() => setDraggedOver(false)}
-           onDrop={() => setDraggedOver(false)}>
-        
-        {/* 拖放提示 */}
-        {draggedOver && (
-          <div className="absolute inset-0 flex items-center justify-center bg-blue-500/10 dark:bg-blue-900/30 backdrop-blur-sm z-10">
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-2xl text-center max-w-md transform scale-110 animate-pulse">
-              <svg className="h-16 w-16 text-blue-600 dark:text-blue-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-              </svg>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">拖放檔案以上傳</h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                拖放您的檔案至此區域以開始上傳至目前資料夾
-              </p>
-            </div>
-          </div>
-        )}
-        
-        {renderFileList()}
-      </div>
-
-      {/* 狀態欄 */}
-      <StatusBar
-        selectedItems={selectedItems}
-        totalItems={files.length + folders.length}
-        totalSize={totalSize}
-        uploadProgress={isUploading ? uploadProgress : undefined}
-        currentOperation={currentOperation}
-        storageQuota={storageQuota || undefined}
-        isSearching={!!searchTerm || !!fileType || (dateRange[0] !== null || dateRange[1] !== null)}
-      />
-
-      {/* 檔案預覽 */}
-      {previewFile && (
-        <FilePreview
-          file={previewFile}
-          onClose={() => setPreviewFile(null)}
-          onShare={async () => {
-            const url = await handleShare(previewFile.Key || '');
-            navigator.clipboard.writeText(url);
-            toast.success('分享連結已複製到剪貼簿');
-          }}
-          onVersions={async () => {
-            // 版本歷史功能
-            toast.info('版本歷史功能即將上線');
-          }}
-          onTag={(tags) => handleTag(previewFile.Key || '', tags)}
-        />
-      )}
-
-      {/* 右鍵選單 */}
-      {contextMenu && (
-        <ContextMenu
-          file={contextMenu.file}
-          position={contextMenu.position}
-          onClose={() => setContextMenu(null)}
-          onAction={handleContextMenuAction}
-          availableActions={[
-            'open', 'preview', 'download', 'share', 
-            'rename', 'move', 'copy', 'delete', 
-            'info', 'tag', 'star'
-          ]}
-        />
-      )}
-
-      {/* 刪除確認對話框 */}
-      {isDeleteConfirmOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full shadow-2xl">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">確認刪除</h3>
-            <p className="text-gray-700 dark:text-gray-300 mb-6">
-              {itemToDelete?.type === 'folder' 
-                ? '確定要刪除此資料夾及其所有內容嗎？此操作無法復原。' 
-                : '確定要刪除此檔案嗎？此操作無法復原。'}
-            </p>
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => setIsDeleteConfirmOpen(false)}
-                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 
-                         rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
-              >
-                取消
-              </button>
-              <button
-                onClick={handleConfirmDelete}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-              >
-                刪除
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 新增資料夾對話框 */}
-      {isCreatingFolder && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full shadow-2xl">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">新增資料夾</h3>
-            <input
-              type="text"
-              value={newFolderName}
-              onChange={(e) => setNewFolderName(e.target.value)}
-              placeholder="資料夾名稱"
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
-                       bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100
-                       focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-600
-                       mb-6"
-              autoFocus
-            />
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => setIsCreatingFolder(false)}
-                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 
-                         rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
-              >
-                取消
-              </button>
-              <button
-                onClick={handleCreateFolder}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                建立
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 檔案重複處理對話框 */}
-      {duplicateFile && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full shadow-2xl">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">檔案已存在</h3>
-            <p className="text-gray-700 dark:text-gray-300 mb-6">
-              檔案 "{duplicateFile.file.name}" 已存在於目前資料夾中。請選擇處理方式：
-            </p>
-            <div className="flex flex-col space-y-3">
-              <button
-                onClick={() => handleDuplicateFile('replace')}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-left"
-              >
-                取代現有檔案
-              </button>
-              <button
-                onClick={() => handleDuplicateFile('keep-both')}
-                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 
-                         rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 text-left"
-              >
-                保留兩者 (重新命名為 "{duplicateFile.file.name.replace(/(\.[^.]+)?$/, ' (1)$1')}")
-              </button>
-              <button
-                onClick={() => handleDuplicateFile('skip')}
-                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 
-                         rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 text-left"
-              >
-                跳過此檔案
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 重命名對話框 */}
-      {isRenamingItem && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full shadow-2xl">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">重新命名</h3>
-            <input
-              type="text"
-              value={newItemName}
-              onChange={(e) => setNewItemName(e.target.value)}
-              placeholder="新名稱"
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
-                       bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100
-                       focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-600
-                       mb-6"
-              autoFocus
-            />
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => setIsRenamingItem(false)}
-                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 
-                         rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
-              >
-                取消
-              </button>
-              <button
-                onClick={() => {
-                  if (fileInfoTarget) {
-                    const oldPath = fileInfoTarget.Key || '';
-                    const pathParts = oldPath.split('/');
-                    pathParts.pop();
-                    const newPath = [...pathParts, newItemName].join('/');
-                    handleRename(oldPath, newPath);
-                    setIsRenamingItem(false);
-                  }
-                }}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                確認
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 檔案資訊面板 */}
-      {showFileInfo && fileInfoTarget && (
-        <FileInfo
-          file={fileInfoTarget}
-          onClose={handleCloseFileInfo}
-          onTag={handleTagsChange}
-          onRename={handleRenameFile}
-          onMove={handleMoveFile}
-          onShare={fileInfoTarget.type !== 'folder' ? handleShareFile : undefined}
-        />
-      )}
-
-      {/* 移動檔案對話框 */}
-      {showMoveDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-lg w-full shadow-2xl">
-            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                移動{fileInfoTarget?.type === 'folder' ? '資料夾' : '檔案'}
-              </h3>
-              <button
-                onClick={() => setShowMoveDialog(false)}
-                className="absolute top-4 right-4 p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none"
-              >
-                <svg className="h-5 w-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            
-            <FolderSelector
-              currentPath={currentPath}
-              onPathChange={(path) => {
-                if (fileInfoTarget) {
-                  // 獲取源路徑
-                  const sourcePath = fileInfoTarget.Key || '';
-                  // 獲取檔案名
-                  const fileName = sourcePath.split('/').pop() || '';
-                  // 構建目標路徑
-                  const targetPath = path + fileName;
-                  
-                  // 檢查是否嘗試移動到自身位置
-                  if (sourcePath === targetPath) {
-                    toast.info('檔案已在目標位置');
-                  } else {
-                    handleMove([sourcePath], targetPath);
-                  }
-                }
-                setShowMoveDialog(false);
-              }}
-              recentFolders={recentFolders}
-              excludePaths={fileInfoTarget?.type === 'folder' ? [fileInfoTarget.Key as string] : []}
-              title={`選擇移動${fileInfoTarget?.type === 'folder' ? '資料夾' : '檔案'}的目標位置`}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* 上傳進度 */}
-      {isUploading && (
-        <UploadProgress 
-          progress={uploadProgress} 
-          fileName={uploadQueue[currentFileIndex]?.name}
-          remainingFiles={totalFiles - currentFileIndex - 1}
-          speed={uploadSpeed}
-          remainingTime={estimatedTimeRemaining ?? undefined}
-          onCancel={cancelUpload}
-        />
-      )}
-    </div>
+    <FileManagerLayout
+      currentPath={currentPath}
+      parentPath={parentPath}
+      breadcrumbs={breadcrumbs}
+      viewMode={viewMode}
+      searchTerm={searchTerm}
+      fileType={fileType}
+      dateRange={dateRange}
+      sortConfig={sortConfig}
+      multiSelectMode={multiSelectMode}
+      onGoBack={handleGoBack}
+      onSetCurrentPath={setCurrentPath}
+      onSetViewMode={setViewMode}
+      onSearchChange={setSearchTerm}
+      onFileTypeChange={setFileType}
+      onDateRangeChange={setDateRange}
+      onSortChange={key => setSortConfig(prevConfig => ({
+        key,
+        direction: prevConfig.key === key && prevConfig.direction === 'asc' ? 'desc' : 'asc'
+      }))}
+      onClearFilters={handleClearFilters}
+      onToggleMultiSelectMode={toggleMultiSelectMode}
+      onCreateFolder={() => setIsCreatingFolder(true)}
+      onUploadClick={handleUploadClick}
+    >
+      {renderFileList()}
+    </FileManagerLayout>
   );
 }

@@ -5,6 +5,7 @@ export interface FileItem {
   Size?: number;
   ETag?: string;
   type: string;
+  displayName?: string;  // 添加: 顯示名稱，不含路徑前綴
   isStarred?: boolean;   // 新增: 星號標記檔案
   tags?: string[];       // 新增: 檔案標籤
   shareUrl?: string;     // 新增: 分享連結
@@ -63,6 +64,7 @@ export interface EmptyStateProps {
   errorMessage?: string;
   onClearFilter?: () => void;  // 新增: 清除篩選條件
   onRetry?: () => void;        // 新增: 重試操作
+  onCreateFolder?: () => void; // 新增: 創建資料夾
 }
 
 // 上傳進度組件 Props
@@ -123,7 +125,7 @@ export interface FileManagerReturn {
     files: FileItem[];
     folders: FolderItem[];
   };
-  loadFiles: () => Promise<void>;
+  loadFiles: () => Promise<{success: boolean, error?: string} | void>;
   handleRetry: () => void;
   handleEnterFolder: (folderName: string) => void;
   handleGoBack: () => void;

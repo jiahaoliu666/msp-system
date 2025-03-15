@@ -1,12 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FileItem, FolderItem, ColumnWidths } from '@/components/storage/types';
-import { formatFileSize, formatDateTime } from '@/services/storage/s3';
+import { formatFileSize, getFileTypeIcon } from '@/services/storage/s3';
+import { formatFolderItemCount } from '@/config/s3-config';
 
 interface ListViewProps {
   folders: FolderItem[];
   files: FileItem[];
-  currentPath: string;
+  currentPath?: string;
   selectedItems: Set<string>;
+  multiSelectMode?: boolean;
+  itemsPerPage?: number;
   sortConfig: {
     key: string;
     direction: string;
@@ -17,18 +20,18 @@ interface ListViewProps {
   onDownload: (key: string, fileName: string) => Promise<void>;
   onDelete: (key: string) => void;
   onFilePreview: (file: FileItem) => void;
-  onContextMenu: (e: React.MouseEvent, file: FileItem) => void;
+  onContextMenu: (e: React.MouseEvent, file: FileItem | FolderItem) => void;
   onSort: (key: string) => void;
   columnWidths?: ColumnWidths;
   onColumnWidthChange?: (column: keyof ColumnWidths, width: number) => void;
 }
 
 const DEFAULT_COLUMN_WIDTHS: ColumnWidths = {
-  name: 40,
-  type: 15,
-  size: 15,
-  lastModified: 20,
-  actions: 10
+  name: 250,
+  type: 100,
+  size: 100,
+  lastModified: 160,
+  actions: 100
 };
 
 const ListView: React.FC<ListViewProps> = ({
@@ -36,6 +39,8 @@ const ListView: React.FC<ListViewProps> = ({
   files,
   currentPath,
   selectedItems,
+  multiSelectMode,
+  itemsPerPage,
   sortConfig,
   onSelectItem,
   onEnterFolder,
@@ -48,210 +53,208 @@ const ListView: React.FC<ListViewProps> = ({
   columnWidths = DEFAULT_COLUMN_WIDTHS,
   onColumnWidthChange
 }) => {
-  const [resizingColumn, setResizingColumn] = useState<keyof ColumnWidths | null>(null);
-  const [startX, setStartX] = useState<number>(0);
-  const [startWidth, setStartWidth] = useState<number>(0);
   const tableRef = useRef<HTMLTableElement>(null);
-  const [resizeLine, setResizeLine] = useState<{ visible: boolean; left: number }>({ visible: false, left: 0 });
+  const [resizeLine, setResizeLine] = useState({
+    visible: false,
+    position: 0,
+    column: '' as keyof ColumnWidths,
+    startX: 0,
+    columnStartWidth: 0
+  });
 
   const handleResizeStart = (e: React.MouseEvent, column: keyof ColumnWidths) => {
     e.preventDefault();
     e.stopPropagation();
-    setResizingColumn(column);
-    setStartX(e.clientX);
-    setStartWidth(columnWidths[column]);
-    setResizeLine({ visible: true, left: e.clientX });
-
+    
+    const startX = e.clientX;
+    
+    setResizeLine({
+      visible: true,
+      position: e.clientX,
+      column,
+      startX,
+      columnStartWidth: columnWidths[column]
+    });
+    
     document.addEventListener('mousemove', handleResizeMove);
     document.addEventListener('mouseup', handleResizeEnd);
-    
-    document.body.style.cursor = 'col-resize';
-    document.body.classList.add('table-column-resizing');
   };
-
+  
   const handleResizeMove = (e: MouseEvent) => {
-    if (!resizingColumn) return;
+    e.preventDefault();
     
-    setResizeLine({ visible: true, left: e.clientX });
-    
-    const tableWidth = tableRef.current?.offsetWidth || 1000;
-    const deltaX = e.clientX - startX;
-    const deltaPercent = (deltaX / tableWidth) * 100;
-    
-    if (onColumnWidthChange) {
-      const newWidth = Math.max(5, Math.min(70, startWidth + deltaPercent));
-      onColumnWidthChange(resizingColumn, newWidth);
+    if (resizeLine.visible) {
+      const diffX = e.clientX - resizeLine.startX;
+      const newWidth = Math.max(50, resizeLine.columnStartWidth + diffX);
+      
+      setResizeLine(prev => ({
+        ...prev,
+        position: e.clientX
+      }));
+      
+      if (onColumnWidthChange) {
+        onColumnWidthChange(resizeLine.column, newWidth);
+      }
     }
   };
-
+  
   const handleResizeEnd = () => {
-    setResizingColumn(null);
-    setResizeLine({ visible: false, left: 0 });
+    setResizeLine(prev => ({
+      ...prev,
+      visible: false
+    }));
+    
     document.removeEventListener('mousemove', handleResizeMove);
     document.removeEventListener('mouseup', handleResizeEnd);
-    document.body.style.cursor = '';
-    document.body.classList.remove('table-column-resizing');
   };
-
+  
   useEffect(() => {
     return () => {
       document.removeEventListener('mousemove', handleResizeMove);
       document.removeEventListener('mouseup', handleResizeEnd);
-      document.body.style.cursor = '';
-      document.body.classList.remove('table-column-resizing');
     };
   }, []);
 
   return (
-    <div className="relative overflow-x-auto">
+    <div className="relative overflow-x-auto shadow-md rounded-lg">
       {resizeLine.visible && (
         <div 
-          className="column-resize-line" 
-          style={{ left: `${resizeLine.left}px` }}
+          className="absolute top-0 bottom-0 w-0.5 bg-blue-500 z-50"
+          style={{ left: `${resizeLine.position}px`, height: tableRef.current?.offsetHeight }}
         />
       )}
       
-      <table ref={tableRef} className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-        <thead className="bg-gray-50 dark:bg-gray-800">
+      <table ref={tableRef} className="w-full text-sm text-left text-gray-700 dark:text-gray-300">
+        <thead className="text-xs text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 select-none">
           <tr>
-            <th className="w-[40px] px-3 py-3 text-center align-middle">
-              <input
-                type="checkbox"
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-              />
-            </th>
             <th 
-              className="relative px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer align-middle"
-              style={{ width: `${columnWidths.name}%` }}
+              className="p-4 relative cursor-pointer" 
+              style={{ width: columnWidths.name }}
               onClick={() => onSort('name')}
             >
               <div className="flex items-center">
-                <span>名稱</span>
+                <span className="flex-grow">名稱</span>
                 {sortConfig.key === 'name' && (
                   <span className="ml-2">
-                    {sortConfig.direction === 'asc' ? '▲' : '▼'}
+                    {sortConfig.direction === 'asc' ? '↑' : '↓'}
                   </span>
                 )}
               </div>
-              <div 
-                className="absolute right-0 top-0 h-full w-2 cursor-col-resize group z-10"
-                onMouseDown={(e) => handleResizeStart(e, 'name')}
-              >
-                <div className="h-full w-1 bg-transparent group-hover:bg-blue-400 group-active:bg-blue-600"></div>
-              </div>
+              {onColumnWidthChange && (
+                <div
+                  onMouseDown={(e) => handleResizeStart(e, 'name')}
+                  className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-blue-500 flex items-center after:content-['⋮'] after:text-gray-400 after:text-xs"
+                />
+              )}
             </th>
             <th 
-              className="relative px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer align-middle"
-              style={{ width: `${columnWidths.type}%` }}
+              className="p-4 relative cursor-pointer" 
+              style={{ width: columnWidths.type }}
               onClick={() => onSort('type')}
             >
               <div className="flex items-center">
-                <span>類型</span>
+                <span className="flex-grow">類型</span>
                 {sortConfig.key === 'type' && (
                   <span className="ml-2">
-                    {sortConfig.direction === 'asc' ? '▲' : '▼'}
+                    {sortConfig.direction === 'asc' ? '↑' : '↓'}
                   </span>
                 )}
               </div>
-              <div 
-                className="absolute right-0 top-0 h-full w-2 cursor-col-resize group z-10"
-                onMouseDown={(e) => handleResizeStart(e, 'type')}
-              >
-                <div className="h-full w-1 bg-transparent group-hover:bg-blue-400 group-active:bg-blue-600"></div>
-              </div>
+              {onColumnWidthChange && (
+                <div
+                  onMouseDown={(e) => handleResizeStart(e, 'type')}
+                  className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-blue-500 flex items-center after:content-['⋮'] after:text-gray-400 after:text-xs"
+                />
+              )}
             </th>
             <th 
-              className="relative px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer align-middle"
-              style={{ width: `${columnWidths.size}%` }}
+              className="p-4 relative cursor-pointer" 
+              style={{ width: columnWidths.size }}
               onClick={() => onSort('size')}
             >
               <div className="flex items-center">
-                <span>大小</span>
+                <span className="flex-grow">大小</span>
                 {sortConfig.key === 'size' && (
                   <span className="ml-2">
-                    {sortConfig.direction === 'asc' ? '▲' : '▼'}
+                    {sortConfig.direction === 'asc' ? '↑' : '↓'}
                   </span>
                 )}
               </div>
-              <div 
-                className="absolute right-0 top-0 h-full w-2 cursor-col-resize group z-10"
-                onMouseDown={(e) => handleResizeStart(e, 'size')}
-              >
-                <div className="h-full w-1 bg-transparent group-hover:bg-blue-400 group-active:bg-blue-600"></div>
-              </div>
+              {onColumnWidthChange && (
+                <div
+                  onMouseDown={(e) => handleResizeStart(e, 'size')}
+                  className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-blue-500 flex items-center after:content-['⋮'] after:text-gray-400 after:text-xs"
+                />
+              )}
             </th>
             <th 
-              className="relative px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer align-middle"
-              style={{ width: `${columnWidths.lastModified}%` }}
-              onClick={() => onSort('date')}
+              className="p-4 relative cursor-pointer" 
+              style={{ width: columnWidths.lastModified }}
+              onClick={() => onSort('lastModified')}
             >
               <div className="flex items-center">
-                <span>修改時間</span>
-                {sortConfig.key === 'date' && (
+                <span className="flex-grow">修改日期</span>
+                {sortConfig.key === 'lastModified' && (
                   <span className="ml-2">
-                    {sortConfig.direction === 'asc' ? '▲' : '▼'}
+                    {sortConfig.direction === 'asc' ? '↑' : '↓'}
                   </span>
                 )}
               </div>
-              <div 
-                className="absolute right-0 top-0 h-full w-2 cursor-col-resize group z-10"
-                onMouseDown={(e) => handleResizeStart(e, 'lastModified')}
-              >
-                <div className="h-full w-1 bg-transparent group-hover:bg-blue-400 group-active:bg-blue-600"></div>
-              </div>
+              {onColumnWidthChange && (
+                <div
+                  onMouseDown={(e) => handleResizeStart(e, 'lastModified')}
+                  className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-blue-500 flex items-center after:content-['⋮'] after:text-gray-400 after:text-xs"
+                />
+              )}
             </th>
-            <th 
-              className="relative px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider align-middle"
-              style={{ width: `${columnWidths.actions}%` }}
-            >
+            <th style={{ width: columnWidths.actions }} className="p-4 relative">
               操作
             </th>
           </tr>
         </thead>
-        <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+        <tbody>
           {folders.map((folder, index) => (
-            <tr
+            <tr 
               key={`folder-${index}`}
-              className={`hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150
-                        ${selectedItems.has(folder.name) ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
+              className={`bg-white dark:bg-gray-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 ${
+                selectedItems.has(folder.name) ? 'bg-blue-50 dark:bg-blue-900/30' : ''
+              }`}
               onClick={() => onSelectItem(folder.name)}
-              onDoubleClick={() => onEnterFolder(folder.name)}
-              onContextMenu={(e) => onContextMenu(e, folder as FileItem)}
             >
-              <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-200 align-middle text-center">
-                <input
-                  type="checkbox"
-                  checked={selectedItems.has(folder.name)}
-                  onChange={() => onSelectItem(folder.name)}
-                  onClick={(e) => e.stopPropagation()}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-              </td>
-              <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-200 align-middle">
-                <div className="flex items-center">
-                  <span className="text-xl mr-3">📁</span>
-                  <span className="truncate">{folder.name}</span>
+              <td className="p-4 flex items-center">
+                <div className="flex items-center space-x-3">
+                  <div className="text-blue-600 dark:text-blue-400 text-2xl">📁</div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEnterFolder(folder.name);
+                    }}
+                    className="font-medium text-blue-600 dark:text-blue-400 hover:underline truncate max-w-[200px]"
+                    title={folder.name}
+                  >
+                    {folder.name}
+                  </button>
                 </div>
               </td>
-              <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 align-middle">
-                資料夾
+              <td className="p-4 align-middle">資料夾</td>
+              <td className="p-4 align-middle">
+                {folder.children ? formatFolderItemCount(folder.children) : formatFolderItemCount(0)}
               </td>
-              <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 align-middle">
-                {formatFileSize(folder.size)}
+              <td className="p-4 align-middle">
+                {new Date(folder.lastModified).toLocaleString('zh-TW')}
               </td>
-              <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 align-middle">
-                {folder.lastModified ? formatDateTime(folder.lastModified) : '-'}
-              </td>
-              <td className="px-4 py-3 text-right text-sm font-medium align-middle">
-                <div className="flex justify-center space-x-2">
+              <td className="p-4 align-middle">
+                <div className="flex items-center justify-center space-x-2">
                   <button
-                    className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200"
                     onClick={(e) => {
                       e.stopPropagation();
                       onDeleteFolder(folder.name);
                     }}
+                    className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg 
+                           text-gray-500 dark:text-gray-400 hover:text-gray-700 
+                           dark:hover:text-gray-300 transition-colors"
                   >
-                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                             d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
@@ -260,72 +263,77 @@ const ListView: React.FC<ListViewProps> = ({
               </td>
             </tr>
           ))}
-          
-          {files.map((file, index) => (
-            <tr
-              key={`file-${index}`}
-              className={`hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150
-                        ${selectedItems.has(file.Key || '') ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
-              onClick={() => onSelectItem(file.Key || '')}
-              onDoubleClick={() => onFilePreview(file)}
-              onContextMenu={(e) => onContextMenu(e, file)}
-            >
-              <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-200 align-middle text-center">
-                <input
-                  type="checkbox"
-                  checked={selectedItems.has(file.Key || '')}
-                  onChange={() => onSelectItem(file.Key || '')}
-                  onClick={(e) => e.stopPropagation()}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-              </td>
-              <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-200 align-middle">
-                <div className="flex items-center">
-                  <span className="text-xl mr-3">
-                    {file.type === 'image' ? '🖼️' : file.type === 'document' ? '📄' : '📁'}
-                  </span>
-                  <span className="truncate">{file.Key?.split('/').pop() || ''}</span>
-                </div>
-              </td>
-              <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 align-middle">
-                {file.type || '-'}
-              </td>
-              <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 align-middle">
-                {formatFileSize(file.Size || 0)}
-              </td>
-              <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 align-middle">
-                {file.LastModified ? formatDateTime(file.LastModified) : '-'}
-              </td>
-              <td className="px-4 py-3 text-center text-sm font-medium align-middle">
-                <div className="flex justify-center space-x-2">
-                  <button
-                    className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDownload(file.Key || '', file.Key?.split('/').pop() || '');
-                    }}
-                  >
-                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+          {files.map((file, index) => {
+            const fileKey = file.Key || '';
+            const fileName = file.displayName || fileKey.split('/').pop() || fileKey;
+            
+            return (
+              <tr
+                key={`file-${index}`}
+                className={`bg-white dark:bg-gray-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 ${
+                  selectedItems.has(fileKey) ? 'bg-blue-50 dark:bg-blue-900/30' : ''
+                }`}
+                onClick={() => onSelectItem(fileKey)}
+                onContextMenu={(e) => onContextMenu(e, file)}
+                onDoubleClick={() => onFilePreview(file)}
+              >
+                <td className="p-4 flex items-center">
+                  <div className="flex items-center space-x-3">
+                    <div className="text-2xl">{getFileTypeIcon(fileKey)}</div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onFilePreview(file);
+                      }}
+                      className="font-medium text-blue-600 dark:text-blue-400 hover:underline truncate max-w-[200px]"
+                      title={fileName}
+                    >
+                      {fileName}
+                    </button>
+                  </div>
+                </td>
+                <td className="p-4 align-middle">
+                  {file.type || fileKey.split('.').pop()?.toUpperCase() || 'Unknown'}
+                </td>
+                <td className="p-4 align-middle">{formatFileSize(file.Size || 0)}</td>
+                <td className="p-4 align-middle">
+                  {file.LastModified ? new Date(file.LastModified).toLocaleString('zh-TW') : '-'}
+                </td>
+                <td className="p-4 align-middle">
+                  <div className="flex items-center justify-center space-x-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDownload(fileKey, fileName);
+                      }}
+                      className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg 
+                               text-gray-500 dark:text-gray-400 hover:text-gray-700 
+                               dark:hover:text-gray-300 transition-colors"
+                    >
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                             d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L7 8m4-4v12" />
-                    </svg>
-                  </button>
-                  <button
-                    className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDelete(file.Key || '');
-                    }}
-                  >
-                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                      </svg>
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(fileKey);
+                      }}
+                      className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg 
+                               text-gray-500 dark:text-gray-400 hover:text-gray-700 
+                               dark:hover:text-gray-300 transition-colors"
+                    >
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                             d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))}
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

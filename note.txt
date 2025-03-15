@@ -6,6 +6,7 @@ s3
 amplify
 ses
 
+
 我們希望針對當前UI界面進行設計和優化，目標是提供一個專業、易讀、人性化且具有現代感的 UI，進一步提升整體質量和用戶體驗。在實現時，要求使用 Tailwind CSS 作為唯一的樣式框架，且不使用任何其他 UI 套件。請將精力專注於UI界面的 UI 規劃與細節呈現，並省略所有與 UI 無關的依賴套件或背景處理邏輯，同時保留當前所有功能 只要修改UI樣式的代碼就好 其餘邏輯或import保持不變 並且要使用繁體中文介面 而不是英文。
 同時要遵循現代 UI 設計原則，使用了 Tailwind CSS 的最佳實踐，並保持了良好的可訪問性和用戶體驗
 
@@ -18,9 +19,6 @@ storage資料夾底下有各種的storage相關的代碼，以及使用src/pages
  
 ，把類型、大小、修改時間、操作這些欄位 和下方文字內容垂直置中對齊 不要一左一右
 --------------------------------
-
-
-
 
 src/pages/login/index.tsx 登入介面
 
@@ -403,3 +401,26 @@ src/components/common/Toast.tsx
 src/pages/_app.tsx
 src/context/ToastContext.tsx
 src/styles/toast.css
+
+
+storage 檔案儲存
+src/config/s3-config.ts
+src/pages/storage.tsx
+src/components/storage/ContextMenu/index.tsx
+src/components/storage/FileList/GridView.tsx
+src/components/storage/FilePreview/index.tsx
+src/components/storage/FolderSelector/index.tsx
+src/components/storage/hooks/useFileManager.ts
+src/components/storage/hooks/useFileOperations.ts
+src/components/storage/hooks/useUpload.ts
+src/components/storage/SearchFilter/index.tsx
+src/components/storage/StatusBar/index.tsx
+src/components/storage/TagManager/index.tsx
+src/components/storage/UploadProgress/index.tsx
+src/components/storage/types.ts
+src/components/storage/FileList/index.tsx
+src/components/storage/FileList/ListView.tsx
+src/components/storage/FileInfo/index.tsx
+src/components/storage/EmptyState/index.tsx
+src/services/storage/s3.ts
+src/config/aws-config.ts

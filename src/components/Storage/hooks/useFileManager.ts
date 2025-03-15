@@ -34,17 +34,52 @@ export const useFileManager = (): FileManagerReturn => {
         throw new Error('網路連線已斷開，請檢查您的網路狀態');
       }
 
+      console.log('正在加載路徑:', currentPath);
+
       const { files: fileList, folders: folderList, parentPath: parent } = await listFilesInFolder(currentPath);
       
-      setFiles(fileList.map(file => ({
-        ...file,
-        type: file.Key?.split('.').pop() || 'unknown'
-      })));
+      console.log('檔案列表加載結果:', { 
+        files: fileList.length, 
+        folders: folderList.length, 
+        currentPath, 
+        parentPath: parent
+      });
+      
+      // 處理文件，確保顯示相對於當前路徑的檔案名稱
+      const processedFiles = fileList.map(file => {
+        // 獲取原始路徑
+        const originalKey = file.Key || '';
+        // 計算在當前路徑下的相對路徑
+        const relativePath = currentPath 
+          ? originalKey.replace(currentPath + '/', '')
+          : originalKey;
+          
+        return {
+          ...file,
+          Key: originalKey, // 保留原始完整路徑
+          displayName: relativePath, // 添加顯示名稱
+          type: getFileType(originalKey)
+        };
+      });
+      
+      // 排除可能帶有子路徑的文件（僅顯示當前層級的文件）
+      const directFiles = processedFiles.filter(file => 
+        !file.displayName.includes('/')
+      );
+      
+      setFiles(directFiles);
       setFolders(folderList.map(folder => ({
         ...folder,
         type: 'folder' as const
       })));
       setParentPath(parent);
+      
+      // 更新麵包屑
+      updateBreadcrumbs(currentPath);
+      
+      // 更新最近訪問的資料夾
+      updateRecentFolders(currentPath);
+      
       setRetryCount(0);
       setIsRetrying(false);
     } catch (error) {
@@ -274,6 +309,66 @@ export const useFileManager = (): FileManagerReturn => {
       return newStarred;
     });
   }, []);
+
+  // 更新麵包屑
+  const updateBreadcrumbs = (path: string) => {
+    const pathParts = path.split('/').filter(Boolean);
+    const crumbs = ['根目錄'];
+    
+    // 累積路徑部分
+    let accumulatedPath = '';
+    pathParts.forEach(part => {
+      accumulatedPath += part + '/';
+      crumbs.push(part);
+    });
+    
+    setBreadcrumbs(crumbs);
+  };
+  
+  // 更新最近訪問的資料夾
+  const updateRecentFolders = (currentPath: string) => {
+    if (!currentPath) return;
+    
+    // 從本地儲存獲取現有的最近資料夾
+    const storedFolders = localStorage.getItem('recentFolders');
+    let recent: string[] = storedFolders ? JSON.parse(storedFolders) : [];
+    
+    // 添加當前路徑，並去重
+    if (!recent.includes(currentPath)) {
+      recent = [currentPath, ...recent].slice(0, 5); // 保留最近5個
+      localStorage.setItem('recentFolders', JSON.stringify(recent));
+    }
+    
+    setRecentFolders(recent);
+  };
+  
+  // 獲取檔案類型
+  const getFileType = (filePath: string): string => {
+    const extension = filePath.split('.').pop()?.toLowerCase() || '';
+    
+    const typeMap: Record<string, string> = {
+      'pdf': 'pdf',
+      'doc': 'document',
+      'docx': 'document',
+      'xls': 'spreadsheet',
+      'xlsx': 'spreadsheet',
+      'ppt': 'presentation',
+      'pptx': 'presentation',
+      'jpg': 'image',
+      'jpeg': 'image',
+      'png': 'image',
+      'gif': 'image',
+      'mp4': 'video',
+      'mov': 'video',
+      'mp3': 'audio',
+      'wav': 'audio',
+      'zip': 'archive',
+      'rar': 'archive',
+      'txt': 'text',
+    };
+    
+    return typeMap[extension] || 'unknown';
+  };
 
   const returnObj = {
     files,

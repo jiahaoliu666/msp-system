@@ -46,6 +46,7 @@ src/
 │   │   ├── Sidebar.tsx # 側邊欄
 │   │   ├── ThemeToggle.tsx # 主題切換按鈕
 │   │   ├── Toast.tsx # 通知組件
+│   │   ├── LoadingSpinner.tsx # 載入中
 │   ├── usermanagement # 用戶管理
 │   │   ├── CreateContractForm.tsx # 建立合約表單
 │   │   ├── CreateOrganizationForm.tsx # 建立組織表單

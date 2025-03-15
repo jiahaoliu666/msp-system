@@ -20,6 +20,9 @@ export const S3_CONFIG = {
   // 共享檔案配置
   sharedFolderPath: 'shared/',
   
+  // 檔案大小顯示配置
+  sizeDisplayMode: 'itemCount', // 'fileSize' 或 'itemCount'
+  
   // 允許的檔案類型配置
   allowedFileTypes: {
     documents: [
@@ -170,47 +173,44 @@ export const STATUS_BAR_CONFIG = {
   showOperationStatus: true
 };
 
-// 驗證 S3 配置
+// 新增：格式化資料夾項目數量
+export const formatFolderItemCount = (count: number): string => {
+  return `${count} 個項目`;
+};
+
+// 導出 S3 配置的函數
 export function validateS3Config() {
-  const requiredConfigs = {
-    bucketName: S3_CONFIG.bucketName,
-    region: S3_CONFIG.region
-  };
-
-  const missingConfigs = Object.entries(requiredConfigs)
-    .filter(([_, value]) => !value)
-    .map(([key]) => key);
-
-  if (missingConfigs.length > 0) {
-    throw new Error(`缺少必要的 S3 配置: ${missingConfigs.join(', ')}`);
+  // 檢查必要配置是否存在
+  if (!S3_CONFIG.bucketName) {
+    console.warn('S3 bucket name is not configured');
+    return false;
   }
-
+  
+  if (!AWS_CONFIG.region) {
+    console.warn('AWS region is not configured');
+    return false;
+  }
+  
   return true;
 }
 
-// 輸出所有支援的檔案類型
+// 獲取允許的檔案類型列表
 export const getAllowedFileTypes = () => {
-  return Object.values(S3_CONFIG.allowedFileTypes).flat();
+  const types: string[] = [];
+  Object.values(S3_CONFIG.allowedFileTypes).forEach(typeList => {
+    types.push(...typeList);
+  });
+  return types;
 };
 
-// 檢查檔案類型是否支援
+// 檢查檔案類型是否允許
 export const isFileTypeAllowed = (mimeType: string): boolean => {
-  return getAllowedFileTypes().includes(mimeType);
+  const allowedTypes = getAllowedFileTypes();
+  return allowedTypes.includes(mimeType);
 };
 
-// 獲取檔案類型圖示
+// 獲取檔案類型對應的圖示
 export const getFileTypeIcon = (fileName: string): string => {
   const extension = fileName.split('.').pop()?.toLowerCase() || '';
   return S3_CONFIG.fileTypeIcons[extension as keyof typeof S3_CONFIG.fileTypeIcons] || S3_CONFIG.fileTypeIcons.default;
-};
-
-// 格式化檔案大小
-export const formatFileSize = (bytes: number): string => {
-  if (bytes === 0) return '0 Bytes';
-  
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }; 

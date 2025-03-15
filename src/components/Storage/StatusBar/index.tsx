@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getStorageQuota } from '@/services/storage/s3';
-import { formatFileSize } from '@/config/s3-config';
+import { getStorageQuota, formatFileSize } from '@/services/storage/s3';
 import { STATUS_BAR_CONFIG } from '@/config/s3-config';
 import { StatusBarProps } from '@/components/storage/types';
 

@@ -3,13 +3,13 @@ import { useDropzone } from 'react-dropzone';
 import { toast } from 'react-toastify';
 import { uploadFile, deleteFile } from '@/services/storage/s3';
 import { S3_CONFIG } from '@/config/s3-config';
-import { formatFileSize } from '@/config/s3-config';
+import { formatFileSize } from '@/services/storage/s3';
 import { FileItem, UploadReturn } from '@/components/storage/types';
 
 export const useUpload = (
   currentPath: string,
   files: FileItem[],
-  loadFiles: () => Promise<void>
+  loadFiles: () => Promise<{success: boolean, error?: string} | void>
 ): UploadReturn => {
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [isUploading, setIsUploading] = useState(false);

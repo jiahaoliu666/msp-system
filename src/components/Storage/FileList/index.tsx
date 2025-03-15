@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FileItem, FolderItem, ColumnWidths } from '@/components/storage/types';
 import { formatFileSize, formatDateTime, getFileTypeIcon } from '@/services/storage/s3';
 import GridView from '@/components/storage/FileList/GridView';
 import ListView from '@/components/storage/FileList/ListView';
+import EmptyState from '../EmptyState';
 
 interface FileListProps {
   files: FileItem[];
@@ -29,13 +30,13 @@ interface FileListProps {
   starredItems: FileItem[];
 }
 
-// 預設欄位寬度設定
+// 默認列寬
 const DEFAULT_COLUMN_WIDTHS: ColumnWidths = {
-  name: 40, // 百分比
-  type: 15,
-  size: 15,
-  lastModified: 20,
-  actions: 10
+  name: 250,         // 名稱列寬度
+  type: 100,         // 類型列寬度
+  size: 100,         // 大小列寬度
+  lastModified: 160, // 日期列寬度
+  actions: 100,      // 操作列寬度
 };
 
 const STORAGE_KEY = 'fileListColumnWidths';
@@ -62,86 +63,35 @@ const FileList: React.FC<FileListProps> = ({
   starredItems
 }) => {
   // 欄位寬度狀態
-  const [columnWidths, setColumnWidths] = useState<ColumnWidths>(() => {
-    try {
-      // 從 localStorage 中讀取欄位寬度設定，如果沒有則使用預設值
-      const savedWidths = localStorage.getItem(STORAGE_KEY);
-      if (savedWidths) {
-        const parsed = JSON.parse(savedWidths);
-        // 驗證讀取的值是否完整
-        if (parsed && typeof parsed === 'object' && 
-            'name' in parsed && 
-            'type' in parsed && 
-            'size' in parsed && 
-            'lastModified' in parsed && 
-            'actions' in parsed) {
-          // 確保所有值都是數字並且總和為 100
-          const total = Object.values(parsed).reduce<number>((sum, val) => sum + (Number(val) || 0), 0);
-          if (Math.abs(total - 100) < 0.1) { // 允許小數點誤差
-            return parsed as ColumnWidths;
-          }
-        }
-      }
-    } catch (error) {
-      console.error('解析儲存的欄位寬度失敗:', error);
-    }
-    return DEFAULT_COLUMN_WIDTHS;
-  });
-
-  // 當欄位寬度改變時保存到 localStorage
+  const [columnWidths, setColumnWidths] = useState<ColumnWidths>(DEFAULT_COLUMN_WIDTHS);
+  
+  // 本地存儲欄位寬度，持久化用戶設置
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(columnWidths));
-    } catch (error) {
-      console.error('儲存欄位寬度失敗:', error);
+    // 從本地存儲加載保存的欄位寬度設置
+    const savedWidths = localStorage.getItem('fileList-columnWidths');
+    if (savedWidths) {
+      try {
+        const parsed = JSON.parse(savedWidths);
+        setColumnWidths(parsed);
+      } catch (e) {
+        console.error('無法解析保存的欄位寬度', e);
+      }
     }
-  }, [columnWidths]);
+  }, []);
 
   // 處理欄位寬度變更
   const handleColumnWidthChange = (column: keyof ColumnWidths, width: number) => {
-    // 計算所有欄位新的總寬度
-    const totalOtherWidths = Object.entries(columnWidths)
-      .filter(([key]) => key !== column)
-      .reduce((sum, [_, value]) => sum + value, 0);
+    const newWidths = { ...columnWidths, [column]: width };
+    setColumnWidths(newWidths);
     
-    // 計算剩餘可分配的寬度
-    const availableWidth = 100 - width;
-    
-    // 按比例調整其他欄位的寬度
-    const adjustedWidths = { ...columnWidths };
-    adjustedWidths[column] = width;
-
-    // 按照原始比例分配剩餘寬度給其他欄位
-    Object.keys(columnWidths).forEach(key => {
-      if (key !== column) {
-        const colKey = key as keyof ColumnWidths;
-        const originalRatio = columnWidths[colKey] / totalOtherWidths;
-        adjustedWidths[colKey] = Math.max(5, Number((availableWidth * originalRatio).toFixed(1)));
-      }
-    });
-
-    // 確保總寬度為 100%
-    const total = Object.values(adjustedWidths).reduce((sum, val) => sum + val, 0);
-    if (Math.abs(total - 100) > 0.1) {
-      // 如果總寬度不為 100%，按比例調整
-      const factor = 100 / total;
-      Object.keys(adjustedWidths).forEach(key => {
-        const colKey = key as keyof ColumnWidths;
-        adjustedWidths[colKey] = Number((adjustedWidths[colKey] * factor).toFixed(1));
-      });
-    }
-
-    setColumnWidths(adjustedWidths);
+    // 保存到本地存儲
+    localStorage.setItem('fileList-columnWidths', JSON.stringify(newWidths));
   };
 
-  // 重置欄位寬度為預設值
+  // 重設欄位寬度
   const handleResetColumnWidths = () => {
-    setColumnWidths({ ...DEFAULT_COLUMN_WIDTHS });
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-    } catch (error) {
-      console.error('移除儲存的欄位寬度失敗:', error);
-    }
+    setColumnWidths(DEFAULT_COLUMN_WIDTHS);
+    localStorage.removeItem('fileList-columnWidths');
   };
 
   // 檔案篩選與排序
@@ -174,22 +124,15 @@ const FileList: React.FC<FileListProps> = ({
     currentPage * itemsPerPage
   );
 
+  // 根據視圖模式顯示不同的檔案列表
   return (
-    <div className="flex flex-col">
-      {/* 欄位寬度調整按鈕 - 只在列表模式顯示 */}
-      {viewMode === 'list' && (
-        <div className="mb-3 flex justify-end">
-          <button
-            onClick={handleResetColumnWidths}
-            className="px-3 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300
-                     hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
-          >
-            重置欄位寬度
-          </button>
-        </div>
-      )}
-
-      {viewMode === 'grid' ? (
+    <>
+      {((folders.length === 0 && files.length === 0) || filteredFiles.length === 0) ? (
+        <EmptyState 
+          type={searchTerm ? 'search' : 'folder'} 
+          searchTerm={searchTerm} 
+        />
+      ) : viewMode === 'grid' ? (
         <GridView
           folders={folders}
           files={paginatedFiles}
@@ -222,7 +165,7 @@ const FileList: React.FC<FileListProps> = ({
           onColumnWidthChange={handleColumnWidthChange}
         />
       )}
-    </div>
+    </>
   );
 };
 
