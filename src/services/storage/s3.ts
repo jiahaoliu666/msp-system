@@ -1,4 +1,4 @@
-import { S3Client, ListObjectsV2Command, PutObjectCommand, DeleteObjectCommand, GetObjectCommand, CopyObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, ListObjectsV2Command, PutObjectCommand, DeleteObjectCommand, GetObjectCommand, CopyObjectCommand, HeadObjectCommand, DeleteObjectsCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { AWS_CONFIG } from '@/config/aws-config';
 import { S3_CONFIG, getAllowedFileTypes, PREVIEW_CONFIG } from '@/config/s3-config';
@@ -659,7 +659,10 @@ export async function deleteFolder(folderPath: string): Promise<boolean> {
     
     // 標準化路徑
     folderPath = folderPath.replace(/^\/+|\/+$/g, '');
-    const prefix = `${folderPath}/`;
+    // 確保資料夾路徑以斜杠結尾
+    const prefix = folderPath.endsWith('/') ? folderPath : `${folderPath}/`;
+    
+    console.log(`正在刪除資料夾: ${prefix}`);
     
     // 列出資料夾內所有檔案
     const command = new ListObjectsV2Command({
@@ -670,22 +673,41 @@ export async function deleteFolder(folderPath: string): Promise<boolean> {
     const response = await s3Client.send(command);
     const objects = response.Contents || [];
     
+    console.log(`找到 ${objects.length} 個檔案需要刪除`);
+    
     if (objects.length === 0) {
+      console.log('資料夾為空或不存在，可能已被刪除');
       return true;
     }
 
-    // 批次刪除所有檔案
-    const deletePromises = objects.map(obj => {
-      const deleteCommand = new DeleteObjectCommand({
-        Bucket: S3_CONFIG.bucketName,
-        Key: obj.Key || ''
-      });
-      return s3Client.send(deleteCommand);
+    // 使用 DeleteObjectsCommand 批次刪除所有檔案
+    const objectsToDelete = objects.map(obj => ({ Key: obj.Key || '' }));
+    
+    const deleteCommand = new DeleteObjectsCommand({
+      Bucket: S3_CONFIG.bucketName,
+      Delete: {
+        Objects: objectsToDelete,
+        Quiet: false
+      }
     });
-
-    await Promise.all(deletePromises);
+    
+    const deleteResult = await s3Client.send(deleteCommand);
+    console.log(`成功刪除 ${deleteResult.Deleted?.length || 0} 個檔案`);
+    
+    // 也刪除資料夾本身的空標記檔案（如果存在）
+    try {
+      const deleteFolderMarker = new DeleteObjectCommand({
+        Bucket: S3_CONFIG.bucketName,
+        Key: prefix
+      });
+      await s3Client.send(deleteFolderMarker);
+    } catch (error) {
+      console.log('嘗試刪除資料夾標記時出錯，可能不存在:', error);
+    }
+    
     return true;
   } catch (error) {
+    console.error('刪除資料夾時出錯:', error);
     handleS3Error(error);
     return false;
   }

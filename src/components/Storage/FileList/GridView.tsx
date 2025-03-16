@@ -181,6 +181,10 @@ const GridView: React.FC<GridViewProps> = ({
                 </button>
               </div>
             </div>
+            <button
+              onClick={(e) => handleFileClick(fileKey, e)}
+              className="absolute inset-0 w-full h-full cursor-pointer z-10"
+            />
           </div>
         );
       })}
