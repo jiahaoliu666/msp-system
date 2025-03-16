@@ -362,6 +362,36 @@ export const useFileManager = (): FileManagerReturn => {
     return typeMap[extension] || 'unknown';
   };
 
+  // 排序檔案和資料夾
+  const sortItems = useCallback((items: FileItem[] | FolderItem[], key: string, direction: 'asc' | 'desc') => {
+    return [...items].sort((a, b) => {
+      const multiplier = direction === 'asc' ? 1 : -1;
+      
+      switch (key) {
+        case 'name':
+          // 依名稱排序
+          const aName = ('name' in a) ? a.name : (a.Key || '').split('/').pop() || '';
+          const bName = ('name' in b) ? b.name : (b.Key || '').split('/').pop() || '';
+          return multiplier * aName.localeCompare(bName);
+          
+        case 'lastModified':
+          // 依修改時間排序
+          const aDate = ('lastModified' in a) ? a.lastModified : (a.LastModified || new Date(0));
+          const bDate = ('lastModified' in b) ? b.lastModified : (b.LastModified || new Date(0));
+          return multiplier * ((bDate as Date).getTime() - (aDate as Date).getTime());
+          
+        case 'size':
+          // 依大小排序
+          const aSize = ('Size' in a) ? a.Size || 0 : 0;
+          const bSize = ('Size' in b) ? b.Size || 0 : 0;
+          return multiplier * (aSize - bSize);
+          
+        default:
+          return 0;
+      }
+    });
+  }, []);
+
   const returnObj = {
     files,
     folders,

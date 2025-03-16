@@ -41,6 +41,7 @@ interface FileManagerLayoutProps {
   viewMode: 'list' | 'grid';
   searchTerm: string;
   multiSelectMode: boolean;
+  totalObjects: number;
   onGoBack: () => void;
   onSetCurrentPath: (path: string) => void;
   onSetViewMode: (mode: 'list' | 'grid') => void;
@@ -60,6 +61,7 @@ const FileManagerLayout: React.FC<FileManagerLayoutProps> = ({
   viewMode,
   searchTerm,
   multiSelectMode,
+  totalObjects,
   onGoBack,
   onSetCurrentPath,
   onSetViewMode,
@@ -90,6 +92,8 @@ const FileManagerLayout: React.FC<FileManagerLayoutProps> = ({
           </button>
           
           <div className="flex items-center space-x-1 text-sm text-gray-600 dark:text-gray-400 overflow-x-auto scrollbar-hide">
+            <span className="font-medium text-gray-700 dark:text-gray-300">物件 ({totalObjects})</span>
+            <span className="mx-1">|</span>
             <button
               onClick={() => onSetCurrentPath('')}
               className="hover:text-blue-600 dark:hover:text-blue-400 whitespace-nowrap"
@@ -281,6 +285,9 @@ export default function Storage() {
   
   // 檢查是否為空文件夾
   const isEmptyFolder = folders.length === 0 && files.length === 0;
+  
+  // 計算總物件數量
+  const totalObjects = folders.length + files.length;
 
   // 狀態管理
   const [isOnline, setIsOnline] = useState(true);
@@ -451,6 +458,28 @@ export default function Storage() {
     setSelectedItems(newSelected);
   };
 
+  // 全選/取消全選功能
+  const handleSelectAll = () => {
+    if (selectedItems.size === folders.length + files.length) {
+      // 如果全部已選，則取消全選
+      setSelectedItems(new Set());
+    } else {
+      // 否則全選
+      const allItems = new Set<string>();
+      // 添加所有資料夾
+      folders.forEach(folder => {
+        allItems.add(folder.name);
+      });
+      // 添加所有檔案
+      files.forEach(file => {
+        if (file.Key) {
+          allItems.add(file.Key);
+        }
+      });
+      setSelectedItems(allItems);
+    }
+  };
+
   // 搜尋函數
   const handleSearch = (term: string) => {
     setSearchTerm(term);
@@ -510,6 +539,7 @@ export default function Storage() {
             viewMode={viewMode}
             searchTerm={searchTerm}
             multiSelectMode={multiSelectMode}
+            totalObjects={totalObjects}
             onGoBack={handleGoBack}
             onSetCurrentPath={setCurrentPath}
             onSetViewMode={setViewMode}
@@ -598,6 +628,7 @@ export default function Storage() {
                 currentPage={currentPage}
                 itemsPerPage={itemsPerPage}
                 onSelectItem={handleSelectItem}
+                onSelectAll={handleSelectAll}
                 onEnterFolder={handleEnterFolder}
                 onDeleteFolder={handleDeleteFolder}
                 onDownload={handleDownload}
@@ -632,7 +663,17 @@ export default function Storage() {
             <p className="text-gray-700 dark:text-gray-300 mb-6">
               {itemToDelete.type === 'folder' && !itemToDelete.isEmpty ? (
                 <>
-                  請先刪除資料夾內的所有檔案後再嘗試刪除該資料夾。
+                  <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border border-red-200 dark:border-red-800 mb-4">
+                    <div className="flex items-center mb-2">
+                      <svg className="w-5 h-5 text-red-600 dark:text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                      <span className="text-red-600 dark:text-red-400 font-medium">無法刪除非空資料夾</span>
+                    </div>
+                    <p className="text-red-600 dark:text-red-400 text-sm">
+                      請先刪除資料夾內的所有檔案後再嘗試刪除該資料夾。
+                    </p>
+                  </div>
                 </>
               ) : (
                 <>您確定要刪除此{itemToDelete.type === 'folder' ? '資料夾' : '檔案'}嗎？此操作無法撤銷。</>

@@ -12,6 +12,7 @@ interface GridViewProps {
   multiSelectMode?: boolean;
   itemsPerPage?: number;
   onSelectItem: (key: string) => void;
+  onSelectAll: () => void;
   onEnterFolder: (folderName: string) => void;
   onDeleteFolder: (folderName: string) => void;
   onDownload: (key: string, fileName: string) => Promise<void>;
@@ -32,6 +33,7 @@ const GridView: React.FC<GridViewProps> = ({
   multiSelectMode,
   itemsPerPage,
   onSelectItem,
+  onSelectAll,
   onEnterFolder,
   onDeleteFolder,
   onDownload,

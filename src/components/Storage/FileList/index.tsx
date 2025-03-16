@@ -15,6 +15,7 @@ interface FileListProps {
   currentPage: number;
   itemsPerPage: number;
   onSelectItem: (key: string) => void;
+  onSelectAll: () => void;
   onEnterFolder: (folderName: string) => void;
   onDeleteFolder: (folderName: string) => void;
   onDownload: (key: string, fileName: string) => Promise<void>;
@@ -54,6 +55,7 @@ const FileList: React.FC<FileListProps> = ({
   currentPage,
   itemsPerPage,
   onSelectItem,
+  onSelectAll,
   onEnterFolder,
   onDeleteFolder,
   onDownload,
@@ -186,6 +188,7 @@ const FileList: React.FC<FileListProps> = ({
         currentPath={currentPath}
         selectedItems={selectedItems}
         onSelectItem={onSelectItem}
+        onSelectAll={onSelectAll}
         onEnterFolder={onEnterFolder}
         onDeleteFolder={onDeleteFolder}
         onDownload={onDownload}

@@ -46,12 +46,6 @@ const StatusBar: React.FC<StatusBarProps> = ({
                 <span className="text-sm text-gray-600 dark:text-gray-400">
                   總儲存容量: {formatFileSize(quota.used)}
                 </span>
-                <div className="w-32 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-blue-600 rounded-full transition-all duration-300"
-                    style={{ width: `${(quota.used / quota.total) * 100}%` }}
-                  />
-                </div>
               </div>
             )}
           </div>
