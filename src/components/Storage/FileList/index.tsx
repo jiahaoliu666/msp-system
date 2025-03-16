@@ -190,14 +190,16 @@ const FileList: React.FC<FileListProps> = ({
         </div>
       )}
       
-      {/* 現有的檔案列表或空狀態 */}
-      {isEmptyFolder ? (
-        <EmptyState 
-          type="folder" 
-          onCreateFolder={onCreateFolder} 
-        />
-      ) : (
-        viewMode === 'grid' ? (
+      {/* 檔案列表或內嵌式空狀態 */}
+      {viewMode === 'grid' ? (
+        isEmptyFolder ? (
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 h-full flex items-center justify-center">
+            <EmptyState 
+              type="folder" 
+              onCreateFolder={onCreateFolder} 
+            />
+          </div>
+        ) : (
           <GridView
             folders={folders}
             files={files}
@@ -210,8 +212,19 @@ const FileList: React.FC<FileListProps> = ({
             onDelete={onDelete}
             onFilePreview={onFilePreview}
             onContextMenu={onContextMenu}
-            isEmptyFolder={isEmptyFolder}
+            isEmptyFolder={false}
           />
+        )
+      ) : (
+        isEmptyFolder ? (
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 h-full">
+            <div className="w-full h-full flex items-center justify-center">
+              <EmptyState 
+                type="folder" 
+                onCreateFolder={onCreateFolder} 
+              />
+            </div>
+          </div>
         ) : (
           <ListView
             folders={folders}

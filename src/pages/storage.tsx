@@ -513,140 +513,138 @@ export default function Storage() {
   };
 
   return (
-    <div className="min-h-screen bg-background-primary flex flex-col">
-      <div className="flex-1 overflow-hidden">
-        <div className="container-responsive py-6 flex flex-col h-full">
-          <div className="flex flex-col space-y-6 flex-1">
-            {/* 檔案管理功能區塊 */}
-            <FileManagerLayout
-              children={
-                <>
-                  {/* 檔案拖放上傳區域 */}
-                  <div 
-                    {...getRootProps()}
-                    className="relative w-full h-full"
-                  >
-                    <input {...getInputProps()} />
-                    
-                    {/* 顯示拖放上傳進度 */}
-                    {isUploading && (
-                      <UploadProgress progress={uploadProgress} />
-                    )}
-                    
-                    {/* 檔案重複處理對話框 */}
-                    {duplicateFile && (
-                      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
-                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-96 max-w-full">
-                          <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-gray-100">檔案已存在</h3>
-                          <p className="mb-6 text-sm text-gray-600 dark:text-gray-400">
-                            檔案「{duplicateFile.file.name}」已存在，請選擇處理方式：
-                          </p>
-                          <div className="space-y-2">
-                            <button
-                              onClick={() => handleDuplicateFile('replace')}
-                              className="w-full py-2 px-4 bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400 
-                                      hover:bg-red-200 dark:hover:bg-red-900/70 rounded-lg transition-colors"
-                            >
-                              覆蓋現有檔案
-                            </button>
-                            <button
-                              onClick={() => handleDuplicateFile('keep-both')}
-                              className="w-full py-2 px-4 bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400 
-                                      hover:bg-blue-200 dark:hover:bg-blue-900/70 rounded-lg transition-colors"
-                            >
-                              保留兩者（重新命名）
-                            </button>
-                            <button
-                              onClick={() => handleDuplicateFile('skip')}
-                              className="w-full py-2 px-4 bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 
-                                      hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
-                            >
-                              跳過此檔案
-                            </button>
-                          </div>
+    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900 overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 overflow-hidden">
+          {/* 檔案管理功能區塊 */}
+          <FileManagerLayout
+            children={
+              <>
+                {/* 檔案拖放上傳區域 */}
+                <div 
+                  {...getRootProps()}
+                  className="relative w-full h-full"
+                >
+                  <input {...getInputProps()} />
+                  
+                  {/* 顯示拖放上傳進度 */}
+                  {isUploading && (
+                    <UploadProgress progress={uploadProgress} />
+                  )}
+                  
+                  {/* 檔案重複處理對話框 */}
+                  {duplicateFile && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+                      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-96 max-w-full">
+                        <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-gray-100">檔案已存在</h3>
+                        <p className="mb-6 text-sm text-gray-600 dark:text-gray-400">
+                          檔案「{duplicateFile.file.name}」已存在，請選擇處理方式：
+                        </p>
+                        <div className="space-y-2">
+                          <button
+                            onClick={() => handleDuplicateFile('replace')}
+                            className="w-full py-2 px-4 bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400 
+                                    hover:bg-red-200 dark:hover:bg-red-900/70 rounded-lg transition-colors"
+                          >
+                            覆蓋現有檔案
+                          </button>
+                          <button
+                            onClick={() => handleDuplicateFile('keep-both')}
+                            className="w-full py-2 px-4 bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400 
+                                    hover:bg-blue-200 dark:hover:bg-blue-900/70 rounded-lg transition-colors"
+                          >
+                            保留兩者（重新命名）
+                          </button>
+                          <button
+                            onClick={() => handleDuplicateFile('skip')}
+                            className="w-full py-2 px-4 bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 
+                                    hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                          >
+                            跳過此檔案
+                          </button>
                         </div>
                       </div>
-                    )}
-
-                    {/* 檔案列表 */}
-                    <FileList
-                      files={filteredItems.files}
-                      folders={filteredItems.folders}
-                      currentPath={currentPath}
-                      selectedItems={selectedItems}
-                      viewMode={viewMode}
-                      searchTerm={searchTerm}
-                      currentPage={currentPage}
-                      itemsPerPage={itemsPerPage}
-                      onSelectItem={(key) => {
-                        const newSelected = new Set(selectedItems);
-                        if (newSelected.has(key)) {
-                          newSelected.delete(key);
-                        } else {
-                          newSelected.add(key);
-                        }
-                        setSelectedItems(newSelected);
-                      }}
-                      onEnterFolder={handleEnterFolder}
-                      onDeleteFolder={handleDeleteFolder}
-                      onDownload={handleDownload}
-                      onDelete={handleDelete}
-                      onFilePreview={handleFilePreview}
-                      onContextMenu={handleContextMenu}
-                      onSort={handleSort}
-                      starredItems={[]}
-                      isEmptyFolder={isEmptyFolder}
-                      onCreateFolder={handleCreateFolder}
-                    />
-                  </div>
-
-                  {/* 分頁控制 */}
-                  {totalPages > 1 && (
-                    <div className="mt-4 flex items-center justify-between">
-                      <button
-                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                        disabled={currentPage === 1}
-                        className={`px-4 py-2 text-sm rounded-md ${
-                          currentPage === 1
-                            ? 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-600 cursor-not-allowed'
-                            : 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30'
-                        }`}
-                      >
-                        上一頁
-                      </button>
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
-                        第 {currentPage} 頁，共 {totalPages} 頁
-                      </span>
-                      <button
-                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                        disabled={currentPage === totalPages}
-                        className={`px-4 py-2 text-sm rounded-md ${
-                          currentPage === totalPages
-                            ? 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-600 cursor-not-allowed'
-                            : 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30'
-                        }`}
-                      >
-                        下一頁
-                      </button>
                     </div>
                   )}
-                </>
-              }
-              currentPath={currentPath}
-              parentPath={parentPath}
-              breadcrumbs={breadcrumbs}
-              viewMode={viewMode}
-              searchTerm={searchTerm}
-              multiSelectMode={multiSelectMode}
-              onGoBack={handleGoBack}
-              onSetCurrentPath={setCurrentPath}
-              onSetViewMode={setViewMode}
-              onSearchChange={handleSearch}
-              onToggleMultiSelectMode={toggleMultiSelectMode}
-              onCreateFolder={handleCreateFolder}
-              onUploadClick={handleUploadClick}
-            />
-          </div>
+
+                  {/* 檔案列表 */}
+                  <FileList
+                    files={filteredItems.files}
+                    folders={filteredItems.folders}
+                    currentPath={currentPath}
+                    selectedItems={selectedItems}
+                    viewMode={viewMode}
+                    searchTerm={searchTerm}
+                    currentPage={currentPage}
+                    itemsPerPage={itemsPerPage}
+                    onSelectItem={(key) => {
+                      const newSelected = new Set(selectedItems);
+                      if (newSelected.has(key)) {
+                        newSelected.delete(key);
+                      } else {
+                        newSelected.add(key);
+                      }
+                      setSelectedItems(newSelected);
+                    }}
+                    onEnterFolder={handleEnterFolder}
+                    onDeleteFolder={handleDeleteFolder}
+                    onDownload={handleDownload}
+                    onDelete={handleDelete}
+                    onFilePreview={handleFilePreview}
+                    onContextMenu={handleContextMenu}
+                    onSort={handleSort}
+                    starredItems={[]}
+                    isEmptyFolder={isEmptyFolder}
+                    onCreateFolder={handleCreateFolder}
+                  />
+                </div>
+
+                {/* 分頁控制 */}
+                {totalPages > 1 && (
+                  <div className="mt-4 flex items-center justify-between">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                      className={`px-4 py-2 text-sm rounded-md ${
+                        currentPage === 1
+                          ? 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-600 cursor-not-allowed'
+                          : 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30'
+                      }`}
+                    >
+                      上一頁
+                    </button>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      第 {currentPage} 頁，共 {totalPages} 頁
+                    </span>
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      disabled={currentPage === totalPages}
+                      className={`px-4 py-2 text-sm rounded-md ${
+                        currentPage === totalPages
+                          ? 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-600 cursor-not-allowed'
+                          : 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30'
+                      }`}
+                    >
+                      下一頁
+                    </button>
+                  </div>
+                )}
+              </>
+            }
+            currentPath={currentPath}
+            parentPath={parentPath}
+            breadcrumbs={breadcrumbs}
+            viewMode={viewMode}
+            searchTerm={searchTerm}
+            multiSelectMode={multiSelectMode}
+            onGoBack={handleGoBack}
+            onSetCurrentPath={setCurrentPath}
+            onSetViewMode={setViewMode}
+            onSearchChange={handleSearch}
+            onToggleMultiSelectMode={toggleMultiSelectMode}
+            onCreateFolder={handleCreateFolder}
+            onUploadClick={handleUploadClick}
+          />
         </div>
       </div>
 

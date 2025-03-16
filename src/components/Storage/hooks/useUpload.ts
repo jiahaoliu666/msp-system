@@ -103,7 +103,11 @@ export const useUpload = (
         
         // 檢查檔案是否已存在
         const fileName = file.name;
-        const fileKey = `${currentPath}${fileName}`;
+        // 確保正確構建檔案路徑，包含目錄分隔符
+        const fileKey = currentPath.endsWith('/') 
+          ? `${currentPath}${fileName}` 
+          : `${currentPath}/${fileName}`;
+        
         const fileExists = await checkFileExists(fileKey);
         
         if (fileExists) {
@@ -172,7 +176,10 @@ export const useUpload = (
         const fileNameWithoutExt = fileName.includes('.') ? fileName.substring(0, fileName.lastIndexOf('.')) : fileName;
         const timestamp = new Date().getTime();
         const newFileName = `${fileNameWithoutExt}_${timestamp}${fileExt}`;
-        const newKey = `${currentPath}${newFileName}`;
+        // 確保正確構建檔案路徑，包含目錄分隔符
+        const newKey = currentPath.endsWith('/') 
+          ? `${currentPath}${newFileName}` 
+          : `${currentPath}/${newFileName}`;
         
         await uploadFile(duplicateFile.file, newKey);
       }
