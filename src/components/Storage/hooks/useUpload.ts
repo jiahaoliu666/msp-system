@@ -103,10 +103,12 @@ export const useUpload = (
         
         // 檢查檔案是否已存在
         const fileName = file.name;
-        // 確保正確構建檔案路徑，包含目錄分隔符
-        const fileKey = currentPath.endsWith('/') 
-          ? `${currentPath}${fileName}` 
-          : `${currentPath}/${fileName}`;
+        // 確保正確構建檔案路徑，使用當前目錄，不創建新資料夾
+        const fileKey = currentPath 
+          ? (currentPath.endsWith('/') 
+              ? `${currentPath}${fileName}` 
+              : `${currentPath}/${fileName}`)
+          : fileName; // 如果是根目錄，直接使用檔案名稱
         
         const fileExists = await checkFileExists(fileKey);
         
@@ -166,26 +168,73 @@ export const useUpload = (
     if (!duplicateFile) return;
     
     try {
-      if (action === 'replace') {
-        // 直接覆蓋，繼續上傳
-        await uploadFile(duplicateFile.file, duplicateFile.existingKey);
-      } else if (action === 'keep-both') {
-        // 保留兩者，使用新檔名
-        const fileName = duplicateFile.file.name;
-        const fileExt = fileName.includes('.') ? `.${fileName.split('.').pop()}` : '';
-        const fileNameWithoutExt = fileName.includes('.') ? fileName.substring(0, fileName.lastIndexOf('.')) : fileName;
-        const timestamp = new Date().getTime();
-        const newFileName = `${fileNameWithoutExt}_${timestamp}${fileExt}`;
-        // 確保正確構建檔案路徑，包含目錄分隔符
-        const newKey = currentPath.endsWith('/') 
-          ? `${currentPath}${newFileName}` 
-          : `${currentPath}/${newFileName}`;
+      if (action === 'skip') {
+        // 跳過此檔案，繼續上傳下一個
+        setDuplicateFile(null);
         
-        await uploadFile(duplicateFile.file, newKey);
+        // 移動到下一個檔案
+        const nextIndex = currentFileIndex + 1;
+        if (nextIndex < uploadQueue.length) {
+          setCurrentFileIndex(nextIndex);
+          await handleFileUpload([uploadQueue[nextIndex]]);
+        } else {
+          // 全部完成
+          setIsUploading(false);
+          showToast('success', `上傳完成 (跳過 ${duplicateFile.file.name})`);
+          loadFiles();
+        }
+        return;
       }
-      // skip: 不做任何事，繼續處理下一個檔案
       
-      setDuplicateFile(null);
+      if (action === 'keep-both') {
+        // 生成新的檔案名稱
+        const { file, existingKey } = duplicateFile;
+        
+        // 分割檔名和副檔名
+        const fileName = file.name;
+        const lastDotIndex = fileName.lastIndexOf('.');
+        const baseName = lastDotIndex !== -1 ? fileName.substring(0, lastDotIndex) : fileName;
+        const extension = lastDotIndex !== -1 ? fileName.substring(lastDotIndex) : '';
+        
+        // 新檔名加上時間戳
+        const timestamp = new Date().getTime();
+        const newFileName = `${baseName}_${timestamp}${extension}`;
+        
+        // 新的檔案路徑，使用相同的路徑邏輯
+        const newKey = currentPath 
+          ? (currentPath.endsWith('/') 
+              ? `${currentPath}${newFileName}` 
+              : `${currentPath}/${newFileName}`)
+          : newFileName; // 如果是根目錄，直接使用新檔案名稱
+        
+        // 上傳新檔案
+        setUploadProgress(0);
+        const result = await uploadFile(file, newKey);
+        setDuplicateFile(null);
+        
+        if (result) {
+          showToast('success', `已上傳新副本: ${newFileName}`);
+        } else {
+          showToast('error', '上傳失敗');
+        }
+      } else if (action === 'replace') {
+        // 替換現有檔案
+        const { file, existingKey } = duplicateFile;
+        
+        // 先刪除現有檔案
+        await deleteFile(existingKey);
+        
+        // 然後上傳新檔案
+        setUploadProgress(0);
+        const result = await uploadFile(file, existingKey);
+        setDuplicateFile(null);
+        
+        if (result) {
+          showToast('success', `已替換: ${file.name}`);
+        } else {
+          showToast('error', '替換失敗');
+        }
+      }
     } catch (error) {
       console.error('處理重複檔案失敗:', error);
       showToast('error', '處理重複檔案時出現錯誤');

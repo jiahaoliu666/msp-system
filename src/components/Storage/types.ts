@@ -81,6 +81,7 @@ export interface UploadProgressProps {
 export interface SearchFilterProps {
   searchTerm: string;
   onSearchChange: (term: string) => void;
+  onRefresh?: () => void;
 }
 
 // 標籤管理 Props

@@ -275,13 +275,56 @@ const ListView: React.FC<ListViewProps> = ({
 
   // 在檔案元件中獲取當前登入用戶
   const { user } = useAuth();
-  const currentUser = user?.email || '系統';
+  const currentUser = user?.email 
+    ? user.email.split('@')[0] // 只取郵件地址的前綴，去掉 @domain.com 部分
+    : '系統';
   
-  // 在檔案元件中加入獲取預覽和下載URL的函數
+  // 在檔案元件中加入獲取S3直接URL的函數
   const getFilePreviewUrl = (fileKey: string): string => {
-    // 構建 S3 預覽 URL
+    // 使用 AWS SDK v3 的方式構建 S3 對象直接 URL
+    const bucketName = process.env.NEXT_PUBLIC_S3_BUCKET_NAME || 'metaage-msp-bucket';
+    const region = process.env.NEXT_PUBLIC_AWS_REGION || 'ap-northeast-1';
     const encodedKey = encodeURIComponent(fileKey);
-    return `/api/s3/preview?key=${encodedKey}`;
+    
+    // 構建 S3 直接URL
+    return `https://${bucketName}.s3.${region}.amazonaws.com/${encodedKey}`;
+  };
+  
+  // 添加檔案點擊處理函數
+  const handleFileClick = (file: FileItem, event: React.MouseEvent) => {
+    // 如果是多選模式，則調用選擇函數
+    if (multiSelectMode) {
+      onSelectItem(file.Key || '');
+      return;
+    }
+    
+    // 如果是點擊操作按鈕區域，則不進行預覽
+    const target = event.target as HTMLElement;
+    if (target.closest('.file-actions')) {
+      return;
+    }
+    
+    // 檢查是否按下 Ctrl 鍵（Windows）或 Command 鍵（Mac）
+    if (event.ctrlKey || event.metaKey) {
+      // 在新標籤頁中打開 S3 直接鏈接
+      const url = getFilePreviewUrl(file.Key || '');
+      window.open(url, '_blank');
+    } else {
+      // 否則顯示內部預覽
+      onFilePreview(file);
+    }
+  };
+  
+  // 獲取格式化的修改者名稱（去除郵件地址的域名部分）
+  const getFormattedModifier = (modifier: string | undefined): string => {
+    if (!modifier) return '未知';
+    
+    // 如果是郵件地址，只顯示用戶名部分
+    if (modifier.includes('@')) {
+      return modifier.split('@')[0];
+    }
+    
+    return modifier;
   };
 
   return (
@@ -407,7 +450,7 @@ const ListView: React.FC<ListViewProps> = ({
                   className={`bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 ${
                     selectedItems.has(folder.name) ? 'bg-blue-50 dark:bg-blue-900/30' : ''
                   }`}
-                  onClick={() => onSelectItem(folder.name)}
+                  onClick={() => onEnterFolder(folder.name)}
                 >
                   <td className="p-4 overflow-hidden">
                     <div className="flex items-center space-x-3 min-w-0 w-full">
@@ -440,6 +483,7 @@ const ListView: React.FC<ListViewProps> = ({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
+                        e.preventDefault(); // 防止事件冒泡和默認行為
                         if(window.confirm(`確定要刪除資料夾 "${folder.name}" 嗎？`)) {
                           onDeleteFolder(folder.name);
                         }
@@ -467,9 +511,8 @@ const ListView: React.FC<ListViewProps> = ({
                     className={`bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 ${
                       selectedItems.has(fileKey) ? 'bg-blue-50 dark:bg-blue-900/30' : ''
                     }`}
-                    onClick={() => onSelectItem(fileKey)}
+                    onClick={(e) => handleFileClick(file, e)}
                     onContextMenu={(e) => onContextMenu(e, file)}
-                    onDoubleClick={() => onFilePreview(file)}
                   >
                     <td className="p-4 overflow-hidden">
                       <div className="flex items-center space-x-3 min-w-0 w-full">
@@ -489,10 +532,11 @@ const ListView: React.FC<ListViewProps> = ({
                       </div>
                     </td>
                     <td className="p-4 align-middle whitespace-nowrap">
-                      {file.LastModified ? new Date(file.LastModified).toLocaleString('zh-TW') : '-'}
+                      {file.LastModified ? new Date(file.LastModified).toLocaleDateString() : '未知'}
                     </td>
                     <td className="p-4 align-middle whitespace-nowrap">
-                      {currentUser}
+                      {/* 因為 FileItem 類型沒有 Modifier 屬性，改為使用固定值 */}
+                      {'未知'}
                     </td>
                     <td className="p-4 align-middle whitespace-nowrap">
                       {file.type || fileKey.split('.').pop()?.toUpperCase() || 'Unknown'}

@@ -29,11 +29,12 @@ interface FileListProps {
 
 // 默認列寬
 const DEFAULT_COLUMN_WIDTHS: ColumnWidths = {
-  name: 250,         // 名稱列寬度
+  name: 300,         // 名稱列寬度
   type: 100,         // 類型列寬度
   size: 100,         // 大小列寬度
-  lastModified: 160, // 日期列寬度
-  actions: 100,      // 操作列寬度
+  lastModified: 180, // 日期列寬度
+  modifier: 150,     // 修改者列寬度
+  actions: 120,      // 操作列寬度
 };
 
 const STORAGE_KEY = 'fileListColumnWidths';

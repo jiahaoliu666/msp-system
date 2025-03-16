@@ -4,6 +4,7 @@ import { SearchFilterProps } from '../types';
 const SearchFilter: React.FC<SearchFilterProps> = ({
   searchTerm,
   onSearchChange,
+  onRefresh
 }) => {
   const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
 
@@ -16,6 +17,13 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSearchChange(localSearchTerm);
+  };
+
+  // 處理刷新按鈕點擊
+  const handleRefresh = () => {
+    if (onRefresh) {
+      onRefresh();
+    }
   };
 
   // 延遲搜尋 (在用戶停止輸入後自動搜尋)
@@ -32,7 +40,24 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
   return (
     <div className="relative w-full">
       {/* 搜索欄 */}
-      <form onSubmit={handleSearchSubmit} className="flex items-center">
+      <form onSubmit={handleSearchSubmit} className="flex items-center space-x-2">
+        {/* 重整按鈕 */}
+        {onRefresh && (
+          <button
+            type="button"
+            onClick={handleRefresh}
+            className="p-2 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg
+                     hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200
+                     focus:outline-none focus:ring-2 focus:ring-blue-500"
+            title="重新整理"
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          </button>
+        )}
+        
         <div className="relative flex-grow">
           <input
             type="text"
