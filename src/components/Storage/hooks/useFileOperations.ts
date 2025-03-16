@@ -22,7 +22,7 @@ export const useFileOperations = (
     position: { x: number; y: number };
   } | null>(null);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<{type: 'file' | 'folder', path: string} | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<{type: 'file' | 'folder', path: string, isEmpty: boolean} | null>(null);
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [currentOperation, setCurrentOperation] = useState<string>('');
@@ -52,7 +52,8 @@ export const useFileOperations = (
   const handleDelete = async (key: string) => {
     setItemToDelete({
       type: 'file',
-      path: key
+      path: key,
+      isEmpty: false
     });
     setIsDeleteConfirmOpen(true);
   };
@@ -66,15 +67,11 @@ export const useFileOperations = (
       const folderContent = await listFilesInFolder(folderPath);
       const isEmpty = folderContent.files.length === 0 && folderContent.folders.length === 0;
       
-      if (!isEmpty) {
-        toast.error('無法刪除非空資料夾。請先刪除資料夾內的所有檔案和子資料夾。');
-        return;
-      }
-      
-      // 如果資料夾為空，設置刪除確認對話框
+      // 無論資料夾是否為空，都設置刪除確認對話框
       setItemToDelete({
         type: 'folder',
-        path: folderPath
+        path: folderPath,
+        isEmpty: isEmpty
       });
       setIsDeleteConfirmOpen(true);
     } catch (error) {
@@ -86,6 +83,14 @@ export const useFileOperations = (
   // 確認刪除處理
   const handleConfirmDelete = async () => {
     if (!itemToDelete) return;
+
+    // 檢查是否是非空資料夾
+    if (itemToDelete.type === 'folder' && !itemToDelete.isEmpty) {
+      toast.error('無法刪除非空資料夾。請先刪除資料夾內的所有檔案和子資料夾。');
+      setIsDeleteConfirmOpen(false);
+      setItemToDelete(null);
+      return;
+    }
 
     try {
       let success = false;
@@ -194,7 +199,8 @@ export const useFileOperations = (
         case 'delete':
           setItemToDelete({
             type: file.type === 'folder' ? 'folder' : 'file',
-            path: file.Key || ''
+            path: file.Key || '',
+            isEmpty: false
           });
           setIsDeleteConfirmOpen(true);
           break;

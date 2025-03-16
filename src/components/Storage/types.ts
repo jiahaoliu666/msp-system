@@ -181,7 +181,7 @@ export interface FileOperationsReturn {
     position: { x: number; y: number };
   } | null;
   isDeleteConfirmOpen: boolean;
-  itemToDelete: {type: 'file' | 'folder', path: string} | null;
+  itemToDelete: {type: 'file' | 'folder', path: string, isEmpty: boolean} | null;
   isCreatingFolder: boolean;
   newFolderName: string;
   currentOperation: string;
@@ -197,7 +197,7 @@ export interface FileOperationsReturn {
   setPreviewFile: (file: FileItem | null) => void;
   setContextMenu: (menu: {file: FileItem | FolderItem; position: {x: number; y: number}} | null) => void;
   setIsDeleteConfirmOpen: (isOpen: boolean) => void;
-  setItemToDelete: (item: {type: 'file' | 'folder', path: string} | null) => void;
+  setItemToDelete: (item: {type: 'file' | 'folder', path: string, isEmpty: boolean} | null) => void;
   setIsCreatingFolder: (isCreating: boolean) => void;
   setNewFolderName: (name: string) => void;
   setCurrentOperation: (operation: string) => void;

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'react-toastify';
 import { testCORSConfiguration, getStorageQuota, reinitializeS3Client, checkS3Connection } from '@/services/storage/s3';
 import { AWS_CONFIG } from '@/config/aws-config';
@@ -222,18 +222,41 @@ export default function Storage() {
     setNewFolderName
   } = useFileOperations(currentPath, loadFiles);
 
+  // 創建一個文件input引用，用於上傳功能
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  
   // 文件上傳鉤子
   const {
     isUploading,
     uploadProgress,
     duplicateFile,
-    handleUploadClick,
+    handleUploadClick: originalHandleUploadClick,
     handleDuplicateFile,
     getRootProps,
     getInputProps,
     draggedOver,
-    setDraggedOver
+    setDraggedOver,
+    onDrop
   } = useUpload(currentPath, files, loadFiles);
+
+  // 替換上傳點擊處理函數
+  const handleUploadClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  // 處理文件選擇
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = e.target.files;
+    if (selectedFiles && selectedFiles.length > 0) {
+      onDrop(Array.from(selectedFiles));
+    }
+    // 重置 input 值，允許再次選擇相同檔案
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   // 視圖模式狀態 (list / grid)
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
@@ -475,6 +498,15 @@ export default function Storage() {
             onUploadClick={handleUploadClick}
             onRefresh={handleRefresh}
           >
+            {/* 隱藏的檔案上傳輸入框 */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              multiple
+              onChange={handleFileInputChange}
+            />
+            
             {/* 檔案拖放上傳區域 */}
             <div 
               {...getRootProps()}
