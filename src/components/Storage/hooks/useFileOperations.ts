@@ -6,7 +6,8 @@ import {
   getFileDownloadUrl, 
   createFolder,
   generateShareLink,
-  isPreviewable
+  isPreviewable,
+  listFilesInFolder
 } from '@/services/storage/s3';
 import { FileItem, FileOperationsReturn } from '@/components/storage/types';
 
@@ -49,25 +50,37 @@ export const useFileOperations = (
 
   // 檔案刪除處理
   const handleDelete = async (key: string) => {
-    if (window.confirm('確定要刪除此檔案嗎？')) {
-      try {
-        await deleteFile(key);
-        toast.success('檔案刪除成功');
-        loadFiles(); // 重新載入檔案列表
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : '檔案刪除失敗');
-        console.error('檔案刪除失敗:', error);
-      }
-    }
+    setItemToDelete({
+      type: 'file',
+      path: key
+    });
+    setIsDeleteConfirmOpen(true);
   };
 
   // 刪除資料夾處理
   const handleDeleteFolder = async (folderName: string) => {
-    setItemToDelete({
-      type: 'folder',
-      path: currentPath ? `${currentPath}/${folderName}` : folderName
-    });
-    setIsDeleteConfirmOpen(true);
+    const folderPath = currentPath ? `${currentPath}/${folderName}` : folderName;
+    
+    try {
+      // 檢查資料夾是否為空
+      const folderContent = await listFilesInFolder(folderPath);
+      const isEmpty = folderContent.files.length === 0 && folderContent.folders.length === 0;
+      
+      if (!isEmpty) {
+        toast.error('無法刪除非空資料夾。請先刪除資料夾內的所有檔案和子資料夾。');
+        return;
+      }
+      
+      // 如果資料夾為空，設置刪除確認對話框
+      setItemToDelete({
+        type: 'folder',
+        path: folderPath
+      });
+      setIsDeleteConfirmOpen(true);
+    } catch (error) {
+      toast.error('檢查資料夾內容時發生錯誤');
+      console.error('檢查資料夾內容時發生錯誤:', error);
+    }
   };
 
   // 確認刪除處理

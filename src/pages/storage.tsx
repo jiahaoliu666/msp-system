@@ -215,7 +215,11 @@ export default function Storage() {
     itemToDelete,
     handleConfirmDelete,
     setIsDeleteConfirmOpen,
-    setItemToDelete
+    setItemToDelete,
+    isCreatingFolder,
+    newFolderName,
+    setIsCreatingFolder,
+    setNewFolderName
   } = useFileOperations(currentPath, loadFiles);
 
   // 文件上傳鉤子
@@ -445,6 +449,11 @@ export default function Storage() {
     }
   };
 
+  // 自定義處理創建資料夾的函數，確保在UI中打開創建資料夾的對話框
+  const handleCreateFolderClick = () => {
+    setIsCreatingFolder(true);
+  };
+
   return (
     <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900 overflow-hidden">
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -462,7 +471,7 @@ export default function Storage() {
             onSetViewMode={setViewMode}
             onSearchChange={handleSearch}
             onToggleMultiSelectMode={toggleMultiSelectMode}
-            onCreateFolder={handleCreateFolder}
+            onCreateFolder={handleCreateFolderClick}
             onUploadClick={handleUploadClick}
             onRefresh={handleRefresh}
           >
@@ -583,6 +592,47 @@ export default function Storage() {
                          transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
               >
                 確認刪除
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 新增資料夾對話框 */}
+      {isCreatingFolder && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full shadow-xl border border-gray-200 dark:border-gray-700">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">新增資料夾</h3>
+            <div className="mb-4">
+              <label htmlFor="folderName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                資料夾名稱
+              </label>
+              <input
+                type="text"
+                id="folderName"
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
+                         focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700
+                         text-gray-900 dark:text-white"
+                placeholder="請輸入資料夾名稱"
+                autoFocus
+              />
+            </div>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setIsCreatingFolder(false)}
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 
+                         transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleCreateFolder}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 
+                         transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                創建
               </button>
             </div>
           </div>
