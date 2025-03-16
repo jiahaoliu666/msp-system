@@ -22,6 +22,10 @@ interface FileListProps {
   onFilePreview: (file: FileItem) => void;
   onContextMenu: (e: React.MouseEvent, file: FileItem) => void;
   onSort: (key: string) => void;
+  sortConfig?: {
+    key: string;
+    direction: string;
+  };
   starredItems: FileItem[];
   isEmptyFolder?: boolean;
   onCreateFolder?: () => void;
@@ -57,6 +61,7 @@ const FileList: React.FC<FileListProps> = ({
   onFilePreview,
   onContextMenu,
   onSort,
+  sortConfig = { key: 'lastModified', direction: 'desc' },
   starredItems,
   isEmptyFolder = false,
   onCreateFolder,
@@ -188,7 +193,7 @@ const FileList: React.FC<FileListProps> = ({
         onFilePreview={onFilePreview}
         onContextMenu={onContextMenu}
         onSort={onSort}
-        sortConfig={{ key: 'name', direction: 'asc' }}
+        sortConfig={sortConfig}
         isEmptyFolder={isEmptyFolder}
         onCreateFolder={onCreateFolder}
         columnWidths={columnWidths}

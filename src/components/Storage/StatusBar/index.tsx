@@ -44,7 +44,7 @@ const StatusBar: React.FC<StatusBarProps> = ({
             {quota && STATUS_BAR_CONFIG.showQuota && (
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                  儲存空間: {formatFileSize(quota.used)} / {formatFileSize(quota.total)}
+                  總儲存容量: {formatFileSize(quota.used)}
                 </span>
                 <div className="w-32 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                   <div 

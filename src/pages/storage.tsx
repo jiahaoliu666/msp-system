@@ -22,6 +22,12 @@ import { useUpload } from '@/components/storage/hooks/useUpload';
 import { useFileOperations } from '@/components/storage/hooks/useFileOperations';
 import { FileFilters, FileItem, FolderItem } from '@/components/storage/types';
 
+// 排序配置接口
+interface SortConfig {
+  key: string;
+  direction: 'asc' | 'desc';
+}
+
 // 導入相關元件
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import GridView from '../components/storage/FileList/GridView';
@@ -258,15 +264,14 @@ export default function Storage() {
     }
   };
 
-  // 視圖模式狀態 (list / grid)
+  // 狀態管理
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
-  
-  // 搜尋詞狀態
   const [searchTerm, setSearchTerm] = useState('');
-  
-  // 分頁狀態
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
+  const [filters, setFilters] = useState<FileFilters>({});
+  const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'lastModified', direction: 'desc' });
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   // 計算總頁數
   const totalItems = filteredItems.files.length + filteredItems.folders.length;
@@ -285,7 +290,6 @@ export default function Storage() {
   const [storageQuota, setStorageQuota] = useState<{ used: number; total: number } | null>(null);
   const [isTagManagerOpen, setIsTagManagerOpen] = useState(false);
   const [taggedItem, setTaggedItem] = useState<string | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // 網路狀態監聽
   useEffect(() => {
@@ -453,10 +457,27 @@ export default function Storage() {
     setCurrentPage(1);
   };
   
+  // 處理排序
+  const onSort = (config: SortConfig) => {
+    setSortConfig(config);
+  };
+  
   // 排序函數
   const handleSort = (key: string) => {
     // 實現排序邏輯
-    console.log('排序依據:', key);
+    if (sortConfig.key === key) {
+      // 如果已經按照這個key排序，切換排序方向
+      onSort({
+        key,
+        direction: sortConfig.direction === 'asc' ? 'desc' : 'asc'
+      });
+    } else {
+      // 如果是新的排序key，默認使用desc排序（最新到最舊）
+      onSort({
+        key,
+        direction: 'desc'
+      });
+    }
   };
 
   // 添加刷新函數處理
@@ -584,6 +605,7 @@ export default function Storage() {
                 onFilePreview={handleFilePreview}
                 onContextMenu={handleContextMenu}
                 onSort={handleSort}
+                sortConfig={sortConfig}
                 starredItems={[]}
                 isEmptyFolder={isEmptyFolder}
                 onCreateFolder={handleCreateFolder}
@@ -608,7 +630,15 @@ export default function Storage() {
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full shadow-xl border border-gray-200 dark:border-gray-700">
             <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">確認刪除</h3>
             <p className="text-gray-700 dark:text-gray-300 mb-6">
-              您確定要刪除此{itemToDelete.type === 'folder' ? '資料夾' : '檔案'}嗎？此操作無法撤銷。
+              {itemToDelete.type === 'folder' && !itemToDelete.isEmpty ? (
+                <>
+                  <span className="text-red-500 font-medium">無法刪除非空資料夾</span>
+                  <br />
+                  此資料夾內還有其他檔案或子資料夾，請先刪除資料夾內的所有內容後再嘗試刪除該資料夾。
+                </>
+              ) : (
+                <>您確定要刪除此{itemToDelete.type === 'folder' ? '資料夾' : '檔案'}嗎？此操作無法撤銷。</>
+              )}
             </p>
             <div className="flex justify-end space-x-3">
               <button
@@ -616,15 +646,17 @@ export default function Storage() {
                 className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 
                          transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
               >
-                取消
+                關閉
               </button>
-              <button
-                onClick={handleConfirmDelete}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 
-                         transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-              >
-                確認刪除
-              </button>
+              {!(itemToDelete.type === 'folder' && !itemToDelete.isEmpty) && (
+                <button
+                  onClick={handleConfirmDelete}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 
+                           transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                >
+                  確認刪除
+                </button>
+              )}
             </div>
           </div>
         </div>

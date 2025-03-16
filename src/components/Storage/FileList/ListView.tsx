@@ -47,7 +47,7 @@ const ListView: React.FC<ListViewProps> = ({
   selectedItems,
   multiSelectMode,
   itemsPerPage,
-  sortConfig = { key: 'name', direction: 'asc' },
+  sortConfig = { key: 'lastModified', direction: 'desc' },
   onSelectItem,
   onEnterFolder,
   onDeleteFolder,
@@ -342,6 +342,11 @@ const ListView: React.FC<ListViewProps> = ({
               style={{ width: columnWidths.name }}
             >
               <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 border-gray-300 rounded text-blue-600 focus:ring-blue-500 mr-2"
+                  onChange={() => {/* 實現全選功能 */}}
+                />
                 <span className="flex-grow">項目名稱</span>
               </div>
               {onColumnWidthChange && (
@@ -356,11 +361,28 @@ const ListView: React.FC<ListViewProps> = ({
               )}
             </th>
             <th 
-              className="p-4 relative" 
+              className="p-4 relative cursor-pointer" 
               style={{ width: columnWidths.lastModified }}
+              onClick={() => onSort('lastModified')}
             >
               <div className="flex items-center">
                 <span className="flex-grow">修改時間</span>
+                <span className="ml-1">
+                  {sortConfig.key === 'lastModified' && (
+                    <svg 
+                      className="w-3 h-3 inline-block" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      {sortConfig.direction === 'asc' ? (
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                      ) : (
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      )}
+                    </svg>
+                  )}
+                </span>
               </div>
               {onColumnWidthChange && (
                 <div
@@ -457,6 +479,16 @@ const ListView: React.FC<ListViewProps> = ({
                 >
                   <td className="p-4 overflow-hidden">
                     <div className="flex items-center space-x-3 min-w-0 w-full">
+                      <input
+                        type="checkbox"
+                        checked={selectedItems.has(folder.name)}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          onSelectItem(folder.name);
+                        }}
+                        className="h-4 w-4 border-gray-300 rounded text-blue-600 focus:ring-blue-500 mr-1"
+                        aria-label={`選擇資料夾 ${folder.name}`}
+                      />
                       <div 
                         className="text-blue-600 dark:text-blue-400 text-2xl flex-shrink-0 cursor-pointer"
                         onClick={() => onEnterFolder(folder.name)}
@@ -491,7 +523,7 @@ const ListView: React.FC<ListViewProps> = ({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        e.preventDefault(); // 防止事件冒泡和默認行為
+                        e.preventDefault();
                         onDeleteFolder(folder.name);
                       }}
                       className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg 
@@ -522,6 +554,16 @@ const ListView: React.FC<ListViewProps> = ({
                   >
                     <td className="p-4 overflow-hidden">
                       <div className="flex items-center space-x-3 min-w-0 w-full">
+                        <input
+                          type="checkbox"
+                          checked={selectedItems.has(fileKey)}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            onSelectItem(fileKey);
+                          }}
+                          className="h-4 w-4 border-gray-300 rounded text-blue-600 focus:ring-blue-500 mr-1"
+                          aria-label={`選擇檔案 ${fileName}`}
+                        />
                         <div className="text-2xl flex-shrink-0">{getFileTypeIcon(fileKey)}</div>
                         <a
                           href={getFilePreviewUrl(fileKey)}
