@@ -210,7 +210,12 @@ export default function Storage() {
     multiSelectMode,
     toggleMultiSelectMode,
     currentOperation,
-    handleCreateFolder
+    handleCreateFolder,
+    isDeleteConfirmOpen,
+    itemToDelete,
+    handleConfirmDelete,
+    setIsDeleteConfirmOpen,
+    setItemToDelete
   } = useFileOperations(currentPath, loadFiles);
 
   // 文件上傳鉤子
@@ -550,7 +555,38 @@ export default function Storage() {
 
       {/* 檔案預覽 */}
       {previewFile && (
-        <FilePreview file={previewFile} onClose={() => setPreviewFile(null)} />
+        <FilePreview 
+          file={previewFile} 
+          onClose={() => setPreviewFile(null)} 
+        />
+      )}
+
+      {/* 刪除確認對話框 */}
+      {isDeleteConfirmOpen && itemToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full shadow-xl border border-gray-200 dark:border-gray-700">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">確認刪除</h3>
+            <p className="text-gray-700 dark:text-gray-300 mb-6">
+              您確定要刪除此{itemToDelete.type === 'folder' ? '資料夾' : '檔案'}嗎？此操作無法撤銷。
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setIsDeleteConfirmOpen(false)}
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 
+                         transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 
+                         transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              >
+                確認刪除
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* 右鍵選單 */}

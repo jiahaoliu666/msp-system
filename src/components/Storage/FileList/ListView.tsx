@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FileItem, FolderItem, ColumnWidths } from '@/components/storage/types';
-import { formatFileSize, getFileTypeIcon } from '@/services/storage/s3';
-import { formatFolderItemCount } from '@/config/s3-config';
+import { formatFileSize, formatDateTime, getFileTypeIcon } from '@/services/storage/s3';
+import { S3_CONFIG, formatFolderItemCount } from '@/config/s3-config';
 import EmptyState from '../EmptyState';
 import { useAuth } from '@/context/AuthContext';
 
@@ -474,7 +474,9 @@ const ListView: React.FC<ListViewProps> = ({
                     </div>
                   </td>
                   <td className="p-4 align-middle whitespace-nowrap">
-                    {new Date(folder.lastModified).toLocaleString('zh-TW')}
+                    <div className="text-sm text-gray-700 dark:text-gray-300">
+                      {formatDateTime(folder.lastModified)}
+                    </div>
                   </td>
                   <td className="p-4 align-middle whitespace-nowrap">
                     {currentUser}
@@ -536,7 +538,9 @@ const ListView: React.FC<ListViewProps> = ({
                       </div>
                     </td>
                     <td className="p-4 align-middle whitespace-nowrap">
-                      {file.LastModified ? new Date(file.LastModified).toLocaleDateString() : '未知'}
+                      <div className="text-sm text-gray-700 dark:text-gray-300">
+                        {file.LastModified ? formatDateTime(file.LastModified) : '未知'}
+                      </div>
                     </td>
                     <td className="p-4 align-middle whitespace-nowrap">
                       {/* 獲取modifier值，可能在file.Metadata或file中 */}
