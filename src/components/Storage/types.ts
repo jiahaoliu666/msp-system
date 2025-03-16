@@ -10,6 +10,12 @@ export interface FileItem {
   tags?: string[];       // 新增: 檔案標籤
   shareUrl?: string;     // 新增: 分享連結
   versionId?: string;    // 新增: 版本ID，用於版本控制
+  modifier?: string;     // 新增: 修改者
+  Metadata?: {           // 新增: S3 Metadata
+    'original-filename'?: string;
+    'upload-date'?: string;
+    'modifier'?: string;
+  };
 }
 
 // 資料夾介面
@@ -65,6 +71,7 @@ export interface EmptyStateProps {
   onClearFilter?: () => void;  // 新增: 清除篩選條件
   onRetry?: () => void;        // 新增: 重試操作
   onCreateFolder?: () => void; // 新增: 創建資料夾
+  isLoading?: boolean;         // 新增: 載入狀態
 }
 
 // 上傳進度組件 Props
@@ -82,6 +89,7 @@ export interface SearchFilterProps {
   searchTerm: string;
   onSearchChange: (term: string) => void;
   onRefresh?: () => void;
+  isRefreshing?: boolean;
 }
 
 // 標籤管理 Props

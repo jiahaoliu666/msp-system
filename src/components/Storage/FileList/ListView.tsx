@@ -450,11 +450,14 @@ const ListView: React.FC<ListViewProps> = ({
                   className={`bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 ${
                     selectedItems.has(folder.name) ? 'bg-blue-50 dark:bg-blue-900/30' : ''
                   }`}
-                  onClick={() => onEnterFolder(folder.name)}
+                  onContextMenu={(e) => onContextMenu(e, folder)}
                 >
                   <td className="p-4 overflow-hidden">
                     <div className="flex items-center space-x-3 min-w-0 w-full">
-                      <div className="text-blue-600 dark:text-blue-400 text-2xl flex-shrink-0">📁</div>
+                      <div 
+                        className="text-blue-600 dark:text-blue-400 text-2xl flex-shrink-0 cursor-pointer"
+                        onClick={() => onEnterFolder(folder.name)}
+                      >📁</div>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -535,8 +538,8 @@ const ListView: React.FC<ListViewProps> = ({
                       {file.LastModified ? new Date(file.LastModified).toLocaleDateString() : '未知'}
                     </td>
                     <td className="p-4 align-middle whitespace-nowrap">
-                      {/* 因為 FileItem 類型沒有 Modifier 屬性，改為使用固定值 */}
-                      {'未知'}
+                      {/* 獲取modifier值，可能在file.Metadata或file中 */}
+                      {getFormattedModifier(file.modifier || (file.Metadata && file.Metadata.modifier ? decodeURIComponent(file.Metadata.modifier) : currentUser))}
                     </td>
                     <td className="p-4 align-middle whitespace-nowrap">
                       {file.type || fileKey.split('.').pop()?.toUpperCase() || 'Unknown'}
@@ -544,21 +547,6 @@ const ListView: React.FC<ListViewProps> = ({
                     <td className="p-4 align-middle whitespace-nowrap">{formatFileSize(file.Size || 0)}</td>
                     <td className="p-4 align-middle whitespace-nowrap">
                       <div className="flex space-x-2">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onDownload(fileKey, fileName);
-                          }}
-                          className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg 
-                                   text-gray-500 dark:text-gray-400 hover:text-blue-600 
-                                   dark:hover:text-blue-400 transition-colors"
-                          title="下載檔案"
-                        >
-                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L7 8m4-4v12" />
-                          </svg>
-                        </button>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();

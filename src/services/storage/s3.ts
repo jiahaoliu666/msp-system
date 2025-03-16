@@ -183,6 +183,26 @@ export async function uploadFile(file: File, key: string): Promise<boolean> {
       throw new Error('網路連線已斷開，請檢查您的網路狀態');
     }
 
+    // 獲取當前用戶信息（如果可用）
+    let modifier = '未知';
+    try {
+      // 嘗試從localStorage獲取用戶信息
+      const userStr = localStorage.getItem('userData');
+      if (userStr) {
+        const userData = JSON.parse(userStr);
+        modifier = userData.email || userData.username || userData.name || '未知';
+      } else {
+        // 嘗試從sessionStorage獲取用戶信息
+        const sessionUserStr = sessionStorage.getItem('userData');
+        if (sessionUserStr) {
+          const sessionUserData = JSON.parse(sessionUserStr);
+          modifier = sessionUserData.email || sessionUserData.username || sessionUserData.name || '未知';
+        }
+      }
+    } catch (error) {
+      console.warn('獲取用戶信息失敗:', error);
+    }
+
     // 將檔案轉換為 Buffer
     const buffer = await fileToBuffer(file);
 
@@ -195,6 +215,7 @@ export async function uploadFile(file: File, key: string): Promise<boolean> {
       Metadata: {
         'original-filename': encodeURIComponent(file.name),
         'upload-date': new Date().toISOString(),
+        'modifier': encodeURIComponent(modifier)
       }
     });
 
