@@ -253,6 +253,7 @@ export default function Storage() {
   const [storageQuota, setStorageQuota] = useState<{ used: number; total: number } | null>(null);
   const [isTagManagerOpen, setIsTagManagerOpen] = useState(false);
   const [taggedItem, setTaggedItem] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // 網路狀態監聽
   useEffect(() => {
@@ -426,6 +427,19 @@ export default function Storage() {
     console.log('排序依據:', key);
   };
 
+  // 添加刷新函數處理
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await loadFiles();
+    } finally {
+      // 無論成功或失敗，延遲一小段時間後再隱藏載入效果，提供更好的用戶體驗
+      setTimeout(() => {
+        setIsRefreshing(false);
+      }, 800);
+    }
+  };
+
   return (
     <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900 overflow-hidden">
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -445,7 +459,7 @@ export default function Storage() {
             onToggleMultiSelectMode={toggleMultiSelectMode}
             onCreateFolder={handleCreateFolder}
             onUploadClick={handleUploadClick}
-            onRefresh={loadFiles}
+            onRefresh={handleRefresh}
           >
             {/* 檔案拖放上傳區域 */}
             <div 
@@ -527,6 +541,7 @@ export default function Storage() {
                 starredItems={[]}
                 isEmptyFolder={isEmptyFolder}
                 onCreateFolder={handleCreateFolder}
+                isRefreshing={isRefreshing}
               />
             </div>
           </FileManagerLayout>

@@ -28,6 +28,7 @@ interface ListViewProps {
   onColumnWidthChange?: (column: keyof ColumnWidths, width: number) => void;
   isEmptyFolder?: boolean;
   onCreateFolder?: () => void;
+  isRefreshing?: boolean;
 }
 
 const DEFAULT_COLUMN_WIDTHS: ColumnWidths = {
@@ -58,7 +59,8 @@ const ListView: React.FC<ListViewProps> = ({
   columnWidths = DEFAULT_COLUMN_WIDTHS,
   onColumnWidthChange,
   isEmptyFolder,
-  onCreateFolder
+  onCreateFolder,
+  isRefreshing = false
 }) => {
   const tableRef = useRef<HTMLTableElement>(null);
   const headerRowRef = useRef<HTMLTableRowElement>(null);
@@ -438,6 +440,7 @@ const ListView: React.FC<ListViewProps> = ({
                   <EmptyState 
                     type="folder" 
                     onCreateFolder={onCreateFolder}
+                    isLoading={isRefreshing}
                   />
                 </div>
               </td>

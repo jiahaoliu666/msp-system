@@ -25,6 +25,7 @@ interface FileListProps {
   starredItems: FileItem[];
   isEmptyFolder?: boolean;
   onCreateFolder?: () => void;
+  isRefreshing?: boolean;
 }
 
 // 默認列寬
@@ -58,7 +59,8 @@ const FileList: React.FC<FileListProps> = ({
   onSort,
   starredItems,
   isEmptyFolder = false,
-  onCreateFolder
+  onCreateFolder,
+  isRefreshing = false
 }) => {
   const [isDragActive, setIsDragActive] = useState(false);
   const dropAreaRef = useRef<HTMLDivElement>(null);
@@ -169,7 +171,52 @@ const FileList: React.FC<FileListProps> = ({
     currentPage * itemsPerPage
   );
 
-  // 渲染檔案列表或空狀態
+  // 修改ViewComponent組件中的EmptyState傳遞
+  let ViewComponent: React.ReactNode;
+  if (viewMode === 'list') {
+    ViewComponent = (
+      <ListView
+        files={paginatedFiles}
+        folders={folders}
+        currentPath={currentPath}
+        selectedItems={selectedItems}
+        onSelectItem={onSelectItem}
+        onEnterFolder={onEnterFolder}
+        onDeleteFolder={onDeleteFolder}
+        onDownload={onDownload}
+        onDelete={onDelete}
+        onFilePreview={onFilePreview}
+        onContextMenu={onContextMenu}
+        onSort={onSort}
+        sortConfig={{ key: 'name', direction: 'asc' }}
+        isEmptyFolder={isEmptyFolder}
+        onCreateFolder={onCreateFolder}
+        columnWidths={columnWidths}
+        onColumnWidthChange={handleColumnWidthChange}
+        isRefreshing={isRefreshing}
+      />
+    );
+  } else {
+    ViewComponent = (
+      <GridView
+        files={paginatedFiles}
+        folders={folders}
+        currentPath={currentPath}
+        selectedItems={selectedItems}
+        onSelectItem={onSelectItem}
+        onEnterFolder={onEnterFolder}
+        onDeleteFolder={onDeleteFolder}
+        onDownload={onDownload}
+        onDelete={onDelete}
+        onFilePreview={onFilePreview}
+        onContextMenu={onContextMenu}
+        isEmptyFolder={isEmptyFolder}
+        onCreateFolder={onCreateFolder}
+        isRefreshing={isRefreshing}
+      />
+    );
+  }
+
   return (
     <div 
       ref={dropAreaRef}
@@ -192,51 +239,7 @@ const FileList: React.FC<FileListProps> = ({
       )}
       
       {/* 檔案列表或內嵌式空狀態 */}
-      {viewMode === 'grid' ? (
-        isEmptyFolder ? (
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 h-full flex items-center justify-center">
-            <EmptyState 
-              type="folder" 
-              onCreateFolder={onCreateFolder} 
-            />
-          </div>
-        ) : (
-          <GridView
-            folders={folders}
-            files={files}
-            currentPath={currentPath}
-            selectedItems={selectedItems}
-            onSelectItem={onSelectItem}
-            onEnterFolder={onEnterFolder}
-            onDeleteFolder={onDeleteFolder}
-            onDownload={onDownload}
-            onDelete={onDelete}
-            onFilePreview={onFilePreview}
-            onContextMenu={onContextMenu}
-            isEmptyFolder={false}
-          />
-        )
-      ) : (
-        <ListView
-          folders={folders}
-          files={files}
-          currentPath={currentPath}
-          selectedItems={selectedItems}
-          onSelectItem={onSelectItem}
-          onEnterFolder={onEnterFolder}
-          onDeleteFolder={onDeleteFolder}
-          onDownload={onDownload}
-          onDelete={onDelete}
-          onFilePreview={onFilePreview}
-          onContextMenu={onContextMenu}
-          onSort={onSort}
-          sortConfig={{ key: 'name', direction: 'asc' }}
-          isEmptyFolder={isEmptyFolder}
-          onCreateFolder={onCreateFolder}
-          columnWidths={columnWidths}
-          onColumnWidthChange={handleColumnWidthChange}
-        />
-      )}
+      {ViewComponent}
     </div>
   );
 };
