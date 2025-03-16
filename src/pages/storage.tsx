@@ -632,9 +632,7 @@ export default function Storage() {
             <p className="text-gray-700 dark:text-gray-300 mb-6">
               {itemToDelete.type === 'folder' && !itemToDelete.isEmpty ? (
                 <>
-                  <span className="text-red-500 font-medium">無法刪除非空資料夾</span>
-                  <br />
-                  此資料夾內還有其他檔案或子資料夾，請先刪除資料夾內的所有內容後再嘗試刪除該資料夾。
+                  請先刪除資料夾內的所有檔案後再嘗試刪除該資料夾。
                 </>
               ) : (
                 <>您確定要刪除此{itemToDelete.type === 'folder' ? '資料夾' : '檔案'}嗎？此操作無法撤銷。</>
