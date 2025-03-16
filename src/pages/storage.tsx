@@ -220,7 +220,7 @@ export default function Storage() {
   } = useUpload(currentPath, files, loadFiles);
 
   // 視圖模式狀態 (list / grid)
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   
   // 搜尋詞狀態
   const [searchTerm, setSearchTerm] = useState('');

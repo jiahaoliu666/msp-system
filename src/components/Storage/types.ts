@@ -223,6 +223,7 @@ export interface ColumnWidths {
   type: number;
   size: number;
   lastModified: number;
+  modifier: number;
   actions: number;
 }
 

@@ -3,6 +3,7 @@ import { FileItem, FolderItem, ColumnWidths } from '@/components/storage/types';
 import { formatFileSize, getFileTypeIcon } from '@/services/storage/s3';
 import { formatFolderItemCount } from '@/config/s3-config';
 import EmptyState from '../EmptyState';
+import { useAuth } from '@/context/AuthContext';
 
 interface ListViewProps {
   folders: FolderItem[];
@@ -26,14 +27,16 @@ interface ListViewProps {
   columnWidths?: ColumnWidths;
   onColumnWidthChange?: (column: keyof ColumnWidths, width: number) => void;
   isEmptyFolder?: boolean;
+  onCreateFolder?: () => void;
 }
 
 const DEFAULT_COLUMN_WIDTHS: ColumnWidths = {
-  name: 250,
-  type: 100,
-  size: 100,
-  lastModified: 160,
-  actions: 100
+  name: 300,         // 名稱列寬度
+  lastModified: 180, // 日期列寬度
+  modifier: 150,     // 修改者列寬度
+  type: 100,         // 類型列寬度
+  size: 100,         // 大小列寬度
+  actions: 120,      // 操作列寬度
 };
 
 const ListView: React.FC<ListViewProps> = ({
@@ -54,7 +57,8 @@ const ListView: React.FC<ListViewProps> = ({
   onSort = () => {},
   columnWidths = DEFAULT_COLUMN_WIDTHS,
   onColumnWidthChange,
-  isEmptyFolder
+  isEmptyFolder,
+  onCreateFolder
 }) => {
   const tableRef = useRef<HTMLTableElement>(null);
   const headerRowRef = useRef<HTMLTableRowElement>(null);
@@ -67,7 +71,7 @@ const ListView: React.FC<ListViewProps> = ({
   const upHandlerRef = useRef<((e: MouseEvent) => void) | null>(null);
 
   // 預計算列的索引順序
-  const columnOrder: (keyof ColumnWidths)[] = ['name', 'lastModified', 'type', 'size', 'actions'];
+  const columnOrder: (keyof ColumnWidths)[] = ['name', 'lastModified', 'modifier', 'type', 'size', 'actions'];
   const getColumnIndex = (columnName: keyof ColumnWidths): number => {
     return columnOrder.indexOf(columnName);
   };
@@ -269,11 +273,22 @@ const ListView: React.FC<ListViewProps> = ({
     };
   }, []);
 
+  // 在檔案元件中獲取當前登入用戶
+  const { user } = useAuth();
+  const currentUser = user?.email || '系統';
+  
+  // 在檔案元件中加入獲取預覽和下載URL的函數
+  const getFilePreviewUrl = (fileKey: string): string => {
+    // 構建 S3 預覽 URL
+    const encodedKey = encodeURIComponent(fileKey);
+    return `/api/s3/preview?key=${encodedKey}`;
+  };
+
   return (
     <div className="relative overflow-x-auto border border-gray-300 dark:border-gray-600 shadow-lg rounded-xl bg-white dark:bg-gray-800 transition-all duration-200 hover:shadow-xl mx-auto my-4 max-w-full">
       <table 
         ref={tableRef} 
-        className={`w-full text-sm text-left text-gray-700 dark:text-gray-300`}
+        className={`w-full text-sm text-left text-gray-700 dark:text-gray-300 table-fixed`}
       >
         <thead className="text-xs text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 select-none border-b border-gray-200 dark:border-gray-700">
           <tr ref={headerRowRef}>
@@ -287,8 +302,9 @@ const ListView: React.FC<ListViewProps> = ({
               {onColumnWidthChange && (
                 <div
                   onMouseDown={(e) => handleResizeStart(e, 'name')}
+                  onDoubleClick={() => onColumnWidthChange('name', DEFAULT_COLUMN_WIDTHS.name)}
                   className="absolute right-0 top-0 h-full w-6 cursor-col-resize flex items-center justify-center z-20 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                  title="拖動調整欄位寬度"
+                  title="拖動調整欄位寬度 (雙擊重置)"
                 >
                   <div className="w-0.5 h-4/5 bg-gray-300 dark:bg-gray-600 hover:bg-blue-500 hover:w-1" />
                 </div>
@@ -304,8 +320,27 @@ const ListView: React.FC<ListViewProps> = ({
               {onColumnWidthChange && (
                 <div
                   onMouseDown={(e) => handleResizeStart(e, 'lastModified')}
+                  onDoubleClick={() => onColumnWidthChange('lastModified', DEFAULT_COLUMN_WIDTHS.lastModified)}
                   className="absolute right-0 top-0 h-full w-6 cursor-col-resize flex items-center justify-center z-20 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                  title="拖動調整欄位寬度"
+                  title="拖動調整欄位寬度 (雙擊重置)"
+                >
+                  <div className="w-0.5 h-4/5 bg-gray-300 dark:bg-gray-600 hover:bg-blue-500 hover:w-1" />
+                </div>
+              )}
+            </th>
+            <th 
+              className="p-4 relative" 
+              style={{ width: columnWidths.modifier }}
+            >
+              <div className="flex items-center">
+                <span className="flex-grow">修改者</span>
+              </div>
+              {onColumnWidthChange && (
+                <div
+                  onMouseDown={(e) => handleResizeStart(e, 'modifier')}
+                  onDoubleClick={() => onColumnWidthChange('modifier', DEFAULT_COLUMN_WIDTHS.modifier)}
+                  className="absolute right-0 top-0 h-full w-6 cursor-col-resize flex items-center justify-center z-20 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                  title="拖動調整欄位寬度 (雙擊重置)"
                 >
                   <div className="w-0.5 h-4/5 bg-gray-300 dark:bg-gray-600 hover:bg-blue-500 hover:w-1" />
                 </div>
@@ -321,8 +356,9 @@ const ListView: React.FC<ListViewProps> = ({
               {onColumnWidthChange && (
                 <div
                   onMouseDown={(e) => handleResizeStart(e, 'type')}
+                  onDoubleClick={() => onColumnWidthChange('type', DEFAULT_COLUMN_WIDTHS.type)}
                   className="absolute right-0 top-0 h-full w-6 cursor-col-resize flex items-center justify-center z-20 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                  title="拖動調整欄位寬度"
+                  title="拖動調整欄位寬度 (雙擊重置)"
                 >
                   <div className="w-0.5 h-4/5 bg-gray-300 dark:bg-gray-600 hover:bg-blue-500 hover:w-1" />
                 </div>
@@ -338,8 +374,9 @@ const ListView: React.FC<ListViewProps> = ({
               {onColumnWidthChange && (
                 <div
                   onMouseDown={(e) => handleResizeStart(e, 'size')}
+                  onDoubleClick={() => onColumnWidthChange('size', DEFAULT_COLUMN_WIDTHS.size)}
                   className="absolute right-0 top-0 h-full w-6 cursor-col-resize flex items-center justify-center z-20 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                  title="拖動調整欄位寬度"
+                  title="拖動調整欄位寬度 (雙擊重置)"
                 >
                   <div className="w-0.5 h-4/5 bg-gray-300 dark:bg-gray-600 hover:bg-blue-500 hover:w-1" />
                 </div>
@@ -353,8 +390,13 @@ const ListView: React.FC<ListViewProps> = ({
         <tbody>
           {isEmptyFolder ? (
             <tr>
-              <td colSpan={5} className="p-0">
-                <EmptyState type="folder" />
+              <td colSpan={6} className="p-0 h-[400px]">
+                <div className="flex items-center justify-center h-full">
+                  <EmptyState 
+                    type="folder" 
+                    onCreateFolder={onCreateFolder}
+                  />
+                </div>
               </td>
             </tr>
           ) : (
@@ -367,39 +409,45 @@ const ListView: React.FC<ListViewProps> = ({
                   }`}
                   onClick={() => onSelectItem(folder.name)}
                 >
-                  <td className="p-4 flex items-center">
-                    <div className="flex items-center space-x-3">
-                      <div className="text-blue-600 dark:text-blue-400 text-2xl">📁</div>
+                  <td className="p-4 overflow-hidden">
+                    <div className="flex items-center space-x-3 min-w-0 w-full">
+                      <div className="text-blue-600 dark:text-blue-400 text-2xl flex-shrink-0">📁</div>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           onEnterFolder(folder.name);
                         }}
-                        className="font-medium text-blue-600 dark:text-blue-400 hover:underline truncate max-w-[200px]"
+                        className="font-medium text-blue-600 dark:text-blue-400 hover:underline whitespace-nowrap overflow-hidden text-ellipsis max-w-full"
                         title={folder.name}
                       >
                         {folder.name}
                       </button>
                     </div>
                   </td>
-                  <td className="p-4 align-middle">
+                  <td className="p-4 align-middle whitespace-nowrap">
                     {new Date(folder.lastModified).toLocaleString('zh-TW')}
                   </td>
-                  <td className="p-4 align-middle">資料夾</td>
-                  <td className="p-4 align-middle">
+                  <td className="p-4 align-middle whitespace-nowrap">
+                    {currentUser}
+                  </td>
+                  <td className="p-4 align-middle whitespace-nowrap">資料夾</td>
+                  <td className="p-4 align-middle whitespace-nowrap">
                     {folder.children !== undefined && folder.children > 0 
                       ? formatFolderItemCount(folder.children) 
                       : formatFolderItemCount(0)}
                   </td>
-                  <td className="p-4 align-middle">
+                  <td className="p-4 align-middle whitespace-nowrap">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        onDeleteFolder(folder.name);
+                        if(window.confirm(`確定要刪除資料夾 "${folder.name}" 嗎？`)) {
+                          onDeleteFolder(folder.name);
+                        }
                       }}
                       className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg 
-                             text-gray-500 dark:text-gray-400 hover:text-gray-700 
-                             dark:hover:text-gray-300 transition-colors"
+                             text-gray-500 dark:text-gray-400 hover:text-red-600 
+                             dark:hover:text-red-400 transition-colors"
+                      title="刪除資料夾"
                     >
                       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
@@ -423,29 +471,34 @@ const ListView: React.FC<ListViewProps> = ({
                     onContextMenu={(e) => onContextMenu(e, file)}
                     onDoubleClick={() => onFilePreview(file)}
                   >
-                    <td className="p-4 flex items-center">
-                      <div className="flex items-center space-x-3">
-                        <div className="text-2xl">{getFileTypeIcon(fileKey)}</div>
-                        <button
+                    <td className="p-4 overflow-hidden">
+                      <div className="flex items-center space-x-3 min-w-0 w-full">
+                        <div className="text-2xl flex-shrink-0">{getFileTypeIcon(fileKey)}</div>
+                        <a
+                          href={getFilePreviewUrl(fileKey)}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           onClick={(e) => {
                             e.stopPropagation();
-                            onFilePreview(file);
                           }}
-                          className="font-medium text-blue-600 dark:text-blue-400 hover:underline truncate max-w-[200px]"
+                          className="font-medium text-blue-600 dark:text-blue-400 hover:underline whitespace-nowrap overflow-hidden text-ellipsis max-w-full"
                           title={fileName}
                         >
                           {fileName}
-                        </button>
+                        </a>
                       </div>
                     </td>
-                    <td className="p-4 align-middle">
+                    <td className="p-4 align-middle whitespace-nowrap">
                       {file.LastModified ? new Date(file.LastModified).toLocaleString('zh-TW') : '-'}
                     </td>
-                    <td className="p-4 align-middle">
+                    <td className="p-4 align-middle whitespace-nowrap">
+                      {currentUser}
+                    </td>
+                    <td className="p-4 align-middle whitespace-nowrap">
                       {file.type || fileKey.split('.').pop()?.toUpperCase() || 'Unknown'}
                     </td>
-                    <td className="p-4 align-middle">{formatFileSize(file.Size || 0)}</td>
-                    <td className="p-4 align-middle">
+                    <td className="p-4 align-middle whitespace-nowrap">{formatFileSize(file.Size || 0)}</td>
+                    <td className="p-4 align-middle whitespace-nowrap">
                       <div className="flex space-x-2">
                         <button
                           onClick={(e) => {
@@ -453,8 +506,9 @@ const ListView: React.FC<ListViewProps> = ({
                             onDownload(fileKey, fileName);
                           }}
                           className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg 
-                                   text-gray-500 dark:text-gray-400 hover:text-gray-700 
-                                   dark:hover:text-gray-300 transition-colors"
+                                   text-gray-500 dark:text-gray-400 hover:text-blue-600 
+                                   dark:hover:text-blue-400 transition-colors"
+                          title="下載檔案"
                         >
                           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
@@ -464,11 +518,14 @@ const ListView: React.FC<ListViewProps> = ({
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            onDelete(fileKey);
+                            if(window.confirm(`確定要刪除檔案 "${fileName}" 嗎？`)) {
+                              onDelete(fileKey);
+                            }
                           }}
                           className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg 
-                                   text-gray-500 dark:text-gray-400 hover:text-gray-700 
-                                   dark:hover:text-gray-300 transition-colors"
+                                   text-gray-500 dark:text-gray-400 hover:text-red-600 
+                                   dark:hover:text-red-400 transition-colors"
+                          title="刪除檔案"
                         >
                           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 

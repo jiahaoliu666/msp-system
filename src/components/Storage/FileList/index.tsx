@@ -216,32 +216,25 @@ const FileList: React.FC<FileListProps> = ({
           />
         )
       ) : (
-        isEmptyFolder ? (
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 h-full">
-            <div className="w-full h-full flex items-center justify-center">
-              <EmptyState 
-                type="folder" 
-                onCreateFolder={onCreateFolder} 
-              />
-            </div>
-          </div>
-        ) : (
-          <ListView
-            folders={folders}
-            files={files}
-            currentPath={currentPath}
-            selectedItems={selectedItems}
-            onSelectItem={onSelectItem}
-            onEnterFolder={onEnterFolder}
-            onDeleteFolder={onDeleteFolder}
-            onDownload={onDownload}
-            onDelete={onDelete}
-            onFilePreview={onFilePreview}
-            onContextMenu={onContextMenu}
-            onSort={onSort}
-            sortConfig={{ key: 'name', direction: 'asc' }}
-          />
-        )
+        <ListView
+          folders={folders}
+          files={files}
+          currentPath={currentPath}
+          selectedItems={selectedItems}
+          onSelectItem={onSelectItem}
+          onEnterFolder={onEnterFolder}
+          onDeleteFolder={onDeleteFolder}
+          onDownload={onDownload}
+          onDelete={onDelete}
+          onFilePreview={onFilePreview}
+          onContextMenu={onContextMenu}
+          onSort={onSort}
+          sortConfig={{ key: 'name', direction: 'asc' }}
+          isEmptyFolder={isEmptyFolder}
+          onCreateFolder={onCreateFolder}
+          columnWidths={columnWidths}
+          onColumnWidthChange={handleColumnWidthChange}
+        />
       )}
     </div>
   );
