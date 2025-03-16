@@ -490,9 +490,7 @@ const ListView: React.FC<ListViewProps> = ({
                       onClick={(e) => {
                         e.stopPropagation();
                         e.preventDefault(); // 防止事件冒泡和默認行為
-                        if(window.confirm(`確定要刪除資料夾 "${folder.name}" 嗎？`)) {
-                          onDeleteFolder(folder.name);
-                        }
+                        onDeleteFolder(folder.name);
                       }}
                       className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg 
                              text-gray-500 dark:text-gray-400 hover:text-red-600 

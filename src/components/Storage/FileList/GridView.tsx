@@ -114,9 +114,7 @@ const GridView: React.FC<GridViewProps> = ({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  if(window.confirm(`確定要刪除資料夾 "${folder.name}" 嗎？`)) {
-                    onDeleteFolder(folder.name);
-                  }
+                  onDeleteFolder(folder.name);
                 }}
                 className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg 
                          text-gray-500 dark:text-gray-400 hover:text-red-600 
@@ -170,9 +168,7 @@ const GridView: React.FC<GridViewProps> = ({
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    if(window.confirm(`確定要刪除檔案 "${fileName}" 嗎？`)) {
-                      onDelete(fileKey);
-                    }
+                    onDelete(fileKey);
                   }}
                   className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg 
                            text-gray-500 dark:text-gray-400 hover:text-red-600 
