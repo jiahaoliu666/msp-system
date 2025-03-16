@@ -59,6 +59,9 @@ const FileList: React.FC<FileListProps> = ({
   isEmptyFolder = false,
   onCreateFolder
 }) => {
+  const [isDragActive, setIsDragActive] = useState(false);
+  const dropAreaRef = useRef<HTMLDivElement>(null);
+
   // 欄位寬度狀態
   const [columnWidths, setColumnWidths] = useState<ColumnWidths>(DEFAULT_COLUMN_WIDTHS);
   const columnWidthsRef = useRef<ColumnWidths>(DEFAULT_COLUMN_WIDTHS);
@@ -112,6 +115,42 @@ const FileList: React.FC<FileListProps> = ({
     localStorage.removeItem('fileList-columnWidths');
   }, []);
 
+  // 拖放區域事件處理
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isDragActive) setIsDragActive(true);
+  };
+
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // 確保只有當滑鼠離開整個區域時才設置為 false
+    if (dropAreaRef.current && !dropAreaRef.current.contains(e.relatedTarget as Node)) {
+      setIsDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(false);
+
+    // 傳播 drop 事件到父元件，由 useUpload hook 處理
+    const customEvent = new CustomEvent('file-drop', { 
+      bubbles: true,
+      detail: { files: e.dataTransfer.files }
+    });
+    dropAreaRef.current?.dispatchEvent(customEvent);
+  };
+
   // 檔案篩選與排序
   const filteredFiles = files
     .filter(file => {
@@ -129,113 +168,69 @@ const FileList: React.FC<FileListProps> = ({
     currentPage * itemsPerPage
   );
 
-  // 根據視圖模式顯示不同的檔案列表
+  // 渲染檔案列表或空狀態
   return (
-    <>
-      {viewMode === 'grid' ? (
-        <div>
-          {isEmptyFolder ? (
-            <GridView
-              folders={[]}
-              files={[]}
-              currentPath={currentPath}
-              selectedItems={selectedItems}
-              onSelectItem={onSelectItem}
-              onEnterFolder={onEnterFolder}
-              onDeleteFolder={onDeleteFolder}
-              onDownload={onDownload}
-              onDelete={onDelete}
-              onFilePreview={onFilePreview}
-              onContextMenu={onContextMenu}
-              isEmptyFolder={true}
-            />
-          ) : (
-            <GridView
-              folders={folders}
-              files={paginatedFiles}
-              currentPath={currentPath}
-              selectedItems={selectedItems}
-              onSelectItem={onSelectItem}
-              onEnterFolder={onEnterFolder}
-              onDeleteFolder={onDeleteFolder}
-              onDownload={onDownload}
-              onDelete={onDelete}
-              onFilePreview={onFilePreview}
-              onContextMenu={onContextMenu}
-            />
-          )}
-        </div>
-      ) : (
-        <div>
-          {isEmptyFolder ? (
-            <>
-              <div className="flex justify-end mb-2">
-                <button
-                  onClick={handleResetColumnWidths}
-                  className="text-xs text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 flex items-center space-x-1"
-                >
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  <span>重置欄位寬度</span>
-                </button>
-              </div>
-              <ListView
-                folders={[]}
-                files={[]}
-                currentPath={currentPath}
-                selectedItems={selectedItems}
-                sortConfig={{ key: 'name', direction: 'asc' }}
-                onSelectItem={onSelectItem}
-                onEnterFolder={onEnterFolder}
-                onDeleteFolder={onDeleteFolder}
-                onDownload={onDownload}
-                onDelete={onDelete}
-                onFilePreview={onFilePreview}
-                onContextMenu={onContextMenu}
-                onSort={onSort}
-                columnWidths={columnWidths}
-                onColumnWidthChange={handleColumnWidthChange}
-                isEmptyFolder={true}
-              />
-            </>
-          ) : (
-            <>
-              <div className="flex justify-end mb-2">
-                <button
-                  onClick={handleResetColumnWidths}
-                  className="text-xs text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 flex items-center space-x-1"
-                >
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  <span>重置欄位寬度</span>
-                </button>
-              </div>
-              <ListView
-                folders={folders}
-                files={paginatedFiles}
-                currentPath={currentPath}
-                selectedItems={selectedItems}
-                sortConfig={{ key: 'name', direction: 'asc' }}
-                onSelectItem={onSelectItem}
-                onEnterFolder={onEnterFolder}
-                onDeleteFolder={onDeleteFolder}
-                onDownload={onDownload}
-                onDelete={onDelete}
-                onFilePreview={onFilePreview}
-                onContextMenu={onContextMenu}
-                onSort={onSort}
-                columnWidths={columnWidths}
-                onColumnWidthChange={handleColumnWidthChange}
-              />
-            </>
-          )}
+    <div 
+      ref={dropAreaRef}
+      className={`relative w-full h-full min-h-[400px] rounded-xl 
+                ${isDragActive ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-900/20' : ''}`}
+      onDragOver={handleDragOver}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      {/* 拖放提示覆蓋層 */}
+      {isDragActive && (
+        <div className="absolute inset-0 flex items-center justify-center bg-blue-50 dark:bg-blue-900/30 backdrop-blur-sm rounded-xl z-20">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-8 text-center transform transition-all duration-200 border-2 border-dashed border-blue-500">
+            <div className="text-6xl mb-4">📥</div>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">放開以上傳檔案</h3>
+            <p className="text-gray-600 dark:text-gray-400">檔案將上傳至當前資料夾</p>
+          </div>
         </div>
       )}
-    </>
+      
+      {/* 現有的檔案列表或空狀態 */}
+      {isEmptyFolder ? (
+        <EmptyState 
+          type="folder" 
+          onCreateFolder={onCreateFolder} 
+        />
+      ) : (
+        viewMode === 'grid' ? (
+          <GridView
+            folders={folders}
+            files={files}
+            currentPath={currentPath}
+            selectedItems={selectedItems}
+            onSelectItem={onSelectItem}
+            onEnterFolder={onEnterFolder}
+            onDeleteFolder={onDeleteFolder}
+            onDownload={onDownload}
+            onDelete={onDelete}
+            onFilePreview={onFilePreview}
+            onContextMenu={onContextMenu}
+            isEmptyFolder={isEmptyFolder}
+          />
+        ) : (
+          <ListView
+            folders={folders}
+            files={files}
+            currentPath={currentPath}
+            selectedItems={selectedItems}
+            onSelectItem={onSelectItem}
+            onEnterFolder={onEnterFolder}
+            onDeleteFolder={onDeleteFolder}
+            onDownload={onDownload}
+            onDelete={onDelete}
+            onFilePreview={onFilePreview}
+            onContextMenu={onContextMenu}
+            onSort={onSort}
+            sortConfig={{ key: 'name', direction: 'asc' }}
+          />
+        )
+      )}
+    </div>
   );
 };
 

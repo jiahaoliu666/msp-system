@@ -195,18 +195,14 @@ export function validateS3Config() {
 }
 
 // 獲取允許的檔案類型列表
-export const getAllowedFileTypes = () => {
-  const types: string[] = [];
-  Object.values(S3_CONFIG.allowedFileTypes).forEach(typeList => {
-    types.push(...typeList);
-  });
-  return types;
+export const getAllowedFileTypes = (): string[] => {
+  return Object.values(S3_CONFIG.allowedFileTypes).flat();
 };
 
-// 檢查檔案類型是否允許
+// 驗證檔案類型是否允許
 export const isFileTypeAllowed = (mimeType: string): boolean => {
   const allowedTypes = getAllowedFileTypes();
-  return allowedTypes.includes(mimeType);
+  return allowedTypes.includes(mimeType) || allowedTypes.includes('*/*');
 };
 
 // 獲取檔案類型對應的圖示

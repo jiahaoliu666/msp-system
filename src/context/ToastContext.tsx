@@ -100,4 +100,9 @@ export const useToast = () => {
     throw new Error('useToast must be used within a ToastProvider');
   }
   return context;
-}; 
+};
+
+// 添加 useToastContext 作為 useToast 的別名，以解決依賴問題
+export const useToastContext = useToast;
+
+export default ToastContext; 

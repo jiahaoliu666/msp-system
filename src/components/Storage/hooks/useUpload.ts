@@ -1,16 +1,19 @@
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { toast } from 'react-toastify';
-import { uploadFile, deleteFile } from '@/services/storage/s3';
+import { uploadFile, deleteFile, checkFileExists } from '@/services/storage/s3';
 import { S3_CONFIG } from '@/config/s3-config';
 import { formatFileSize } from '@/services/storage/s3';
 import { FileItem, UploadReturn } from '@/components/storage/types';
+import { useToastContext } from '@/context/ToastContext';
+import { isFileTypeAllowed, getAllowedFileTypes } from '@/config/s3-config';
 
 export const useUpload = (
   currentPath: string,
   files: FileItem[],
   loadFiles: () => Promise<{success: boolean, error?: string} | void>
 ): UploadReturn => {
+  const { showToast } = useToastContext();
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [isUploading, setIsUploading] = useState(false);
   const [draggedOver, setDraggedOver] = useState(false);
@@ -29,123 +32,221 @@ export const useUpload = (
   const [totalFiles, setTotalFiles] = useState<number>(0);
   const [isPaused, setIsPaused] = useState<boolean>(false);
 
-  // 檔案上傳處理
-  const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    if (acceptedFiles.length === 0) {
-      toast.error('請選擇要上傳的檔案');
-      return;
-    }
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const dropAreaRef = useRef<HTMLDivElement | null>(null);
 
-    // 檢查檔案大小
-    const oversizedFiles = acceptedFiles.filter(file => file.size > S3_CONFIG.maxFileSize);
-    if (oversizedFiles.length > 0) {
-      toast.error(`以下檔案超過大小限制 (${formatFileSize(S3_CONFIG.maxFileSize)}):\n${oversizedFiles.map(f => f.name).join('\n')}`);
-      return;
-    }
+  // 檢查檔案類型是否允許上傳
+  const validateFileTypes = (files: File[]): { valid: File[], invalid: File[] } => {
+    const valid: File[] = [];
+    const invalid: File[] = [];
+    
+    files.forEach(file => {
+      if (isFileTypeAllowed(file.type)) {
+        valid.push(file);
+      } else {
+        invalid.push(file);
+      }
+    });
+    
+    return { valid, invalid };
+  };
 
-    // 檢查檔案類型
-    const allowedTypes = Object.values(S3_CONFIG.allowedFileTypes).flat();
-    const invalidFiles = acceptedFiles.filter(file => !allowedTypes.includes(file.type));
-    if (invalidFiles.length > 0) {
-      toast.error(`不支援的檔案類型:\n${invalidFiles.map(f => f.name).join('\n')}`);
-      return;
+  // 檢查檔案大小是否超過限制
+  const validateFileSize = (files: File[]): { valid: File[], invalid: File[] } => {
+    const maxSize = S3_CONFIG.maxFileSize;
+    const valid: File[] = [];
+    const invalid: File[] = [];
+    
+    files.forEach(file => {
+      if (file.size <= maxSize) {
+        valid.push(file);
+      } else {
+        invalid.push(file);
+      }
+    });
+    
+    return { valid, invalid };
+  };
+  
+  // 處理檔案上傳
+  const handleFileUpload = async (files: File[]): Promise<void> => {
+    if (files.length === 0) return;
+    
+    // 驗證檔案類型
+    const typeValidationResult = validateFileTypes(files);
+    if (typeValidationResult.invalid.length > 0) {
+      showToast('error', `不支援的檔案類型 (${typeValidationResult.invalid.length} 個檔案)。允許的類型：${getAllowedFileTypes().join(', ')}`);
+      
+      if (typeValidationResult.valid.length === 0) return;
     }
-
+    
+    // 驗證檔案大小
+    const sizeValidationResult = validateFileSize(typeValidationResult.valid);
+    if (sizeValidationResult.invalid.length > 0) {
+      showToast('error', `檔案過大 (${sizeValidationResult.invalid.length} 個檔案)。大小限制：${(S3_CONFIG.maxFileSize / (1024 * 1024)).toFixed(0)}MB`);
+      
+      if (sizeValidationResult.valid.length === 0) return;
+    }
+    
+    const validFiles = sizeValidationResult.valid;
+    
+    setUploadQueue(validFiles);
+    setTotalFiles(validFiles.length);
+    setCurrentFileIndex(0);
+    setUploadStartTime(new Date());
     setIsUploading(true);
-    setUploadProgress(0);
-
+    
     try {
-      for (let i = 0; i < acceptedFiles.length; i++) {
-        const file = acceptedFiles[i];
-        const progress = Math.round((i / acceptedFiles.length) * 100);
-        setUploadProgress(progress);
-
-        // 檢查是否有同名檔案
-        const fileName = file.name;
-        const existingFile = files.find(f => f.Key === fileName);
+      for (let i = 0; i < validFiles.length; i++) {
+        setCurrentFileIndex(i);
+        const file = validFiles[i];
         
-        if (existingFile) {
-          // 如果有同名檔案，設置重複檔案狀態並等待用戶選擇
+        // 檢查檔案是否已存在
+        const fileName = file.name;
+        const fileKey = `${currentPath}${fileName}`;
+        const fileExists = await checkFileExists(fileKey);
+        
+        if (fileExists) {
+          // 設置重複檔案狀態，等待用戶決定
           setDuplicateFile({
             file,
-            existingKey: existingFile.Key || '',
-            newKey: fileName
+            existingKey: fileKey,
+            newKey: fileKey
           });
-          // 等待用戶選擇
-          await new Promise(resolve => {
-            const unsubscribe = setInterval(() => {
+          
+          // 等待用戶處理重複檔案
+          await new Promise<void>(resolve => {
+            const checkInterval = setInterval(() => {
               if (!duplicateFile) {
-                clearInterval(unsubscribe);
-                resolve(true);
+                clearInterval(checkInterval);
+                resolve();
               }
-            }, 100);
+            }, 500);
           });
-          continue;
+          
+          // 如果用戶選擇跳過，則繼續下一個檔案
+          if (duplicateFile === null) {
+            continue;
+          }
         }
-
-        const key = `${currentPath ? currentPath + '/' : ''}${fileName}`;
-        await uploadFile(file, key);
+        
+        // 更新進度
+        setUploadProgress(Math.round((i / validFiles.length) * 100));
+        
+        // 上傳檔案
+        await uploadFile(file, fileKey);
       }
-
-      setUploadProgress(100);
-      toast.success(`成功上傳 ${acceptedFiles.length} 個檔案`);
-      loadFiles();
-    } catch (error) {
-      toast.error('檔案上傳失敗');
-      console.error('檔案上傳失敗:', error);
-    } finally {
+      
       setIsUploading(false);
-      setTimeout(() => setUploadProgress(0), 1000);
+      setUploadProgress(100);
+      
+      // 成功上傳後重新載入檔案列表
+      await loadFiles();
+      
+      showToast('success', `已成功上傳 ${validFiles.length} 個檔案`);
+    } catch (error) {
+      console.error('上傳失敗:', error);
+      setIsUploading(false);
+      
+      showToast('error', '檔案上傳過程中出現錯誤，請重試');
+    } finally {
+      // 清理狀態
+      setTimeout(() => {
+        setUploadProgress(0);
+      }, 3000);
     }
-  }, [currentPath, loadFiles, files, duplicateFile]);
+  };
 
-  // 處理檔案重複的選擇
+  // 處理重複檔案
   const handleDuplicateFile = async (action: 'replace' | 'keep-both' | 'skip') => {
     if (!duplicateFile) return;
-
+    
     try {
-      const { file, existingKey, newKey } = duplicateFile;
-      
-      switch (action) {
-        case 'replace':
-          // 刪除舊檔案並上傳新檔案
-          await deleteFile(existingKey);
-          await uploadFile(file, `${currentPath ? currentPath + '/' : ''}${newKey}`);
-          break;
-        case 'keep-both':
-          // 使用新的檔名上傳
-          const ext = newKey.split('.').pop();
-          const baseName = newKey.slice(0, -(ext?.length || 0) - 1);
-          const newFileName = `${baseName} (${new Date().getTime()}).${ext}`;
-          await uploadFile(file, `${currentPath ? currentPath + '/' : ''}${newFileName}`);
-          break;
-        case 'skip':
-          // 不做任何事
-          break;
+      if (action === 'replace') {
+        // 直接覆蓋，繼續上傳
+        await uploadFile(duplicateFile.file, duplicateFile.existingKey);
+      } else if (action === 'keep-both') {
+        // 保留兩者，使用新檔名
+        const fileName = duplicateFile.file.name;
+        const fileExt = fileName.includes('.') ? `.${fileName.split('.').pop()}` : '';
+        const fileNameWithoutExt = fileName.includes('.') ? fileName.substring(0, fileName.lastIndexOf('.')) : fileName;
+        const timestamp = new Date().getTime();
+        const newFileName = `${fileNameWithoutExt}_${timestamp}${fileExt}`;
+        const newKey = `${currentPath}${newFileName}`;
+        
+        await uploadFile(duplicateFile.file, newKey);
       }
-
+      // skip: 不做任何事，繼續處理下一個檔案
+      
       setDuplicateFile(null);
-      loadFiles();
     } catch (error) {
-      toast.error('處理重複檔案失敗');
       console.error('處理重複檔案失敗:', error);
+      showToast('error', '處理重複檔案時出現錯誤');
     }
   };
 
-  // 檔案上傳按鈕點擊處理
+  // 點擊上傳按鈕
   const handleUploadClick = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.multiple = true;
-    input.accept = Object.values(S3_CONFIG.allowedFileTypes).flat().join(',');
-    input.onchange = async (e) => {
-      const files = Array.from((e.target as HTMLInputElement).files || []);
-      await onDrop(files);
-    };
-    input.click();
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+  
+  // 處理檔案選擇
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = e.target.files;
+    if (selectedFiles && selectedFiles.length > 0) {
+      handleFileUpload(Array.from(selectedFiles));
+    }
+    
+    // 重置 input 值，允許再次選擇相同檔案
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
-  // 設置檔案拖放區域
+  // 處理拖放上傳
+  const onDrop = async (acceptedFiles: File[]) => {
+    await handleFileUpload(acceptedFiles);
+  };
+
+  // 暫停上傳
+  const pauseUpload = () => {
+    // 待實現
+    console.log('暫停上傳功能待實現');
+  };
+
+  // 繼續上傳
+  const resumeUpload = () => {
+    // 待實現
+    console.log('繼續上傳功能待實現');
+  };
+
+  // 取消上傳
+  const cancelUpload = () => {
+    setIsUploading(false);
+    setUploadProgress(0);
+    setUploadQueue([]);
+  };
+  
+  // 監聽自定義拖放事件
+  useEffect(() => {
+    const handleCustomDrop = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail && customEvent.detail.files) {
+        const files = Array.from(customEvent.detail.files as FileList);
+        handleFileUpload(files);
+      }
+    };
+    
+    document.addEventListener('file-drop', handleCustomDrop);
+    
+    return () => {
+      document.removeEventListener('file-drop', handleCustomDrop);
+    };
+  }, [currentPath]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 利用 react-dropzone 提供的鉤子
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: Object.values(S3_CONFIG.allowedFileTypes).flat().reduce((acc, type) => ({
@@ -162,28 +263,6 @@ export const useUpload = (
     },
     noClick: true
   });
-
-  // 暫停上傳
-  const pauseUpload = () => {
-    setIsPaused(true);
-    toast.info('上傳已暫停');
-  };
-
-  // 繼續上傳
-  const resumeUpload = () => {
-    setIsPaused(false);
-    toast.info('上傳已繼續');
-  };
-
-  // 取消上傳
-  const cancelUpload = () => {
-    setIsUploading(false);
-    setUploadQueue([]);
-    setUploadProgress(0);
-    setCurrentFileIndex(0);
-    setTotalFiles(0);
-    toast.info('上傳已取消');
-  };
 
   return {
     isUploading,

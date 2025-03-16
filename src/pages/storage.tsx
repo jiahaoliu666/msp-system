@@ -169,22 +169,7 @@ const FileManagerLayout: React.FC<{
 };
 
 export default function Storage() {
-  // UI狀態
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(50);
-
-  // 狀態管理
-  const [isOnline, setIsOnline] = useState(true);
-  const [showFileInfo, setShowFileInfo] = useState(false);
-  const [fileInfoTarget, setFileInfoTarget] = useState<FileItem | FolderItem | null>(null);
-  const [showMoveDialog, setShowMoveDialog] = useState(false);
-  const [storageQuota, setStorageQuota] = useState<{ used: number; total: number } | null>(null);
-  const [isTagManagerOpen, setIsTagManagerOpen] = useState(false);
-  const [taggedItem, setTaggedItem] = useState<string | null>(null);
-
-  // 使用自定義 hooks
+  // 文件管理器鉤子
   const {
     files,
     folders,
@@ -194,82 +179,73 @@ export default function Storage() {
     parentPath,
     selectedItems,
     totalSize,
-    starredItems,
-    breadcrumbs,
-    recentFolders,
     loadFiles,
     handleRetry,
     handleEnterFolder,
     handleGoBack,
-    handleSelectItem,
-    handleSelectAll,
-    toggleStarred,
     setCurrentPath,
     setSelectedItems,
-    filteredItems,
-    applyFilters
+    breadcrumbs,
+    filteredItems
   } = useFileManager();
 
-  const {
-    isUploading,
-    uploadProgress,
-    uploadSpeed,
-    uploadQueue,
-    currentFileIndex,
-    totalFiles,
-    estimatedTimeRemaining,
-    draggedOver,
-    duplicateFile,
-    onDrop,
-    handleUploadClick,
-    handleDuplicateFile,
-    pauseUpload,
-    resumeUpload,
-    cancelUpload,
-    setDraggedOver,
-    getRootProps,
-    getInputProps,
-    isDragActive
-  } = useUpload(currentPath, files, loadFiles);
-
+  // 文件操作鉤子
   const {
     selectedFile,
     previewFile,
     contextMenu,
-    isDeleteConfirmOpen,
-    itemToDelete,
-    isCreatingFolder,
-    isRenamingItem,
-    newFolderName,
-    newItemName,
-    currentOperation,
-    multiSelectMode,
     handleDownload,
     handleDelete,
     handleDeleteFolder,
-    handleConfirmDelete,
-    handleCreateFolder,
     handleFilePreview,
     handleContextMenu,
     handleContextMenuAction,
-    handleRename,
-    handleMove,
-    handleCopy,
-    handleShare,
-    handleTag,
-    handleStar,
-    toggleMultiSelectMode,
-    setSelectedFile,
     setPreviewFile,
     setContextMenu,
-    setIsDeleteConfirmOpen,
-    setItemToDelete,
-    setIsCreatingFolder,
-    setIsRenamingItem,
-    setNewFolderName,
-    setNewItemName,
-    setCurrentOperation
+    multiSelectMode,
+    toggleMultiSelectMode,
+    currentOperation,
+    handleCreateFolder
   } = useFileOperations(currentPath, loadFiles);
+
+  // 文件上傳鉤子
+  const {
+    isUploading,
+    uploadProgress,
+    duplicateFile,
+    handleUploadClick,
+    handleDuplicateFile,
+    getRootProps,
+    getInputProps
+  } = useUpload(currentPath, files, loadFiles);
+
+  // 視圖模式狀態 (list / grid)
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
+  
+  // 搜尋詞狀態
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  // 分頁狀態
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
+  
+  // 計算總頁數
+  const totalItems = filteredItems.files.length + filteredItems.folders.length;
+  const totalFiles = filteredItems.files.length;
+  const totalFolders = filteredItems.folders.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  
+  // 檢查是否為空文件夾
+  const isEmptyFolder = folders.length === 0 && files.length === 0;
+
+  // 狀態管理
+  const [isOnline, setIsOnline] = useState(true);
+  const [showFileInfo, setShowFileInfo] = useState(false);
+  const [fileInfoTarget, setFileInfoTarget] = useState<FileItem | FolderItem | null>(null);
+  const [showMoveDialog, setShowMoveDialog] = useState(false);
+  const [storageQuota, setStorageQuota] = useState<{ used: number; total: number } | null>(null);
+  const [isTagManagerOpen, setIsTagManagerOpen] = useState(false);
+  const [taggedItem, setTaggedItem] = useState<string | null>(null);
 
   // 網路狀態監聽
   useEffect(() => {
@@ -365,87 +341,97 @@ export default function Storage() {
     return () => clearInterval(intervalId);
   }, []);
 
-  // 應用篩選條件
+  // UI效果
   useEffect(() => {
-    try {
-      const filters: FileFilters = {
-        searchTerm,
-        fileTypes: undefined,
-        dateRange: undefined,
-        sortBy: 'name',
-        sortDirection: 'asc'
-      };
-      
-      applyFilters(filters);
-    } catch (err) {
-      console.error("篩選檔案時發生錯誤:", err);
-      toast.error("過濾檔案時發生錯誤，請重試");
-    }
-  }, [searchTerm, applyFilters]);
+    document.body.style.overflowY = showFileInfo ? 'hidden' : 'auto';
+    return () => {
+      document.body.style.overflowY = 'auto';
+    };
+  }, [showFileInfo]);
 
-  // 處理清除篩選條件
-  const handleClearFilters = () => {
-    setSearchTerm('');
-  };
+  // 當搜尋條件變更時，重置分頁
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
-  // 開啟檔案信息面板
+  // 載入儲存空間配額
+  useEffect(() => {
+    const loadStorageQuota = async () => {
+      try {
+        const quota = await getStorageQuota();
+        setStorageQuota(quota);
+      } catch (error) {
+        console.error('獲取儲存空間配額失敗:', error);
+      }
+    };
+
+    loadStorageQuota();
+    
+    // 每隔 5 分鐘更新一次
+    const intervalId = setInterval(loadStorageQuota, 5 * 60 * 1000);
+    
+    return () => clearInterval(intervalId);
+  }, []);
+
+  // 載入儲存空間配額
+  useEffect(() => {
+    const loadStorageQuota = async () => {
+      try {
+        const quota = await getStorageQuota();
+        setStorageQuota(quota);
+      } catch (error) {
+        console.error('獲取儲存空間配額失敗:', error);
+      }
+    };
+
+    loadStorageQuota();
+    
+    // 每隔 5 分鐘更新一次
+    const intervalId = setInterval(loadStorageQuota, 5 * 60 * 1000);
+    
+    return () => clearInterval(intervalId);
+  }, []);
+
+  // 檔案資訊
   const handleOpenFileInfo = (file: FileItem | FolderItem) => {
     setFileInfoTarget(file);
     setShowFileInfo(true);
   };
 
-  // 關閉檔案信息面板
+  // 關閉檔案資訊
   const handleCloseFileInfo = () => {
     setShowFileInfo(false);
-    setFileInfoTarget(null);
   };
 
-  // 處理檔案標籤
+  // 標籤變更
   const handleTagsChange = async (tags: string[]) => {
-    if (!fileInfoTarget) return;
+    if (!taggedItem) return;
     
     try {
-      await handleTag(fileInfoTarget.Key || '', tags);
-      toast.success('標籤更新成功');
+      // 這裡可以實現標籤更新邏輯
+      console.log('更新標籤:', taggedItem, tags);
+      setIsTagManagerOpen(false);
     } catch (error) {
-      console.error('更新標籤失敗:', error);
-      toast.error('更新標籤失敗');
-      throw error; // 將錯誤傳遞給 TagManager 以還原 UI
+      console.error('標籤更新失敗:', error);
     }
   };
 
-  // 處理移動檔案
+  // 移動檔案
   const handleMoveFile = () => {
-    if (!fileInfoTarget) return;
     setShowMoveDialog(true);
   };
 
-  // 處理重命名
+  // 重命名檔案
   const handleRenameFile = () => {
-    if (!fileInfoTarget) return;
-    setIsRenamingItem(true);
-    setNewItemName(fileInfoTarget.type === 'folder' 
-      ? (fileInfoTarget as FolderItem).name 
-      : (fileInfoTarget.Key?.split('/').pop() || ''));
+    if (!selectedFile) return;
+    // 這裡可以實現重命名邏輯
+    console.log('重命名檔案:', selectedFile);
   };
 
-  // 處理分享檔案
+  // 分享檔案
   const handleShareFile = async () => {
-    if (!fileInfoTarget || fileInfoTarget.type === 'folder') return;
-    
-    try {
-      const shareUrl = await handleShare(fileInfoTarget.Key || '');
-      navigator.clipboard.writeText(shareUrl);
-      toast.success('分享連結已複製到剪貼簿');
-    } catch (error) {
-      console.error('分享檔案失敗:', error);
-      toast.error('分享檔案失敗');
-    }
-  };
-
-  // 處理項目選擇
-  const toggleItemSelection = (itemKey: string) => {
-    handleSelectItem(itemKey);
+    // 這裡可以實現檔案分享邏輯
+    console.log('分享檔案');
   };
 
   // 渲染檔案列表
@@ -489,43 +475,204 @@ export default function Storage() {
         selectedItems={selectedItems}
         viewMode={viewMode}
         searchTerm={searchTerm}
-        onSelectItem={toggleItemSelection}
+        currentPage={currentPage}
+        itemsPerPage={itemsPerPage}
+        onSelectItem={(key) => {
+          const newSelected = new Set(selectedItems);
+          if (newSelected.has(key)) {
+            newSelected.delete(key);
+          } else {
+            newSelected.add(key);
+          }
+          setSelectedItems(newSelected);
+        }}
         onEnterFolder={handleEnterFolder}
         onDeleteFolder={handleDeleteFolder}
         onDownload={handleDownload}
         onDelete={handleDelete}
         onFilePreview={handleFilePreview}
         onContextMenu={handleContextMenu}
-        currentPage={currentPage}
-        itemsPerPage={itemsPerPage}
-        onSort={() => {}}
+        onSort={handleSort}
         starredItems={[]}
-        isEmptyFolder={folders.length === 0 && files.length === 0}
-        onCreateFolder={() => setIsCreatingFolder(true)}
+        isEmptyFolder={isEmptyFolder}
+        onCreateFolder={handleCreateFolder}
       />
     );
   };
 
+  // 搜尋函數
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+    setCurrentPage(1);
+  };
+  
+  // 排序函數
+  const handleSort = (key: string) => {
+    // 實現排序邏輯
+    console.log('排序依據:', key);
+  };
+
   return (
-    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-      {/* 文件管理器主界面 */}
-      <FileManagerLayout
-        currentPath={currentPath}
-        parentPath={parentPath}
-        breadcrumbs={breadcrumbs}
-        viewMode={viewMode}
-        searchTerm={searchTerm}
-        multiSelectMode={multiSelectMode}
-        onGoBack={handleGoBack}
-        onSetCurrentPath={setCurrentPath}
-        onSetViewMode={setViewMode}
-        onSearchChange={setSearchTerm}
-        onToggleMultiSelectMode={toggleMultiSelectMode}
-        onCreateFolder={handleCreateFolder}
-        onUploadClick={handleUploadClick}
-      >
-        {renderFileList()}
-      </FileManagerLayout>
+    <div className="min-h-screen bg-background-primary flex flex-col">
+      <div className="flex-1 overflow-hidden">
+        <div className="container-responsive py-6 flex flex-col h-full">
+          <div className="flex flex-col space-y-6 flex-1">
+            {/* 檔案管理功能區塊 */}
+            <FileManagerLayout
+              children={
+                <>
+                  {/* 檔案拖放上傳區域 */}
+                  <div 
+                    {...getRootProps()}
+                    className="relative w-full h-full"
+                  >
+                    <input {...getInputProps()} />
+                    
+                    {/* 顯示拖放上傳進度 */}
+                    {isUploading && (
+                      <UploadProgress progress={uploadProgress} />
+                    )}
+                    
+                    {/* 檔案重複處理對話框 */}
+                    {duplicateFile && (
+                      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-96 max-w-full">
+                          <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-gray-100">檔案已存在</h3>
+                          <p className="mb-6 text-sm text-gray-600 dark:text-gray-400">
+                            檔案「{duplicateFile.file.name}」已存在，請選擇處理方式：
+                          </p>
+                          <div className="space-y-2">
+                            <button
+                              onClick={() => handleDuplicateFile('replace')}
+                              className="w-full py-2 px-4 bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400 
+                                      hover:bg-red-200 dark:hover:bg-red-900/70 rounded-lg transition-colors"
+                            >
+                              覆蓋現有檔案
+                            </button>
+                            <button
+                              onClick={() => handleDuplicateFile('keep-both')}
+                              className="w-full py-2 px-4 bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400 
+                                      hover:bg-blue-200 dark:hover:bg-blue-900/70 rounded-lg transition-colors"
+                            >
+                              保留兩者（重新命名）
+                            </button>
+                            <button
+                              onClick={() => handleDuplicateFile('skip')}
+                              className="w-full py-2 px-4 bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 
+                                      hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                            >
+                              跳過此檔案
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 檔案列表 */}
+                    <FileList
+                      files={filteredItems.files}
+                      folders={filteredItems.folders}
+                      currentPath={currentPath}
+                      selectedItems={selectedItems}
+                      viewMode={viewMode}
+                      searchTerm={searchTerm}
+                      currentPage={currentPage}
+                      itemsPerPage={itemsPerPage}
+                      onSelectItem={(key) => {
+                        const newSelected = new Set(selectedItems);
+                        if (newSelected.has(key)) {
+                          newSelected.delete(key);
+                        } else {
+                          newSelected.add(key);
+                        }
+                        setSelectedItems(newSelected);
+                      }}
+                      onEnterFolder={handleEnterFolder}
+                      onDeleteFolder={handleDeleteFolder}
+                      onDownload={handleDownload}
+                      onDelete={handleDelete}
+                      onFilePreview={handleFilePreview}
+                      onContextMenu={handleContextMenu}
+                      onSort={handleSort}
+                      starredItems={[]}
+                      isEmptyFolder={isEmptyFolder}
+                      onCreateFolder={handleCreateFolder}
+                    />
+                  </div>
+
+                  {/* 分頁控制 */}
+                  {totalPages > 1 && (
+                    <div className="mt-4 flex items-center justify-between">
+                      <button
+                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                        disabled={currentPage === 1}
+                        className={`px-4 py-2 text-sm rounded-md ${
+                          currentPage === 1
+                            ? 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-600 cursor-not-allowed'
+                            : 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30'
+                        }`}
+                      >
+                        上一頁
+                      </button>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        第 {currentPage} 頁，共 {totalPages} 頁
+                      </span>
+                      <button
+                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                        className={`px-4 py-2 text-sm rounded-md ${
+                          currentPage === totalPages
+                            ? 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-600 cursor-not-allowed'
+                            : 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30'
+                        }`}
+                      >
+                        下一頁
+                      </button>
+                    </div>
+                  )}
+                </>
+              }
+              currentPath={currentPath}
+              parentPath={parentPath}
+              breadcrumbs={breadcrumbs}
+              viewMode={viewMode}
+              searchTerm={searchTerm}
+              multiSelectMode={multiSelectMode}
+              onGoBack={handleGoBack}
+              onSetCurrentPath={setCurrentPath}
+              onSetViewMode={setViewMode}
+              onSearchChange={handleSearch}
+              onToggleMultiSelectMode={toggleMultiSelectMode}
+              onCreateFolder={handleCreateFolder}
+              onUploadClick={handleUploadClick}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* 檔案預覽 */}
+      {previewFile && (
+        <FilePreview file={previewFile} onClose={() => setPreviewFile(null)} />
+      )}
+
+      {/* 右鍵選單 */}
+      {contextMenu && (
+        <ContextMenu
+          file={contextMenu.file}
+          position={contextMenu.position}
+          onClose={() => setContextMenu(null)}
+          onAction={handleContextMenuAction}
+        />
+      )}
+
+      {/* 狀態欄 */}
+      <StatusBar
+        selectedItems={selectedItems}
+        totalItems={totalItems}
+        totalSize={totalSize}
+        uploadProgress={isUploading ? uploadProgress : undefined}
+        currentOperation={currentOperation}
+      />
     </div>
   );
 }

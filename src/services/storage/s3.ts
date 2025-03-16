@@ -1,4 +1,4 @@
-import { S3Client, ListObjectsV2Command, PutObjectCommand, DeleteObjectCommand, GetObjectCommand, CopyObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, ListObjectsV2Command, PutObjectCommand, DeleteObjectCommand, GetObjectCommand, CopyObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { AWS_CONFIG } from '@/config/aws-config';
 import { S3_CONFIG, getAllowedFileTypes, PREVIEW_CONFIG } from '@/config/s3-config';
@@ -911,5 +911,36 @@ export function reinitializeS3Client(config?: {
   } catch (error) {
     console.error('S3 客戶端重新初始化失敗:', error);
     return false;
+  }
+}
+
+// 檢查檔案是否已存在
+export async function checkFileExists(key: string): Promise<boolean> {
+  try {
+    // 初始化 S3 客戶端
+    const s3Client = new S3Client({
+      region: AWS_CONFIG.region,
+      credentials: AWS_CONFIG.credentials,
+      endpoint: AWS_CONFIG.endpoint
+    });
+    
+    // 使用 headObject 檢查檔案是否存在
+    const params = {
+      Bucket: S3_CONFIG.bucketName,
+      Key: key
+    };
+    
+    try {
+      await s3Client.send(new HeadObjectCommand(params));
+      return true; // 檔案存在
+    } catch (error: any) {
+      if (error.name === 'NotFound') {
+        return false; // 檔案不存在
+      }
+      throw error; // 其他錯誤
+    }
+  } catch (error) {
+    console.error('檢查檔案存在失敗:', error);
+    return false; // 出錯時假設檔案不存在
   }
 } 
