@@ -172,55 +172,46 @@ const FileList: React.FC<FileListProps> = ({
       return (a.Key || '').localeCompare(b.Key || '');
     });
 
-  // 分頁處理
-  const paginatedFiles = filteredFiles.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  // 計算分頁後的檔案列表
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedFiles = filteredFiles.slice(startIndex, startIndex + itemsPerPage);
 
-  // 修改ViewComponent組件中的EmptyState傳遞
-  let ViewComponent: React.ReactNode;
+  // 共用的視圖屬性
+  const commonViewProps = {
+    files: paginatedFiles,
+    folders,
+    currentPath,
+    selectedItems,
+    onSelectItem,
+    onSelectAll,
+    onEnterFolder,
+    onDeleteFolder,
+    onDownload,
+    onDelete,
+    onFilePreview,
+    onContextMenu,
+    isEmptyFolder,
+    onCreateFolder,
+    isRefreshing
+  };
+
+  let ViewComponent;
   if (viewMode === 'list') {
     ViewComponent = (
       <ListView
-        files={paginatedFiles}
-        folders={folders}
-        currentPath={currentPath}
-        selectedItems={selectedItems}
-        onSelectItem={onSelectItem}
-        onSelectAll={onSelectAll}
-        onEnterFolder={onEnterFolder}
-        onDeleteFolder={onDeleteFolder}
-        onDownload={onDownload}
-        onDelete={onDelete}
-        onFilePreview={onFilePreview}
-        onContextMenu={onContextMenu}
+        {...commonViewProps}
         onSort={onSort}
         sortConfig={sortConfig}
-        isEmptyFolder={isEmptyFolder}
-        onCreateFolder={onCreateFolder}
         columnWidths={columnWidths}
         onColumnWidthChange={handleColumnWidthChange}
-        isRefreshing={isRefreshing}
+        multiSelectMode={selectedItems.size > 0}
       />
     );
   } else {
     ViewComponent = (
       <GridView
-        files={paginatedFiles}
-        folders={folders}
-        currentPath={currentPath}
-        selectedItems={selectedItems}
-        onSelectItem={onSelectItem}
-        onEnterFolder={onEnterFolder}
-        onDeleteFolder={onDeleteFolder}
-        onDownload={onDownload}
-        onDelete={onDelete}
-        onFilePreview={onFilePreview}
-        onContextMenu={onContextMenu}
-        isEmptyFolder={isEmptyFolder}
-        onCreateFolder={onCreateFolder}
-        isRefreshing={isRefreshing}
+        {...commonViewProps}
+        multiSelectMode={selectedItems.size > 0}
       />
     );
   }

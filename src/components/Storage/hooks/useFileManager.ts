@@ -20,6 +20,9 @@ export const useFileManager = (): FileManagerReturn => {
   const [starredItems, setStarredItems] = useState<Set<string>>(new Set());
   const [breadcrumbs, setBreadcrumbs] = useState<string[]>([]);
   const [recentFolders, setRecentFolders] = useState<string[]>([]);
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({ key: 'name', direction: 'asc' });
+  const [sortedFolders, setSortedFolders] = useState<FolderItem[]>([]);
+  const [sortedFiles, setSortedFiles] = useState<FileItem[]>([]);
 
   const maxRetries = 3;
   const retryDelay = 2000;
@@ -362,35 +365,53 @@ export const useFileManager = (): FileManagerReturn => {
     return typeMap[extension] || 'unknown';
   };
 
-  // 排序檔案和資料夾
-  const sortItems = useCallback((items: FileItem[] | FolderItem[], key: string, direction: 'asc' | 'desc') => {
-    return [...items].sort((a, b) => {
-      const multiplier = direction === 'asc' ? 1 : -1;
-      
-      switch (key) {
-        case 'name':
-          // 依名稱排序
-          const aName = ('name' in a) ? a.name : (a.Key || '').split('/').pop() || '';
-          const bName = ('name' in b) ? b.name : (b.Key || '').split('/').pop() || '';
-          return multiplier * aName.localeCompare(bName);
+  // 排序處理
+  useEffect(() => {
+    const sortItems = () => {
+      // 創建排序函數
+      const sortFn = (a: any, b: any) => {
+        let valueA, valueB;
+  
+        if (sortConfig.key === 'name') {
+          valueA = (a.name || a.Key || '').toLowerCase();
+          valueB = (b.name || b.Key || '').toLowerCase();
+        } else if (sortConfig.key === 'size') {
+          valueA = a.Size || a.size || 0;
+          valueB = b.Size || b.size || 0;
+        } else if (sortConfig.key === 'lastModified') {
+          // 對於修改時間，確保使用Date物件進行比較
+          valueA = a.LastModified || a.lastModified || new Date(0);
+          valueB = b.LastModified || b.lastModified || new Date(0);
           
-        case 'lastModified':
-          // 依修改時間排序
-          const aDate = ('lastModified' in a) ? a.lastModified : (a.LastModified || new Date(0));
-          const bDate = ('lastModified' in b) ? b.lastModified : (b.LastModified || new Date(0));
-          return multiplier * ((bDate as Date).getTime() - (aDate as Date).getTime());
-          
-        case 'size':
-          // 依大小排序
-          const aSize = ('Size' in a) ? a.Size || 0 : 0;
-          const bSize = ('Size' in b) ? b.Size || 0 : 0;
-          return multiplier * (aSize - bSize);
-          
-        default:
-          return 0;
-      }
-    });
-  }, []);
+          // 確保兩個值都是Date物件
+          if (!(valueA instanceof Date)) valueA = new Date(valueA);
+          if (!(valueB instanceof Date)) valueB = new Date(valueB);
+        } else {
+          valueA = a[sortConfig.key] || '';
+          valueB = b[sortConfig.key] || '';
+        }
+  
+        // 比較值並返回排序結果
+        if (valueA < valueB) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (valueA > valueB) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      };
+  
+      // 應用排序
+      const sortedFolders = [...folders].sort(sortFn);
+      const sortedFiles = [...files].sort(sortFn);
+  
+      // 設置排序後的項目
+      setSortedFolders(sortedFolders);
+      setSortedFiles(sortedFiles);
+    };
+  
+    sortItems();
+  }, [folders, files, sortConfig]);
 
   const returnObj = {
     files,
@@ -414,7 +435,11 @@ export const useFileManager = (): FileManagerReturn => {
     starredItems,
     toggleStarred,
     breadcrumbs,
-    recentFolders
+    recentFolders,
+    sortConfig,
+    setSortConfig,
+    sortedFolders,
+    sortedFiles
   };
   
   console.log("useFileManager 返回前檢查:", {

@@ -74,6 +74,11 @@ export const useFileOperations = (
         isEmpty: isEmpty
       });
       setIsDeleteConfirmOpen(true);
+      
+      // 添加非空資料夾的額外提示
+      if (!isEmpty) {
+        console.log(`資料夾 "${folderName}" 不是空的，包含 ${folderContent.files.length} 個檔案和 ${folderContent.folders.length} 個子資料夾`);
+      }
     } catch (error) {
       toast.error('檢查資料夾內容時發生錯誤');
       console.error('檢查資料夾內容時發生錯誤:', error);

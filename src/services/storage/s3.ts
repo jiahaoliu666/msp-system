@@ -477,15 +477,18 @@ export async function createFolder(folderPath: string): Promise<boolean> {
 
 // 格式化日期時間
 export function formatDateTime(date: Date): string {
-  return date.toLocaleString('zh-TW', {
-    year: 'numeric',
-    month: 'numeric',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: true
-  });
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  
+  const hour = date.getHours();
+  const minute = date.getMinutes().toString().padStart(2, '0');
+  const second = date.getSeconds().toString().padStart(2, '0');
+  
+  const period = hour >= 12 ? '下午' : '上午';
+  const formattedHour = (hour % 12 || 12).toString().padStart(2, '0');
+  
+  return `${year}/${month}/${day} ${period}${formattedHour}:${minute}:${second}`;
 }
 
 // 計算資料夾大小
