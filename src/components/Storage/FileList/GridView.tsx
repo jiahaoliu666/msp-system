@@ -91,43 +91,55 @@ const GridView: React.FC<GridViewProps> = ({
       {folders.map((folder: FolderItem, index: number) => (
         <div
           key={`folder-${index}`}
-          className="relative group bg-white dark:bg-gray-800 rounded-xl border border-gray-200 
+          className={`relative group bg-white dark:bg-gray-800 rounded-xl border border-gray-200 
                    dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500 
-                   hover:shadow-md transition-all duration-200"
+                   hover:shadow-md transition-all duration-200
+                   h-[180px] min-h-[180px] flex flex-col ${
+                     selectedItems.has(folder.name) ? 'ring-2 ring-blue-500' : ''
+                   }`}
           onContextMenu={(e) => onContextMenu(e, folder)}
         >
-          <div className="p-4">
-            <div className="flex flex-col items-center">
-              <div className="w-16 h-16 flex items-center justify-center text-4xl mb-3 
-                            text-blue-600 dark:text-blue-400">
-                📁
+          <div className="absolute top-2 left-2 z-20">
+            <input
+              type="checkbox"
+              checked={selectedItems.has(folder.name)}
+              onChange={() => onSelectItem(folder.name)}
+              className="w-5 h-5 rounded border-gray-300 text-blue-600 
+                       transition-opacity duration-200
+                       focus:ring-blue-500 dark:border-gray-600 
+                       dark:focus:ring-offset-gray-800"
+            />
+          </div>
+          <div className="flex-1 p-4 flex flex-col items-center justify-center">
+            <div className="w-16 h-16 flex items-center justify-center text-4xl mb-3 
+                          text-blue-600 dark:text-blue-400">
+              📁
+            </div>
+            <div className="w-full">
+              <div className="text-sm font-medium text-gray-900 dark:text-gray-100 
+                            mb-1 text-center truncate" title={folder.name}>
+                {folder.name}
               </div>
-              <div className="w-full">
-                <div className="text-sm font-medium text-gray-900 dark:text-gray-100 
-                              mb-1 text-center truncate" title={folder.name}>
-                  {folder.name}
-                </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                  {formatFolderItemCount(folder.children || 0)}
-                </div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                {formatFolderItemCount(folder.children || 0)}
               </div>
             </div>
-            <div className="absolute top-2 right-2 opacity-100 z-20 action-button-always-visible">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDeleteFolder(folder.name);
-                }}
-                className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg 
-                         text-gray-500 dark:text-gray-400 hover:text-red-600 
-                         dark:hover:text-red-400 transition-colors"
-              >
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </button>
-            </div>
+          </div>
+          <div className="absolute top-2 right-2 opacity-100 z-20 action-button-always-visible">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDeleteFolder(folder.name);
+              }}
+              className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg 
+                       text-gray-500 dark:text-gray-400 hover:text-red-600 
+                       dark:hover:text-red-400 transition-colors"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
           </div>
           <button
             onClick={() => onEnterFolder(folder.name)}
@@ -145,43 +157,53 @@ const GridView: React.FC<GridViewProps> = ({
             key={`file-${index}`}
             className={`relative group bg-white dark:bg-gray-800 rounded-xl border border-gray-200 
                       dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500 
-                      hover:shadow-md transition-all duration-200 ${
+                      hover:shadow-md transition-all duration-200
+                      h-[180px] min-h-[180px] flex flex-col ${
                         selectedItems.has(fileKey) ? 'ring-2 ring-blue-500' : ''
                       }`}
             onClick={(e) => handleFileClick(fileKey, e)}
             onContextMenu={(e) => onContextMenu(e, file)}
           >
-            <div className="p-4">
-              <div className="flex flex-col items-center">
-                <div className="w-16 h-16 flex items-center justify-center text-4xl mb-3">
-                  {getFileTypeIcon(fileKey)}
+            <div className="absolute top-2 left-2 z-20">
+              <input
+                type="checkbox"
+                checked={selectedItems.has(fileKey)}
+                onChange={() => onSelectItem(fileKey)}
+                className="w-5 h-5 rounded border-gray-300 text-blue-600 
+                         transition-opacity duration-200
+                         focus:ring-blue-500 dark:border-gray-600 
+                         dark:focus:ring-offset-gray-800"
+              />
+            </div>
+            <div className="flex-1 p-4 flex flex-col items-center justify-center">
+              <div className="w-16 h-16 flex items-center justify-center text-4xl mb-3">
+                {getFileTypeIcon(fileKey)}
+              </div>
+              <div className="w-full">
+                <div className="text-sm font-medium text-gray-900 dark:text-gray-100 
+                              mb-1 text-center truncate" title={fileName}>
+                  {fileName}
                 </div>
-                <div className="w-full">
-                  <div className="text-sm font-medium text-gray-900 dark:text-gray-100 
-                                mb-1 text-center truncate" title={fileName}>
-                    {fileName}
-                  </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                    {formatFileSize(file.Size || 0)}
-                  </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                  {formatFileSize(file.Size || 0)}
                 </div>
               </div>
-              <div className="absolute top-2 right-2 opacity-100 z-20 action-button-always-visible">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete(fileKey);
-                  }}
-                  className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg 
-                           text-gray-500 dark:text-gray-400 hover:text-red-600 
-                           dark:hover:text-red-400 transition-colors"
-                >
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
-              </div>
+            </div>
+            <div className="absolute top-2 right-2 opacity-100 z-20 action-button-always-visible">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(fileKey);
+                }}
+                className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg 
+                         text-gray-500 dark:text-gray-400 hover:text-red-600 
+                         dark:hover:text-red-400 transition-colors"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
             </div>
             <button
               onClick={(e) => handleFileClick(fileKey, e)}
