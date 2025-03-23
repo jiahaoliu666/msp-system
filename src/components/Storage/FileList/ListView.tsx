@@ -434,7 +434,7 @@ const ListView: React.FC<ListViewProps> = ({
                     className="absolute right-0 top-0 h-full w-6 cursor-col-resize flex items-center justify-center z-20 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                     title="拖動調整欄位寬度 (雙擊重置)"
                   >
-                    <div className="w-0.5 h-4/5 bg-gray-300 dark:bg-gray-600 hover:bg-blue-500 hover:w-1" />
+                    <div className="w-0.5 h-4/5 bg-transparent" />
                   </div>
                 )}
               </div>
