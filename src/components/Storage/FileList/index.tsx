@@ -40,7 +40,6 @@ const DEFAULT_COLUMN_WIDTHS: ColumnWidths = {
   size: 100,         // 大小列寬度
   lastModified: 180, // 日期列寬度
   modifier: 150,     // 修改者列寬度
-  actions: 120,      // 操作列寬度
 };
 
 const STORAGE_KEY = 'fileListColumnWidths';

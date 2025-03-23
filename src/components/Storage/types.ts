@@ -233,7 +233,6 @@ export interface ColumnWidths {
   size: number;
   lastModified: number;
   modifier: number;
-  actions: number;
 }
 
 // 新增: 欄位寬度配置 Props

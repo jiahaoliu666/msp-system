@@ -38,7 +38,6 @@ const DEFAULT_COLUMN_WIDTHS: ColumnWidths = {
   modifier: 150,     // 修改者列寬度
   type: 100,         // 類型列寬度
   size: 100,         // 大小列寬度
-  actions: 120,      // 操作列寬度
 };
 
 const ListView: React.FC<ListViewProps> = ({
@@ -75,7 +74,7 @@ const ListView: React.FC<ListViewProps> = ({
   const upHandlerRef = useRef<((e: MouseEvent) => void) | null>(null);
 
   // 預計算列的索引順序
-  const columnOrder: (keyof ColumnWidths)[] = ['name', 'lastModified', 'modifier', 'type', 'size', 'actions'];
+  const columnOrder: (keyof ColumnWidths)[] = ['name', 'lastModified', 'modifier', 'type', 'size'];
   const getColumnIndex = (columnName: keyof ColumnWidths): number => {
     return columnOrder.indexOf(columnName);
   };
@@ -440,9 +439,6 @@ const ListView: React.FC<ListViewProps> = ({
                 )}
               </div>
             </th>
-            <th className="p-4 relative" style={{ width: columnWidths.actions }}>
-              <span className="font-medium">操作</span>
-            </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -492,24 +488,6 @@ const ListView: React.FC<ListViewProps> = ({
               <td className="p-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
                 {folder.children ? `${folder.children} 個項目` : '-'}
               </td>
-              <td className="p-4 whitespace-nowrap">
-                <div className="flex items-center justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDeleteFolder(folder.name);
-                    }}
-                    className="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-full 
-                             hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-150"
-                    title="刪除資料夾"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
-                </div>
-              </td>
             </tr>
           ))}
 
@@ -556,38 +534,6 @@ const ListView: React.FC<ListViewProps> = ({
                 </td>
                 <td className="p-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
                   {formatFileSize(file.Size || 0)}
-                </td>
-                <td className="p-4 whitespace-nowrap">
-                  <div className="flex items-center justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDownload(fileKey, fileName);
-                      }}
-                      className="p-1 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-full 
-                               hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors duration-150"
-                      title="下載檔案"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDelete(fileKey);
-                      }}
-                      className="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-full 
-                               hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-150"
-                      title="刪除檔案"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  </div>
                 </td>
               </tr>
             );
