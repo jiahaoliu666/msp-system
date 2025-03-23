@@ -1,93 +1,98 @@
-src/ 
-├── types-----------------------------------------------------------類型
-│   ├──
-├── context-----------------------------------------------------------上下文
-│   ├── ToastContext.tsx # 通知上下文
-│   ├── AuthContext.tsx # 認證上下文
-│   ├── LoadingContext.tsx # 加載狀態上下文 (使用NProgress)
-│   ├── ThemeContext.tsx # 主題切換上下文
-├── pages-----------------------------------------------------------頁面
-│   ├── _app.tsx # 應用程序入口
-│   ├── index.tsx # 首頁
-│   ├── _document.tsx # 自定義文檔
-│   ├── 404.tsx # 404 錯誤頁面
-│   ├── change-password.tsx # 更改密碼頁面
-│   ├── forgot-password.tsx # 忘記密碼頁面
-│   ├── user-portal.tsx # 客戶介面
-│   ├── login # 登入頁面
-│   │   └── index.tsx 
-│   │--------------------------------------------------------------側邊欄頁面
-│   ├── check-in.tsx # 值班簽到
-│   ├── chat-room.tsx # 聊天對話
-│   ├── ticket-system.tsx # 工單系統
-│   ├── service-record.tsx # 服務紀錄
-│   ├── todo-list.tsx # 待辦事項
-│   ├── handover-item.tsx # 交接項目
-│   ├── storage.tsx # 檔案儲存
-│   ├── meeting.tsx # 會議排程
-│   ├── contract-management.tsx # 合約管理
-│   ├── organization-management.tsx # 組織管理
-│   ├── user-management.tsx # 使用者管理
-│   ├── customer-management.tsx # 客戶管理
-│   ├── permission-setting.tsx # 權限設定
-│   ├── operation-record.tsx # 操作紀錄
-│   ├── system-settings.tsx # 系統設定
-│   ├── version-record.tsx # 更版紀錄
-├── api-----------------------------------------------------------API
-│   ├── users
-│   │   └── index.ts # 使用者管理 API (獲取用戶列表、創建 & 更新 & 刪除用戶請求、DynamoDB 組織 & 角色)
-│   ├── customers
-│   │   └── index.ts # 客戶管理 API (獲取客戶列表)
-├── components-----------------------------------------------------------組件
-│   ├── common # 通用組件 (快速建立按鈕、側邊欄、主題切換按鈕)
+src
+├── components
+│   ├── common
 │   │   ├── CreateTicketForm.tsx # 建立工單表單
 │   │   ├── CreateTodoForm.tsx # 建立待辦表單
-│   │   ├── CreateOrganizationForm.tsx # 建立組織表單
+│   │   ├── LoadingSpinner.tsx # 載入中
 │   │   ├── Sidebar.tsx # 側邊欄
 │   │   ├── ThemeToggle.tsx # 主題切換按鈕
 │   │   ├── Toast.tsx # 通知組件
-│   │   ├── LoadingSpinner.tsx # 載入中
-│   ├── usermanagement # 用戶管理
-│   │   ├── CreateContractForm.tsx # 建立合約表單
-│   │   ├── CreateOrganizationForm.tsx # 建立組織表單
-│   │   ├── CreateUserForm.tsx # 建立使用者表單
-│   ├── handoveritem # 交接項目
+│   ├── handoveritem
 │   │   ├── CreateHandoverItemForm.tsx # 建立交接項目表單
-│   ├── storage # 檔案儲存
-│   │   ├── ContextMenu # 右鍵選單
+│   ├── storage
+│   │   ├── types.ts # 類型定義
+│   │   ├── SearchFilter
+│   │   │   └── index.tsx # 搜尋過濾器組件
+│   │   ├── ContextMenu 
 │   │   │   └── index.tsx # 右鍵選單組件
-│   │   ├── EmptyState # 空狀態
+│   │   ├── EmptyState
 │   │   │   └── index.tsx # 空狀態組件
-│   │   ├── FileList # 檔案列表
+│   │   ├── FileInfo 
+│   │   │   └── index.tsx # 檔案資訊組件
+│   │   ├── FileList 
 │   │   │   ├── index.tsx # 檔案列表組件
 │   │   │   ├── GridView.tsx # 網格視圖
 │   │   │   └── ListView.tsx # 列表視圖
-│   │   ├── FilePreview # 檔案預覽
+│   │   ├── FilePreview
 │   │   │   └── index.tsx # 檔案預覽組件
-│   │   ├── hooks # 自定義hooks
+│   │   ├── FolderSelector
+│   │   │   └── index.tsx # 資料夾選擇器組件
+│   │   ├── StatusBar
+│   │   │   └── index.tsx # 狀態欄組件
+│   │   ├── TagManager
+│   │   │   └── index.tsx # 標籤管理組件
+│   │   ├── UploadProgress
+│   │   │   └── index.tsx # 上傳進度組件
+│   │   ├── hooks
 │   │   │   ├── useFileManager.ts # 檔案管理
 │   │   │   ├── useFileOperations.ts # 檔案操作
 │   │   │   └── useUpload.ts # 檔案上傳
-│   │   ├── StatusBar # 狀態欄
-│   │   │   └── index.tsx # 狀態欄組件
-│   │   ├── UploadProgress # 上傳進度
-│   │   │   └── index.tsx # 上傳進度組件
-│   │   └── types.ts # 類型定義
-├── services-----------------------------------------------------------AWS服務
-│   ├── auth
-│   │   ├── cognito.ts # 認證服務 (更新、刪除用戶)
-│   ├── storage
-│   │   ├── s3.ts # S3 服務 (上傳、刪除、下載、列出檔案)
-├── config-----------------------------------------------------------配置
+│   ├── usermanagement
+│   │   ├── CreateContractForm.tsx # 建立合約表單
+│   │   ├── CreateOrganizationForm.tsx # 建立組織表單
+│   │   ├── CreateUserForm.tsx # 建立使用者表單
+├── config
 │   ├── aws-config.ts # AWS 配置
 │   ├── cognito-config.ts # Cognito 配置
 │   ├── db-config.ts # DynamoDB 配置
 │   ├── s3-config.ts # S3 配置
 │   ├── role-config.ts # 角色配置
 │   ├── contract-config.ts # 合約管理配置 (合約類型、合約狀態、所有用戶管理標籤配置)
-├── styles-----------------------------------------------------------樣式
-│   ├── globals.css 全域樣式
+├── context
+│   ├── ToastContext.tsx # 通知上下文
+│   ├── AuthContext.tsx # 認證上下文
+│   ├── LoadingContext.tsx # 加載狀態上下文 (使用NProgress)
+│   ├── ThemeContext.tsx # 主題切換上下文
+├── pages
+│   ├── api
+│   │   ├── users
+│   │   │   └── index.ts # 使用者管理 API (獲取用戶列表、創建 & 更新 & 刪除用戶請求、DynamoDB 組織 & 角色)
+│   │   └── customers
+│   │       └── index.ts # 客戶管理 API (獲取客戶列表)
+│   ├── login
+│   │   └── index.tsx # 登入頁面
+│   ├── _app.tsx # 應用程序入口
+│   ├── _document.tsx # 自定義文檔
+│   ├── 404.tsx # 404 錯誤頁面
+│   ├── index.tsx # 首頁
+│   ├── change-password.tsx # 更改密碼頁面
+│   ├── forgot-password.tsx # 忘記密碼頁面
+│   ├── chat-room.tsx # 聊天對話
+│   ├── check-in.tsx # 值班簽到
+│   ├── contract-management.tsx # 合約管理
+│   ├── customer-management.tsx # 客戶管理
+│   ├── handover-item.tsx # 交接項目
+│   ├── meeting.tsx # 會議排程
+│   ├── operation-record.tsx # 操作紀錄
+│   ├── organization-management.tsx # 組織管理
+│   ├── permission-setting.tsx # 權限設定
+│   ├── service-record.tsx # 服務紀錄
+│   ├── storage.tsx # 檔案儲存
+│   ├── system-settings.tsx # 系統設定
+│   ├── ticket-system.tsx # 工單系統
+│   ├── todo-list.tsx # 待辦事項
+│   ├── user-management.tsx # 使用者管理
+│   ├── user-portal.tsx # 客戶介面
+│   ├── version-record.tsx # 更版紀錄
+├── services
+│   ├── auth
+│   │   ├── cognito.ts # 認證服務 (更新、刪除用戶)
+│   ├── storage
+│   │   ├── s3.ts # S3 服務 (上傳、刪除、下載、列出檔案)
+├── styles
+│   ├── globals.css # 全域樣式
 │   ├── toast.css # 通知樣式
+
 
 
 
