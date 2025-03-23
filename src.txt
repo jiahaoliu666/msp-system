@@ -12,31 +12,23 @@ src
 │   ├── storage
 │   │   ├── types.ts # 類型定義
 │   │   ├── SearchFilter
-│   │   │   └── index.tsx # 搜尋過濾器組件
+│   │   │   └── index.tsx # 搜尋輸入框
 │   │   ├── ContextMenu 
-│   │   │   └── index.tsx # 右鍵選單組件
+│   │   │   └── index.tsx # 右鍵選單
 │   │   ├── EmptyState
 │   │   │   └── index.tsx # 空狀態組件
-│   │   ├── FileInfo 
-│   │   │   └── index.tsx # 檔案資訊組件
 │   │   ├── FileList 
-│   │   │   ├── index.tsx # 檔案列表組件
+│   │   │   ├── index.tsx # 檔案列表
 │   │   │   ├── GridView.tsx # 網格視圖
 │   │   │   └── ListView.tsx # 列表視圖
-│   │   ├── FilePreview
-│   │   │   └── index.tsx # 檔案預覽組件
-│   │   ├── FolderSelector
-│   │   │   └── index.tsx # 資料夾選擇器組件
 │   │   ├── StatusBar
-│   │   │   └── index.tsx # 狀態欄組件
-│   │   ├── TagManager
-│   │   │   └── index.tsx # 標籤管理組件
+│   │   │   └── index.tsx # 底部狀態欄組件
 │   │   ├── UploadProgress
 │   │   │   └── index.tsx # 上傳進度組件
 │   │   ├── hooks
-│   │   │   ├── useFileManager.ts # 檔案管理
-│   │   │   ├── useFileOperations.ts # 檔案操作
-│   │   │   └── useUpload.ts # 檔案上傳
+│   │   │   ├── useFileManager.ts # 檔案管理，檔案管理器的自定義Hook，提供檔案和資料夾的載入、排序、過濾、導航等功能，同時支持星號標記、麵包屑導航、網路斷線自動重試、檔案類型識別，是管理雲端檔案系統的核心邏輯層
+│   │   │   ├── useFileOperations.ts # 檔案操作，檔案操作的自定義Hook，提供檔案下載、刪除、預覽、建立資料夾、分享檔案、重命名、移動、複製等功能，同時處理右鍵選單、刪除確認和多選模式等操作，是檔案管理系統的操作層邏輯
+│   │   │   └── useUpload.ts # 檔案上傳，檔案上傳的自定義Hook，處理檔案的拖放上傳、選擇上傳功能，提供上傳進度顯示、重複檔案處理（替換/保留兩者/跳過）、檔案類型和大小驗證，並且具有暫停、繼續和取消上傳的功能架構
 │   ├── usermanagement
 │   │   ├── CreateContractForm.tsx # 建立合約表單
 │   │   ├── CreateOrganizationForm.tsx # 建立組織表單
@@ -46,7 +38,7 @@ src
 │   ├── cognito-config.ts # Cognito 配置
 │   ├── db-config.ts # DynamoDB 配置
 │   ├── s3-config.ts # S3 配置
-│   ├── role-config.ts # 角色配置
+│   ├── role-config.ts # 用戶角色配置
 │   ├── contract-config.ts # 合約管理配置 (合約類型、合約狀態、所有用戶管理標籤配置)
 ├── context
 │   ├── ToastContext.tsx # 通知上下文

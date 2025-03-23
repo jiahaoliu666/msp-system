@@ -9,12 +9,8 @@ import FileList from '@/components/storage/FileList';
 import EmptyState from '../components/storage/EmptyState';
 import UploadProgress from '@/components/storage/UploadProgress';
 import StatusBar from '@/components/storage/StatusBar';
-import FilePreview from '@/components/storage/FilePreview';
 import ContextMenu from '@/components/storage/ContextMenu';
 import SearchFilter from '@/components/storage/SearchFilter';
-import FileInfo from '@/components/storage/FileInfo';
-import TagManager from '@/components/storage/TagManager';
-import FolderSelector from '@/components/storage/FolderSelector';
 
 // 引入 hooks
 import { useFileManager } from '@/components/storage/hooks/useFileManager';
@@ -746,14 +742,6 @@ export default function Storage() {
           </FileManagerLayout>
         </div>
       </div>
-
-      {/* 檔案預覽 */}
-      {previewFile && (
-        <FilePreview 
-          file={previewFile} 
-          onClose={() => setPreviewFile(null)} 
-        />
-      )}
 
       {/* 刪除確認對話框 */}
       {isDeleteConfirmOpen && itemToDelete && (

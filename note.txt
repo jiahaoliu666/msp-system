@@ -373,14 +373,14 @@ suport -> case 到ticket system
 
 移除會議排程？
 
-
---------------------------------
-
 若為登入狀態時 要檢查MetaAge-MSP-User-Management
 資料表 分區索引為email 的role值是否為 客戶 ，若值為客戶則只能訪問user-portal頁面，而其他角色都正常訪問，修改的同時不要影響到現行功能
 
 _app.tsx 右上角要顯示對應的 id 和 mail
 
+--------------------------------
+
+src/components/storage/EmptyState/index.tsx 上傳檔案、新增資料夾放到對應的代碼中
 --------------------------------
 
 # 安裝並使用最新的 LTS 版本
